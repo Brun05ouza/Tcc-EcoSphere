@@ -1,0 +1,15 @@
+/* Responsividade Global */
+@media (max-width: 640px) {
+  .container { padding: 0 1rem; }
+  h1 { font-size: 2rem !important; }
+  h2 { font-size: 1.5rem !important; }
+  .grid-mobile { grid-template-columns: 1fr !important; gap: 1rem !important; }
+  .modal-mobile { margin: 1rem !important; max-width: calc(100vw - 2rem) !important; }
+}
+
+@media (min-width: 641px) and (max-width: 768px) {
+  .grid-tablet { grid-template-columns: repeat(2, 1fr) !important; }
+}
+
+.text-responsive { font-size: clamp(0.875rem, 2.5vw, 1rem); }
+.padding-responsive { padding: clamp(1rem, 3vw, 2rem); }

@@ -1,0 +1,177 @@
+import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
+import { motion } from 'framer-motion';
+// Usando Font Awesome via CDN
+
+const Home = () => {
+  const [stats, setStats] = useState({ users: 0, actions: 0, co2: 0 });
+  const [isVisible, setIsVisible] = useState(false);
+
+  useEffect(() => {
+    setIsVisible(true);
+    // Animação dos números
+    const timer = setInterval(() => {
+      setStats(prev => ({
+        users: prev.users < 2847 ? prev.users + 47 : 2847,
+        actions: prev.actions < 15392 ? prev.actions + 253 : 15392,
+        co2: prev.co2 < 8.2 ? +(prev.co2 + 0.13).toFixed(1) : 8.2
+      }));
+    }, 50);
+    
+    setTimeout(() => clearInterval(timer), 3000);
+    return () => clearInterval(timer);
+  }, []);
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-green-50 via-blue-50 to-emerald-50">
+      {/* Hero Section */}
+      <motion.div 
+        initial={{ opacity: 0, y: 50 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.8 }}
+        className="container mx-auto px-4 py-16 text-center"
+      >
+        <motion.div
+          initial={{ scale: 0.8 }}
+          animate={{ scale: 1 }}
+          transition={{ delay: 0.2, duration: 0.6 }}
+          className="mb-8"
+        >
+          <h1 className="text-6xl font-bold bg-gradient-to-r from-green-600 to-blue-600 bg-clip-text text-transparent mb-6">
+            🌍 EcoSphere Web
+          </h1>
+          <p className="text-2xl text-gray-700 mb-8 max-w-3xl mx-auto">
+            Transforme o mundo com <span className="text-green-600 font-semibold">inteligência artificial</span>, 
+            dados em tempo real e <span className="text-blue-600 font-semibold">ação sustentável</span>
+          </p>
+        </motion.div>
+        
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.6, duration: 0.6 }}
+          className="flex flex-col sm:flex-row gap-4 justify-center mb-12"
+        >
+          <Link 
+            to="/guia" 
+            className="bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white px-8 py-4 rounded-xl text-lg font-semibold shadow-lg transform hover:scale-105 transition-all duration-200"
+          >
+            🚀 Começar Agora
+          </Link>
+          <Link 
+            to="/classificar-residuos" 
+            className="bg-white border-2 border-green-600 text-green-600 hover:bg-green-600 hover:text-white px-8 py-4 rounded-xl text-lg font-semibold shadow-lg transform hover:scale-105 transition-all duration-200"
+          >
+            📸 Testar IA
+          </Link>
+        </motion.div>
+      </motion.div>
+
+      {/* Features Grid */}
+      <div className="container mx-auto px-4 mb-16">
+        <motion.h2 
+          initial={{ opacity: 0 }}
+          whileInView={{ opacity: 1 }}
+          transition={{ duration: 0.6 }}
+          className="text-4xl font-bold text-center mb-12 text-gray-800"
+        >
+          🚀 Funcionalidades Principais
+        </motion.h2>
+        
+        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
+          {[
+            { icon: "bi bi-globe2", emoji: "🌍", title: "Monitoramento Ambiental", desc: "Dados em tempo real de temperatura, qualidade do ar e mais", color: "from-blue-500 to-cyan-500" },
+            { icon: "bi bi-robot", emoji: "🤖", title: "IA para Resíduos", desc: "Classifique resíduos automaticamente com visão computacional", color: "from-green-500 to-emerald-500" },
+            { icon: "bi bi-award", emoji: "🏆", title: "Gamificação", desc: "Ganhe EcoPoints e badges por ações sustentáveis", color: "from-yellow-500 to-orange-500" },
+            { icon: "bi bi-mortarboard", emoji: "🎓", title: "Educação", desc: "Cursos e desafios para aprender sobre sustentabilidade", color: "from-purple-500 to-pink-500" }
+          ].map((feature, index) => (
+            <motion.div
+              key={index}
+              initial={{ opacity: 0, y: 50 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              whileHover={{ y: -10, scale: 1.05 }}
+              transition={{ delay: index * 0.1, duration: 0.6 }}
+              className="bg-white p-8 rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 text-center group relative overflow-hidden"
+            >
+              <div className="absolute top-4 right-4 text-3xl opacity-20 group-hover:opacity-40 transition-opacity">
+                {feature.emoji}
+              </div>
+              <div className={`w-16 h-16 mx-auto mb-6 rounded-2xl bg-gradient-to-r ${feature.color} flex items-center justify-center transform group-hover:rotate-12 transition-transform duration-300 shadow-lg`}>
+                <i className={`${feature.icon} text-2xl text-white`}></i>
+              </div>
+              <h3 className="text-xl font-bold mb-4 text-gray-800">{feature.title}</h3>
+              <p className="text-gray-600 leading-relaxed">{feature.desc}</p>
+            </motion.div>
+          ))}
+        </div>
+      </div>
+
+      {/* Stats Section */}
+      <motion.div 
+        initial={{ opacity: 0 }}
+        whileInView={{ opacity: 1 }}
+        transition={{ duration: 0.8 }}
+        className="container mx-auto px-4 mb-16"
+      >
+        <div className="bg-gradient-to-r from-green-600 to-blue-600 p-12 rounded-3xl shadow-2xl text-white">
+          <motion.h2 
+            initial={{ y: 30 }}
+            whileInView={{ y: 0 }}
+            className="text-4xl font-bold text-center mb-12"
+          >
+            🌱 Impacto da Comunidade
+          </motion.h2>
+          
+          <div className="grid md:grid-cols-3 gap-8 text-center">
+            {[
+              { icon: "bi bi-people-fill", emoji: "👥", value: stats.users.toLocaleString(), label: "Usuários Ativos", suffix: "" },
+              { icon: "bi bi-graph-up-arrow", emoji: "📈", value: stats.actions.toLocaleString(), label: "Ações Sustentáveis", suffix: "" },
+              { icon: "bi bi-tree-fill", emoji: "🌳", value: stats.co2, label: "CO₂ Evitado", suffix: " ton" }
+            ].map((stat, index) => (
+              <motion.div
+                key={index}
+                initial={{ scale: 0 }}
+                whileInView={{ scale: 1 }}
+                whileHover={{ scale: 1.1 }}
+                transition={{ delay: index * 0.2, duration: 0.6 }}
+                className="bg-white/10 backdrop-blur-sm p-8 rounded-2xl hover:bg-white/20 transition-all duration-300 relative overflow-hidden"
+              >
+                <div className="absolute top-2 right-2 text-2xl opacity-30">{stat.emoji}</div>
+                <i className={`${stat.icon} text-5xl mx-auto mb-4 text-white/90 block`}></i>
+                <div className="text-4xl font-bold mb-2">
+                  {stat.value}{stat.suffix}
+                </div>
+                <div className="text-white/80 text-lg">{stat.label}</div>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </motion.div>
+      
+      {/* Call to Action */}
+      <motion.div
+        initial={{ opacity: 0, y: 50 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.8 }}
+        className="container mx-auto px-4 text-center pb-16"
+      >
+        <div className="bg-white p-12 rounded-3xl shadow-xl">
+          <h2 className="text-3xl font-bold mb-6 text-gray-800">
+            Pronto para fazer a diferença? 🌍
+          </h2>
+          <p className="text-xl text-gray-600 mb-8 max-w-2xl mx-auto">
+            Junte-se à nossa comunidade e comece a transformar o mundo com pequenas ações sustentáveis!
+          </p>
+          <Link 
+            to="/guia" 
+            className="inline-block bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-700 hover:to-blue-700 text-white px-12 py-4 rounded-2xl text-xl font-semibold shadow-lg transform hover:scale-105 transition-all duration-300"
+          >
+            🚀 Começar Jornada Sustentável
+          </Link>
+        </div>
+      </motion.div>
+    </div>
+  );
+};
+
+export default Home;
