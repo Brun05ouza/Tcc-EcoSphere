@@ -118,7 +118,7 @@ Este projeto está sob a licença MIT. Veja o arquivo [LICENSE](LICENSE) para de
 
 ## 👥 Autores
 
-- **Bruno Souza** - *Desenvolvimento inicial* - [seu-github](https://github.com/Brun05ouza)
+- **Bruno Souza** - *Desenvolvimento inicial* - [Brun05ouza](https://github.com/Brun05ouza)
 
 ## 🙏 Agradecimentos
 
