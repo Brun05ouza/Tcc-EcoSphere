@@ -13,6 +13,7 @@ yarn.lock
 # Firebase
 backend/config/*.json
 **/serviceAccountKey.json
+backend/ecosphere-web-firebase-adminsdk-fbsvc-1d90c9ddde.json
 
 # Build
 frontend/build/
