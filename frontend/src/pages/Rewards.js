@@ -10,6 +10,18 @@ const Rewards = () => {
   const [showNotificationModal, setShowNotificationModal] = useState(false);
   const [notificationData, setNotificationData] = useState({ type: '', message: '', icon: '' });
 
+  const Icon = ({ name, className = "w-5 h-5", white = false }) => {
+    const iconStyle = white ? { filter: 'brightness(0) invert(1)' } : { filter: 'invert(40%) sepia(93%) saturate(500%) hue-rotate(100deg)' };
+    return (
+      <img 
+        src={require(`../assets/icons/${name}.svg`)} 
+        alt={name} 
+        className={className}
+        style={iconStyle}
+      />
+    );
+  };
+
   const categories = [
     { id: 'education', label: 'Educação', icon: 'bi-book', color: 'from-blue-500 to-cyan-500' },
     { id: 'products', label: 'Eco-Friendly', icon: 'bi-leaf', color: 'from-green-500 to-emerald-500' },
@@ -99,8 +111,9 @@ const Rewards = () => {
           animate={{ opacity: 1, y: 0 }}
           className="text-center mb-8"
         >
-          <h1 className="text-5xl font-bold bg-gradient-to-r from-green-600 to-blue-600 bg-clip-text text-transparent mb-4">
-            🎁 Resgate de EcoPoints
+          <h1 className="text-5xl font-bold bg-gradient-to-r from-green-600 to-blue-600 bg-clip-text text-transparent mb-4 flex items-center justify-center gap-3">
+            <Icon name="recompensas" className="w-14 h-14" />
+            Resgate de EcoPoints
           </h1>
           <p className="text-xl text-gray-600">Troque seus pontos por recompensas incríveis!</p>
         </motion.div>

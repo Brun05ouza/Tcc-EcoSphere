@@ -19,6 +19,18 @@ const Dashboard = () => {
   const [loading, setLoading] = useState(true);
   const { ecoPoints } = useEcoPoints();
 
+  const Icon = ({ name, className = "w-5 h-5", white = false }) => {
+    const iconStyle = white ? { filter: 'brightness(0) invert(1)' } : { filter: 'invert(40%) sepia(93%) saturate(500%) hue-rotate(100deg)' };
+    return (
+      <img 
+        src={require(`../assets/icons/${name}.svg`)} 
+        alt={name} 
+        className={className}
+        style={iconStyle}
+      />
+    );
+  };
+
   useEffect(() => {
     loadDashboardData();
   }, [ecoPoints]);
@@ -100,8 +112,9 @@ const Dashboard = () => {
           animate={{ opacity: 1, y: 0 }}
           className="mb-8"
         >
-          <h1 className="text-4xl font-bold text-gray-800 mb-2">
-            📊 Dashboard EcoSphere
+          <h1 className="text-4xl font-bold mb-2 flex items-center gap-3">
+            <Icon name="dashboard" className="w-10 h-10" />
+            <span className="bg-gradient-to-r from-green-600 to-blue-600 bg-clip-text text-transparent">Dashboard EcoSphere</span>
           </h1>
           <p className="text-gray-600">Acompanhe seu progresso sustentável</p>
         </motion.div>
@@ -109,10 +122,10 @@ const Dashboard = () => {
         {/* Stats Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-8">
           {[
-            { icon: "bi bi-gem", emoji: "💎", title: "EcoPoints", value: userStats.ecoPoints.toLocaleString(), color: "from-green-500 to-emerald-600", suffix: "" },
-            { icon: "bi bi-lightning-charge", emoji: "⚡", title: "Ações Realizadas", value: userStats.actions, color: "from-blue-500 to-cyan-600", suffix: "" },
-            { icon: "bi bi-award", emoji: "🏅", title: "Badges Conquistadas", value: userStats.badges, color: "from-purple-500 to-pink-600", suffix: "" },
-            { icon: "bi bi-trophy", emoji: "🏆", title: "Nível Atual", value: userStats.level, color: "from-orange-500 to-red-600", suffix: "" }
+            { icon: "ecopoints", emoji: "💎", title: "EcoPoints", value: userStats.ecoPoints.toLocaleString(), color: "from-green-500 to-emerald-600", suffix: "" },
+            { icon: "rocket", emoji: "⚡", title: "Ações Realizadas", value: userStats.actions, color: "from-blue-500 to-cyan-600", suffix: "" },
+            { icon: "recompensas", emoji: "🏅", title: "Badges Conquistadas", value: userStats.badges, color: "from-purple-500 to-pink-600", suffix: "" },
+            { icon: "ecopoints", emoji: "🏆", title: "Nível Atual", value: userStats.level, color: "from-orange-500 to-red-600", suffix: "" }
           ].map((stat, index) => (
             <motion.div
               key={index}
@@ -123,8 +136,8 @@ const Dashboard = () => {
               className="bg-white p-4 sm:p-6 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 relative overflow-hidden"
             >
               <div className="absolute top-2 right-2 text-xl opacity-20">{stat.emoji}</div>
-              <div className={`w-12 h-12 rounded-xl bg-gradient-to-r ${stat.color} flex items-center justify-center mb-4 shadow-lg`}>
-                <i className={`${stat.icon} text-xl text-white`}></i>
+              <div className={`w-12 h-12 rounded-xl bg-gradient-to-r ${stat.color} flex items-center justify-center mb-4 shadow-lg p-2`}>
+                <Icon name={stat.icon} className="w-full h-full" white />
               </div>
               <h3 className="text-sm font-medium text-gray-600 mb-1">{stat.title}</h3>
               <div className="text-2xl font-bold text-gray-800">
@@ -189,9 +202,9 @@ const Dashboard = () => {
           <h3 className="text-xl font-semibold mb-6">Atividades Recentes</h3>
           <div className="space-y-4">
             {userStats.actions > 0 ? [
-              { action: "Classificou resíduos com IA", points: "+25", time: "Recente", icon: "🤖" },
-              { action: "Completou Eco Quiz", points: "+50", time: "Hoje", icon: "🧠" },
-              { action: "Jogou Eco Catcher", points: "+30", time: "Ontem", icon: "🎮" }
+              { action: "Classificou resíduos com IA", points: "+25", time: "Recente", icon: "camera" },
+              { action: "Completou Eco Quiz", points: "+50", time: "Hoje", icon: "educacao" },
+              { action: "Jogou Eco Catcher", points: "+30", time: "Ontem", icon: "rocket" }
             ].slice(0, Math.min(3, userStats.actions)).map((activity, index) => (
               <motion.div
                 key={index}
@@ -201,7 +214,13 @@ const Dashboard = () => {
                 className="flex items-center justify-between p-4 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors"
               >
                 <div className="flex items-center">
-                  <span className="text-2xl mr-3">{activity.icon}</span>
+                  {typeof activity.icon === 'string' && !activity.icon.includes('�') ? (
+                    <div className="w-8 h-8 mr-3 flex items-center justify-center">
+                      <Icon name={activity.icon} className="w-full h-full" />
+                    </div>
+                  ) : (
+                    <span className="text-2xl mr-3">{activity.icon}</span>
+                  )}
                   <div>
                     <p className="font-medium text-gray-800">{activity.action}</p>
                     <p className="text-sm text-gray-500">{activity.time}</p>

@@ -7,6 +7,18 @@ const Home = () => {
   const [stats, setStats] = useState({ users: 0, actions: 0, co2: 0 });
   const [isVisible, setIsVisible] = useState(false);
 
+  const Icon = ({ name, className = "w-16 h-16", white = false }) => {
+    const iconStyle = white ? { filter: 'brightness(0) invert(1)' } : { filter: 'invert(40%) sepia(93%) saturate(500%) hue-rotate(100deg)' };
+    return (
+      <img 
+        src={require(`../assets/icons/${name}.svg`)} 
+        alt={name} 
+        className={className}
+        style={iconStyle}
+      />
+    );
+  };
+
   useEffect(() => {
     setIsVisible(true);
     // Animação dos números
@@ -37,8 +49,9 @@ const Home = () => {
           transition={{ delay: 0.2, duration: 0.6 }}
           className="mb-8"
         >
-          <h1 className="text-6xl font-bold bg-gradient-to-r from-green-600 to-blue-600 bg-clip-text text-transparent mb-6">
-            🌍 EcoSphere Web
+          <h1 className="text-6xl font-bold bg-gradient-to-r from-green-600 to-blue-600 bg-clip-text text-transparent mb-6 flex items-center justify-center gap-3">
+            <Icon name="earth" className="w-16 h-16" />
+            EcoSphere Web
           </h1>
           <p className="text-2xl text-gray-700 mb-8 max-w-3xl mx-auto">
             Transforme o mundo com <span className="text-green-600 font-semibold">inteligência artificial</span>, 
@@ -54,9 +67,10 @@ const Home = () => {
         >
           <Link 
             to="/guia" 
-            className="bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white px-8 py-4 rounded-xl text-lg font-semibold shadow-lg transform hover:scale-105 transition-all duration-200"
+            className="bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white px-8 py-4 rounded-xl text-lg font-semibold shadow-lg transform hover:scale-105 transition-all duration-200 flex items-center gap-2 justify-center"
           >
-            🚀 Começar Agora
+            <Icon name="rocket" className="w-5 h-5" white />
+            Começar Agora
           </Link>
           <Link 
             to="/classificar-residuos" 
@@ -73,17 +87,18 @@ const Home = () => {
           initial={{ opacity: 0 }}
           whileInView={{ opacity: 1 }}
           transition={{ duration: 0.6 }}
-          className="text-4xl font-bold text-center mb-12 text-gray-800"
+          className="text-4xl font-bold text-center mb-12 text-gray-800 flex items-center justify-center gap-3"
         >
-          🚀 Funcionalidades Principais
+          <Icon name="rocket" className="w-10 h-10" />
+          Funcionalidades Principais
         </motion.h2>
         
         <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
           {[
-            { icon: "bi bi-globe2", emoji: "🌍", title: "Monitoramento Ambiental", desc: "Dados em tempo real de temperatura, qualidade do ar e mais", color: "from-blue-500 to-cyan-500" },
-            { icon: "bi bi-robot", emoji: "🤖", title: "IA para Resíduos", desc: "Classifique resíduos automaticamente com visão computacional", color: "from-green-500 to-emerald-500" },
-            { icon: "bi bi-award", emoji: "🏆", title: "Gamificação", desc: "Ganhe EcoPoints e badges por ações sustentáveis", color: "from-yellow-500 to-orange-500" },
-            { icon: "bi bi-mortarboard", emoji: "🎓", title: "Educação", desc: "Cursos e desafios para aprender sobre sustentabilidade", color: "from-purple-500 to-pink-500" }
+            { icon: "monitoramento", emoji: "🌍", title: "Monitoramento Ambiental", desc: "Dados em tempo real de temperatura, qualidade do ar e mais", color: "from-blue-500 to-cyan-500" },
+            { icon: "IA", emoji: "🤖", title: "IA para Resíduos", desc: "Classifique resíduos automaticamente com visão computacional", color: "from-green-500 to-emerald-500" },
+            { icon: "ecopoints", emoji: "🏆", title: "Gamificação", desc: "Ganhe EcoPoints e badges por ações sustentáveis", color: "from-yellow-500 to-orange-500" },
+            { icon: "educacao", emoji: "🎓", title: "Educação", desc: "Cursos e desafios para aprender sobre sustentabilidade", color: "from-purple-500 to-pink-500" }
           ].map((feature, index) => (
             <motion.div
               key={index}
@@ -96,8 +111,8 @@ const Home = () => {
               <div className="absolute top-4 right-4 text-3xl opacity-20 group-hover:opacity-40 transition-opacity">
                 {feature.emoji}
               </div>
-              <div className={`w-16 h-16 mx-auto mb-6 rounded-2xl bg-gradient-to-r ${feature.color} flex items-center justify-center transform group-hover:rotate-12 transition-transform duration-300 shadow-lg`}>
-                <i className={`${feature.icon} text-2xl text-white`}></i>
+              <div className={`w-16 h-16 mx-auto mb-6 rounded-2xl bg-gradient-to-r ${feature.color} flex items-center justify-center transform group-hover:rotate-12 transition-transform duration-300 shadow-lg p-3`}>
+                <Icon name={feature.icon} className="w-full h-full" white />
               </div>
               <h3 className="text-xl font-bold mb-4 text-gray-800">{feature.title}</h3>
               <p className="text-gray-600 leading-relaxed">{feature.desc}</p>
@@ -156,17 +171,18 @@ const Home = () => {
         className="container mx-auto px-4 text-center pb-16"
       >
         <div className="bg-white p-12 rounded-3xl shadow-xl">
-          <h2 className="text-3xl font-bold mb-6 text-gray-800">
-            Pronto para fazer a diferença? 🌍
+          <h2 className="text-3xl font-bold mb-6 text-gray-800 flex items-center justify-center gap-2">
+            Pronto para fazer a diferença? <Icon name="earth" className="w-8 h-8" />
           </h2>
           <p className="text-xl text-gray-600 mb-8 max-w-2xl mx-auto">
             Junte-se à nossa comunidade e comece a transformar o mundo com pequenas ações sustentáveis!
           </p>
           <Link 
             to="/guia" 
-            className="inline-block bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-700 hover:to-blue-700 text-white px-12 py-4 rounded-2xl text-xl font-semibold shadow-lg transform hover:scale-105 transition-all duration-300"
+            className="inline-flex items-center gap-2 bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-700 hover:to-blue-700 text-white px-12 py-4 rounded-2xl text-xl font-semibold shadow-lg transform hover:scale-105 transition-all duration-300"
           >
-            🚀 Começar Jornada Sustentável
+            <Icon name="rocket" className="w-6 h-6" white />
+            Começar Jornada Sustentável
           </Link>
         </div>
       </motion.div>

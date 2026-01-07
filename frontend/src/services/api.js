@@ -28,6 +28,7 @@ export const wasteAPI = {
   classifyImage: (formData) => api.post('/waste/classify', formData, {
     headers: { 'Content-Type': 'multipart/form-data' }
   }),
+  saveClassification: (data) => api.post('/waste/classification', data),
   getHistorico: () => api.get('/waste/historico'),
   registrarDescarte: (data) => api.post('/waste/registrar', data),
 };

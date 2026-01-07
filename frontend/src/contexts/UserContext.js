@@ -14,36 +14,70 @@ export const useUser = () => {
 export const UserProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [token, setToken] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const savedToken = sessionStorage.getItem('token');
-    if (savedToken) {
-      setToken(savedToken);
-    }
+    const loadUser = async () => {
+      const savedToken = sessionStorage.getItem('token');
+      const savedUser = sessionStorage.getItem('user');
+      
+      if (savedToken) {
+        setToken(savedToken);
+        
+        if (savedUser) {
+          try {
+            setUser(JSON.parse(savedUser));
+          } catch (error) {
+            console.error('Erro ao carregar usuário:', error);
+          }
+        }
+        
+        try {
+          const response = await userAPI.getProfile(savedToken);
+          setUser(response.data);
+          sessionStorage.setItem('user', JSON.stringify(response.data));
+        } catch (error) {
+          console.error('Erro ao buscar perfil:', error);
+          sessionStorage.removeItem('token');
+          sessionStorage.removeItem('user');
+          setToken(null);
+          setUser(null);
+        }
+      }
+      setLoading(false);
+    };
+    
+    loadUser();
   }, []);
 
   const updateUser = (newUserData, authToken) => {
     setUser(newUserData);
     setToken(authToken);
     sessionStorage.setItem('token', authToken);
+    sessionStorage.setItem('user', JSON.stringify(newUserData));
   };
 
   const logout = () => {
     setUser(null);
     setToken(null);
     sessionStorage.removeItem('token');
+    sessionStorage.removeItem('user');
   };
 
-  const addEcoPoints = async (pointsToAdd, action = 'Ação') => {
+  const addEcoPoints = (pointsToAdd, action = 'Ação') => {
     if (user && pointsToAdd > 0) {
-      try {
-        const response = await userAPI.addPoints({ points: pointsToAdd, action });
-        setUser(response.data.user);
-        return response.data.user.ecoPoints;
-      } catch (error) {
-        console.error('Erro ao adicionar pontos:', error);
-        return user.ecoPoints;
-      }
+      const updatedUser = {
+        ...user,
+        ecoPoints: (user.ecoPoints || 0) + pointsToAdd
+      };
+      setUser(updatedUser);
+      sessionStorage.setItem('user', JSON.stringify(updatedUser));
+      
+      userAPI.addPoints({ points: pointsToAdd, action }).catch(error => {
+        console.error('Erro ao salvar pontos no backend:', error);
+      });
+      
+      return updatedUser.ecoPoints;
     }
     return user?.ecoPoints || 0;
   };
@@ -52,6 +86,7 @@ export const UserProvider = ({ children }) => {
     <UserContext.Provider value={{ 
       user, 
       token,
+      loading,
       updateUser, 
       logout,
       addEcoPoints

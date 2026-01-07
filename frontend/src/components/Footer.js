@@ -48,6 +48,7 @@ const Footer = () => {
                 <li key={link.to}>
                   <Link
                     to={link.to}
+                    onClick={() => window.scrollTo(0, 0)}
                     className="text-gray-300 hover:text-white transition-colors flex items-center gap-2"
                   >
                     <i className="bi bi-chevron-right text-xs"></i>
@@ -84,15 +85,15 @@ const Footer = () => {
             <div className="space-y-3 text-sm">
               <div className="flex items-center gap-2 text-gray-300">
                 <i className="bi bi-envelope"></i>
-                <span>contato@ecosphere.com</span>
+                <span>brunosoaresecosphere@gmail.com</span>
               </div>
               <div className="flex items-center gap-2 text-gray-300">
                 <i className="bi bi-telephone"></i>
-                <span>(11) 9999-9999</span>
+                <span>(21) 96527-2231</span>
               </div>
               <div className="flex items-center gap-2 text-gray-300">
                 <i className="bi bi-geo-alt"></i>
-                <span>São Paulo, Brasil</span>
+                <span>Rio de Janeiro, Brasil</span>
               </div>
             </div>
           </div>

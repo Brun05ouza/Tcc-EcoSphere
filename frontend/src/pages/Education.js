@@ -5,6 +5,18 @@ const Education = () => {
   const [selectedCategory, setSelectedCategory] = useState('courses');
   const [selectedCourse, setSelectedCourse] = useState(null);
 
+  const Icon = ({ name, className = "w-5 h-5", white = false }) => {
+    const iconStyle = white ? { filter: 'brightness(0) invert(1)' } : { filter: 'invert(40%) sepia(93%) saturate(500%) hue-rotate(100deg)' };
+    return (
+      <img 
+        src={require(`../assets/icons/${name}.svg`)} 
+        alt={name} 
+        className={className}
+        style={iconStyle}
+      />
+    );
+  };
+
   const courses = [
     {
       id: 1,
@@ -122,8 +134,9 @@ const Education = () => {
           animate={{ opacity: 1, y: 0 }}
           className="text-center mb-8"
         >
-          <h1 className="text-5xl font-bold bg-gradient-to-r from-green-600 to-blue-600 bg-clip-text text-transparent mb-4">
-            🎓 Educação Ambiental
+          <h1 className="text-5xl font-bold bg-gradient-to-r from-green-600 to-blue-600 bg-clip-text text-transparent mb-4 flex items-center justify-center gap-3">
+            <Icon name="educacao" className="w-14 h-14" />
+            Educação Ambiental
           </h1>
           <p className="text-xl text-gray-600">Aprenda, pratique e transforme o mundo!</p>
         </motion.div>

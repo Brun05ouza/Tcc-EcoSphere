@@ -4,7 +4,11 @@ Sistema web completo para gestão ambiental com IA, gamificação e monitorament
 
 ## 🚀 Funcionalidades
 
-- **Classificação de Resíduos com IA** - Identifica tipos de materiais automaticamente
+- **Classificação de Resíduos com IA** - TensorFlow.js + Google Teachable Machine
+  - Upload de imagem ou captura de câmera
+  - 6 categorias: Plástico, Metal, Vidro, Papel, Orgânico, Eletrônico
+  - Score de confiança em tempo real
+  - Sistema de pontuação inteligente
 - **Monitoramento Ambiental** - Dados climáticos e qualidade do ar em tempo real
 - **Sistema de Gamificação** - EcoPoints, badges e ranking de usuários
 - **ChatBot Inteligente** - Assistente virtual com IA (OpenAI/Gemini)
@@ -30,6 +34,8 @@ Sistema web completo para gestão ambiental com IA, gamificação e monitorament
 - OpenAI GPT-3.5
 - Google Gemini
 - OpenWeatherMap
+- TensorFlow.js
+- Google Teachable Machine
 
 ## 📦 Instalação
 
@@ -56,6 +62,11 @@ cp .env.example .env
 # Configure as variáveis no .env
 npm start
 ```
+
+### 4. (Opcional) Treinar Modelo de IA
+Para classificação de resíduos com IA real:
+- Siga o guia: `TEACHABLE_MACHINE_GUIDE.md`
+- Ou use classificação simulada (já funciona!)
 
 ## ⚙️ Configuração
 
@@ -100,9 +111,33 @@ npm start
 
 1. **Cadastro/Login** - Use Google OAuth ou email/senha
 2. **Dashboard** - Visualize estatísticas e progresso
-3. **Classificar Resíduos** - Upload de imagem para IA identificar
+3. **Classificar Resíduos** - Upload de imagem ou câmera para IA identificar
+   - 6 categorias automáticas
+   - Score de confiança
+   - Dicas de descarte
+   - Ganhe EcoPoints!
 4. **ChatBot** - Tire dúvidas sobre sustentabilidade
 5. **Gamificação** - Ganhe pontos e badges por ações sustentáveis
+
+## 🤖 Classificação de Resíduos com IA
+
+### Início Rápido
+```bash
+# Sistema já funciona com classificação simulada!
+# Acesse: http://localhost:3000/classificador
+```
+
+### Treinar Modelo Real (Opcional)
+1. Acesse: https://teachablemachine.withgoogle.com
+2. Siga o guia: `TEACHABLE_MACHINE_GUIDE.md`
+3. Exporte como TensorFlow.js
+4. Coloque em: `frontend/public/models/waste-classifier/`
+
+### Documentação Completa
+- **Início Rápido:** `QUICK_START.md`
+- **Guia de Treinamento:** `TEACHABLE_MACHINE_GUIDE.md`
+- **Documentação Técnica:** `AI_IMPLEMENTATION.md`
+- **Checklist:** `CHECKLIST.md`
 
 ## 🤝 Contribuição
 

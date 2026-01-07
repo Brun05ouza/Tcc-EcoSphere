@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { useEnterKey } from '../hooks/useEnterKey';
 import { useUser } from '../contexts/UserContext';
 import { wasteAPI } from '../services/api';
+import { useWasteClassifier } from '../hooks/useWasteClassifier';
 
 const WasteClassifier = () => {
   const [selectedFile, setSelectedFile] = useState(null);
@@ -12,9 +13,26 @@ const WasteClassifier = () => {
   const [loading, setLoading] = useState(false);
   const [dragActive, setDragActive] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
+  const [useCamera, setUseCamera] = useState(false);
+  const [stream, setStream] = useState(null);
   const fileInputRef = useRef(null);
+  const videoRef = useRef(null);
+  const canvasRef = useRef(null);
   const { addEcoPoints } = useUser();
   const navigate = useNavigate();
+  const { model, loading: modelLoading, classifyImage, calculatePoints, wasteInfo } = useWasteClassifier();
+
+  const Icon = ({ name, className = "w-5 h-5", white = false }) => {
+    const iconStyle = white ? { filter: 'brightness(0) invert(1)' } : { filter: 'invert(40%) sepia(93%) saturate(500%) hue-rotate(100deg)' };
+    return (
+      <img 
+        src={require(`../assets/icons/${name}.svg`)} 
+        alt={name} 
+        className={className}
+        style={iconStyle}
+      />
+    );
+  };
 
   // Classificar com Enter quando há imagem
   useEnterKey(() => {
@@ -57,70 +75,98 @@ const WasteClassifier = () => {
     }
   };
 
+  const startCamera = async () => {
+    try {
+      const mediaStream = await navigator.mediaDevices.getUserMedia({ 
+        video: { facingMode: 'environment' } 
+      });
+      setStream(mediaStream);
+      if (videoRef.current) {
+        videoRef.current.srcObject = mediaStream;
+      }
+      setUseCamera(true);
+    } catch (error) {
+      console.error('Erro ao acessar câmera:', error);
+      alert('Não foi possível acessar a câmera. Use upload de arquivo.');
+    }
+  };
+
+  const stopCamera = () => {
+    if (stream) {
+      stream.getTracks().forEach(track => track.stop());
+      setStream(null);
+    }
+    setUseCamera(false);
+  };
+
+  const capturePhoto = () => {
+    if (videoRef.current && canvasRef.current) {
+      const canvas = canvasRef.current;
+      const video = videoRef.current;
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      canvas.getContext('2d').drawImage(video, 0, 0);
+      
+      canvas.toBlob((blob) => {
+        const file = new File([blob], 'camera-capture.jpg', { type: 'image/jpeg' });
+        setSelectedFile(file);
+        setPreview(canvas.toDataURL('image/jpeg'));
+        stopCamera();
+      }, 'image/jpeg');
+    }
+  };
+
   const classifyWaste = async () => {
-    if (!selectedFile) return;
+    if (!selectedFile || !preview) return;
     
     setLoading(true);
     
     try {
-      // Simular análise de IA
-      await new Promise(resolve => setTimeout(resolve, 2500));
+      // Criar elemento de imagem para classificação
+      const img = new Image();
+      img.src = preview;
       
-      // Simulação de classificação baseada no nome do arquivo
-      const fileName = selectedFile.name.toLowerCase();
-      let wasteType, confidence, points, tips;
+      await new Promise((resolve) => {
+        img.onload = resolve;
+      });
       
-      if (fileName.includes('garrafa') || fileName.includes('plastic') || fileName.includes('pet')) {
-        wasteType = 'plastico';
-        confidence = 0.92;
-        points = 25;
-        tips = 'Remova rótulos e tampas. Lave antes de descartar. Pode ser reciclado infinitas vezes!';
-      } else if (fileName.includes('papel') || fileName.includes('paper') || fileName.includes('cardboard')) {
-        wasteType = 'papel';
-        confidence = 0.88;
-        points = 20;
-        tips = 'Mantenha seco e limpo. Remova fitas adesivas. Papel é 100% reciclável!';
-      } else if (fileName.includes('vidro') || fileName.includes('glass') || fileName.includes('bottle')) {
-        wasteType = 'vidro';
-        confidence = 0.95;
-        points = 30;
-        tips = 'Remova tampas e rótulos. Vidro pode ser reciclado infinitas vezes sem perder qualidade!';
-      } else if (fileName.includes('metal') || fileName.includes('lata') || fileName.includes('can')) {
-        wasteType = 'metal';
-        confidence = 0.90;
-        points = 35;
-        tips = 'Lave bem antes de descartar. Metais são 100% recicláveis e economizam muita energia!';
-      } else {
-        // Classificação aleatória para outras imagens
-        const types = [
-          { type: 'plastico', conf: 0.85, pts: 25, tip: 'Remova rótulos e tampas. Lave antes de descartar.' },
-          { type: 'papel', conf: 0.82, pts: 20, tip: 'Mantenha seco e limpo. Remova fitas adesivas.' },
-          { type: 'vidro', conf: 0.88, pts: 30, tip: 'Remova tampas e rótulos. Cuidado com fragmentos.' },
-          { type: 'metal', conf: 0.91, pts: 35, tip: 'Lave bem antes de descartar. Economiza muita energia!' }
-        ];
-        const random = types[Math.floor(Math.random() * types.length)];
-        wasteType = random.type;
-        confidence = random.conf;
-        points = random.pts;
-        tips = random.tip;
-      }
+      // Classificar com IA
+      const result = await classifyImage(img);
+      const points = calculatePoints(result.confidence);
       
       // Adicionar EcoPoints
-      const newTotal = addEcoPoints(points, 'Classificação de resíduo');
+      const newTotal = addEcoPoints(points, `Classificação: ${result.class}`);
       
-      console.log('🎮 WasteClassifier: Pontos adicionados:', points, 'Total:', newTotal);
+      console.log('🎮 IA Classificou:', result.class, 'Confiança:', (result.confidence * 100).toFixed(1) + '%');
       
       setClassification({
-        type: wasteType,
-        confidence: confidence,
+        type: result.class,
+        confidence: result.confidence,
         points: points,
-        tips: tips,
+        tips: result.tips,
+        bin: result.bin,
+        icon: result.icon,
+        color: result.color,
+        bgColor: result.bgColor,
+        textColor: result.textColor,
         locations: ['Supermercado Central - 0.5km', 'Ponto de Coleta Norte - 1.2km', 'Cooperativa Sul - 2.1km'],
         totalEcoPoints: newTotal
       });
       
       setShowSuccess(true);
       setTimeout(() => setShowSuccess(false), 3000);
+      
+      // Salvar no backend (opcional)
+      try {
+        await wasteAPI.saveClassification({
+          category: result.class,
+          confidence: result.confidence,
+          points: points
+        });
+      } catch (err) {
+        console.log('Erro ao salvar no backend:', err);
+      }
+      
     } catch (error) {
       console.error('Erro na classificação:', error);
       alert('Erro ao classificar resíduo. Tente novamente.');
@@ -129,13 +175,7 @@ const WasteClassifier = () => {
     }
   };
 
-  const wasteTypes = {
-    plastico: { color: 'from-red-500 to-pink-500', bgColor: 'bg-red-50', textColor: 'text-red-800', icon: '♻️', bin: 'Lixeira Vermelha' },
-    papel: { color: 'from-blue-500 to-cyan-500', bgColor: 'bg-blue-50', textColor: 'text-blue-800', icon: '📄', bin: 'Lixeira Azul' },
-    vidro: { color: 'from-green-500 to-emerald-500', bgColor: 'bg-green-50', textColor: 'text-green-800', icon: '🍶', bin: 'Lixeira Verde' },
-    metal: { color: 'from-yellow-500 to-orange-500', bgColor: 'bg-yellow-50', textColor: 'text-yellow-800', icon: '🥫', bin: 'Lixeira Amarela' },
-    organico: { color: 'from-amber-600 to-orange-600', bgColor: 'bg-amber-50', textColor: 'text-amber-800', icon: '🍎', bin: 'Lixeira Marrom' }
-  };
+
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50 py-8">
@@ -145,10 +185,39 @@ const WasteClassifier = () => {
           animate={{ opacity: 1, y: 0 }}
           className="text-center mb-12"
         >
-          <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold bg-gradient-to-r from-green-600 to-blue-600 bg-clip-text text-transparent mb-4">
-            🤖 Classificador Inteligente
+          <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-4">
+            <span className="bg-gradient-to-r from-green-600 to-blue-600 bg-clip-text text-transparent flex items-center justify-center gap-3 pb-2">
+              <div className="w-12 h-12 flex-shrink-0">
+                <Icon name="IA" className="w-full h-full" />
+              </div>
+              <span>Classificador Inteligente</span>
+            </span>
           </h1>
           <p className="text-lg sm:text-xl text-gray-600">Identifique resíduos com IA e ganhe EcoPoints!</p>
+          {modelLoading && (
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="mt-4 flex items-center justify-center gap-2 text-blue-600"
+            >
+              <motion.div
+                animate={{ rotate: 360 }}
+                transition={{ repeat: Infinity, duration: 1, ease: "linear" }}
+                className="w-5 h-5 border-2 border-blue-600 border-t-transparent rounded-full"
+              />
+              <span className="text-sm">Carregando modelo de IA...</span>
+            </motion.div>
+          )}
+          {!modelLoading && model && (
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="mt-4 flex items-center justify-center gap-2 text-green-600"
+            >
+              <i className="bi bi-check-circle-fill"></i>
+              <span className="text-sm">Modelo de IA pronto!</span>
+            </motion.div>
+          )}
         </motion.div>
 
         <div className="max-w-4xl mx-auto">
@@ -209,23 +278,51 @@ const WasteClassifier = () => {
                   id="file-input"
                 />
                 
-                <div className="flex gap-4 justify-center">
-                  <label
-                    htmlFor="file-input"
-                    className="bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white px-6 py-3 rounded-xl cursor-pointer flex items-center gap-2 transform hover:scale-105 transition-all duration-200 shadow-lg"
-                  >
-                    <i className="bi bi-cloud-upload text-lg"></i>
-                    Selecionar Imagem
-                  </label>
-                  
-                  <button
-                    onClick={() => fileInputRef.current?.click()}
-                    className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white px-6 py-3 rounded-xl flex items-center gap-2 transform hover:scale-105 transition-all duration-200 shadow-lg"
-                  >
-                    <i className="bi bi-camera text-lg"></i>
-                    Câmera
-                  </button>
-                </div>
+                {!useCamera ? (
+                  <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+                    <label
+                      htmlFor="file-input"
+                      className="bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white px-6 py-3 rounded-xl cursor-pointer flex items-center justify-center gap-2 transform hover:scale-105 transition-all duration-200 shadow-lg w-full sm:w-auto"
+                    >
+                      <i className="bi bi-cloud-upload text-lg"></i>
+                      Selecionar Imagem
+                    </label>
+                    
+                    <button
+                      onClick={startCamera}
+                      className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white px-6 py-3 rounded-xl flex items-center justify-center gap-2 transform hover:scale-105 transition-all duration-200 shadow-lg w-full sm:w-auto"
+                    >
+                      <Icon name="camera" className="w-5 h-5" white />
+                      Abrir Câmera
+                    </button>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    <video 
+                      ref={videoRef} 
+                      autoPlay 
+                      playsInline
+                      className="w-full h-64 object-cover rounded-xl bg-black"
+                    />
+                    <canvas ref={canvasRef} className="hidden" />
+                    <div className="flex gap-4 justify-center">
+                      <button
+                        onClick={capturePhoto}
+                        className="bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white px-6 py-3 rounded-xl flex items-center gap-2 transform hover:scale-105 transition-all duration-200 shadow-lg"
+                      >
+                        <i className="bi bi-camera-fill text-lg"></i>
+                        Capturar Foto
+                      </button>
+                      <button
+                        onClick={stopCamera}
+                        className="bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white px-6 py-3 rounded-xl flex items-center gap-2 transform hover:scale-105 transition-all duration-200 shadow-lg"
+                      >
+                        <i className="bi bi-x-circle text-lg"></i>
+                        Cancelar
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
 
               {selectedFile && (
@@ -292,7 +389,7 @@ const WasteClassifier = () => {
                   <motion.div
                     initial={{ scale: 0.9 }}
                     animate={{ scale: 1 }}
-                    className={`p-6 rounded-2xl ${wasteTypes[classification.type]?.bgColor} mb-6 border-l-4`}
+                    className={`p-6 rounded-2xl ${classification.bgColor} mb-6 border-l-4`}
                   >
                     <div className="flex items-center justify-between">
                       <div className="flex items-center">
@@ -301,10 +398,10 @@ const WasteClassifier = () => {
                           transition={{ repeat: 3, duration: 0.5 }}
                           className="text-4xl mr-4"
                         >
-                          {wasteTypes[classification.type]?.icon}
+                          {classification.icon}
                         </motion.span>
                         <div>
-                          <div className={`text-2xl font-bold capitalize ${wasteTypes[classification.type]?.textColor}`}>
+                          <div className={`text-2xl font-bold ${classification.textColor}`}>
                             {classification.type}
                           </div>
                           <div className="text-sm text-gray-600">
@@ -313,8 +410,8 @@ const WasteClassifier = () => {
                         </div>
                       </div>
                       <div className="text-right">
-                        <div className={`font-bold text-lg ${wasteTypes[classification.type]?.textColor}`}>
-                          {wasteTypes[classification.type]?.bin}
+                        <div className={`font-bold text-lg ${classification.textColor}`}>
+                          {classification.bin}
                         </div>
                         <motion.div 
                           initial={{ scale: 0 }}

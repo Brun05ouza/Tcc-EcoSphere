@@ -50,13 +50,25 @@ const Navbar = () => {
   };
 
   const navItems = [
-    { path: '/dashboard', label: 'Dashboard', icon: '📊' },
-    { path: '/classificar-residuos', label: 'IA Resíduos', icon: '🤖' },
-    { path: '/monitoramento', label: 'Monitoramento', icon: '🌡️' },
-    { path: '/gamificacao', label: 'EcoPoints', icon: '🏆' },
-    { path: '/recompensas', label: 'Recompensas', icon: '🎁' },
-    { path: '/educacao', label: 'Educação', icon: '📚' }
+    { path: '/dashboard', label: 'Dashboard', icon: 'dashboard' },
+    { path: '/classificar-residuos', label: 'IA Resíduos', icon: 'IA' },
+    { path: '/monitoramento', label: 'Monitoramento', icon: 'monitoramento' },
+    { path: '/gamificacao', label: 'EcoPoints', icon: 'ecopoints' },
+    { path: '/recompensas', label: 'Recompensas', icon: 'recompensas' },
+    { path: '/educacao', label: 'Educação', icon: 'educacao' }
   ];
+
+  const Icon = ({ name, className = "w-5 h-5" }) => {
+    const iconStyle = { filter: 'brightness(0) invert(1)' };
+    return (
+      <img 
+        src={require(`../assets/icons/${name}.svg`)} 
+        alt={name} 
+        className={className}
+        style={iconStyle}
+      />
+    );
+  };
 
   return (
     <motion.nav 
@@ -92,7 +104,7 @@ const Navbar = () => {
                   whileHover={{ scale: 1.05 }}
                   className="flex items-center xl:space-x-2 lg:space-x-1"
                 >
-                  <span className="xl:text-base lg:text-sm">{item.icon}</span>
+                  <Icon name={item.icon} className="xl:w-5 xl:h-5 lg:w-4 lg:h-4" />
                   <span className="font-medium xl:text-base lg:text-sm xl:block lg:hidden xl:inline">{item.label}</span>
                 </motion.div>
                 {location.pathname === item.path && (
@@ -301,7 +313,7 @@ const Navbar = () => {
                   onClick={() => setIsOpen(false)}
                   className="flex items-center space-x-3 px-4 py-3 rounded-xl hover:bg-white/10 transition-colors"
                 >
-                  <span className="text-xl">{item.icon}</span>
+                  <Icon name={item.icon} className="w-6 h-6" />
                   <span className="font-medium">{item.label}</span>
                 </Link>
               </motion.div>

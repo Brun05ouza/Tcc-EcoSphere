@@ -28,6 +28,18 @@ const Environmental = () => {
   const [cepInput, setCepInput] = useState('');
   const [cepLoading, setCepLoading] = useState(false);
 
+  const Icon = ({ name, className = "w-5 h-5", white = false }) => {
+    const iconStyle = white ? { filter: 'brightness(0) invert(1)' } : { filter: 'invert(40%) sepia(93%) saturate(500%) hue-rotate(100deg)' };
+    return (
+      <img 
+        src={require(`../assets/icons/${name}.svg`)} 
+        alt={name} 
+        className={className}
+        style={iconStyle}
+      />
+    );
+  };
+
   // Fechar modais com Escape
   useEscapeKey(() => {
     if (showCepModal) setShowCepModal(false);
@@ -490,8 +502,9 @@ const Environmental = () => {
           className="mb-8"
         >
           <div className="flex items-center justify-between mb-4">
-            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-800">
-              🌡️ Monitoramento Ambiental
+            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold flex items-center gap-3">
+              <Icon name="monitoramento" className="w-10 h-10" />
+              <span className="bg-gradient-to-r from-green-600 to-blue-600 bg-clip-text text-transparent">Monitoramento Ambiental</span>
             </h1>
             
             {currentLocation && (

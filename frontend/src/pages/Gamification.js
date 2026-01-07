@@ -11,6 +11,18 @@ const Gamification = () => {
   const [badges, setBadges] = useState([]);
   const [loading, setLoading] = useState(true);
   const { user: contextUser, addEcoPoints: addEcoPointsContext } = useUser();
+
+  const Icon = ({ name, className = "w-5 h-5", white = false }) => {
+    const iconStyle = white ? { filter: 'brightness(0) invert(1)' } : { filter: 'invert(40%) sepia(93%) saturate(500%) hue-rotate(100deg)' };
+    return (
+      <img 
+        src={require(`../assets/icons/${name}.svg`)} 
+        alt={name} 
+        className={className}
+        style={iconStyle}
+      />
+    );
+  };
   
   // Quiz states
   const [quizActive, setQuizActive] = useState(false);
@@ -331,8 +343,9 @@ const Gamification = () => {
           animate={{ opacity: 1, y: 0 }}
           className="text-center mb-8"
         >
-          <h1 className="text-5xl font-bold bg-gradient-to-r from-green-600 to-blue-600 bg-clip-text text-transparent mb-4">
-            🏆 EcoPoints & Conquistas
+          <h1 className="text-5xl font-bold bg-gradient-to-r from-green-600 to-blue-600 bg-clip-text text-transparent mb-4 flex items-center justify-center gap-3">
+            <Icon name="ecopoints" className="w-14 h-14" />
+            EcoPoints & Conquistas
           </h1>
           <p className="text-xl text-gray-600">Ganhe pontos, desbloqueie badges e suba no ranking!</p>
         </motion.div>
@@ -825,7 +838,10 @@ const Gamification = () => {
 
               {/* Quick Stats */}
               <div className="bg-white p-6 rounded-2xl shadow-lg">
-                <h3 className="font-bold text-lg mb-4">📊 Estatísticas Rápidas</h3>
+                <h3 className="font-bold text-lg mb-4 flex items-center gap-2">
+                  <Icon name="dashboard" className="w-5 h-5" />
+                  Estatísticas Rápidas
+                </h3>
                 <div className="space-y-4">
                   <div className="flex justify-between items-center">
                     <span className="text-gray-600">Classificações hoje</span>
