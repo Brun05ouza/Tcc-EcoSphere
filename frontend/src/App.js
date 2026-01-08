@@ -15,12 +15,12 @@ import Education from './pages/Education';
 import Rewards from './pages/Rewards';
 import Profile from './pages/Profile';
 import Guide from './pages/Guide';
+import EcoCatcher from './pages/EcoCatcher';
+import History from './pages/History';
+import CarbonCalculator from './pages/CarbonCalculator';
 import './App.css';
-import './styles/responsive.css';
 
 function App() {
-  const isAuthenticated = sessionStorage.getItem('token');
-
   return (
     <UserProvider>
       <Router>
@@ -38,8 +38,11 @@ function App() {
                       <Route path="/classificar-residuos" element={<WasteClassifier />} />
                       <Route path="/monitoramento" element={<Environmental />} />
                       <Route path="/gamificacao" element={<Gamification />} />
+                      <Route path="/eco-catcher" element={<EcoCatcher />} />
                       <Route path="/educacao" element={<Education />} />
                       <Route path="/recompensas" element={<Rewards />} />
+                      <Route path="/historico" element={<History />} />
+                      <Route path="/calculadora-carbono" element={<CarbonCalculator />} />
                       <Route path="/perfil" element={<Profile />} />
                       <Route path="/guia" element={<Guide />} />
                     </Routes>

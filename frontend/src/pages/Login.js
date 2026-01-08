@@ -83,6 +83,16 @@ const Login = () => {
         const response = await userAPI.login({
           email: formData.email,
           password: formData.password
+        }).catch(() => {
+          // Fallback para login local
+          const users = JSON.parse(localStorage.getItem('users') || '[]');
+          const user = users.find(u => u.email === formData.email && u.password === formData.password);
+
+          if (!user) {
+            throw new Error('Email ou senha incorretos');
+          }
+
+          return { data: { user, token: 'local_token_' + Date.now() } };
         });
 
         updateUser(response.data.user, response.data.token);
@@ -119,6 +129,28 @@ const Login = () => {
           name: formData.name,
           email: formData.email,
           password: formData.password
+        }).catch(() => {
+          // Fallback para registro local
+          const users = JSON.parse(localStorage.getItem('users') || '[]');
+          
+          if (users.find(u => u.email === formData.email)) {
+            throw new Error('Email já cadastrado');
+          }
+
+          const newUser = {
+            id: Date.now(),
+            name: formData.name,
+            email: formData.email,
+            password: formData.password,
+            ecoPoints: 0,
+            level: 'Iniciante',
+            createdAt: new Date().toISOString()
+          };
+
+          users.push(newUser);
+          localStorage.setItem('users', JSON.stringify(users));
+
+          return { data: { user: newUser, token: 'local_token_' + Date.now() } };
         });
 
         updateUser(response.data.user, response.data.token);
@@ -151,23 +183,11 @@ const Login = () => {
 
   return (
     <div className="h-screen bg-gradient-to-br from-green-500 via-blue-500 to-purple-600 flex items-center justify-center p-4 relative overflow-hidden">
-      {/* Círculos flutuantes animados */}
+      {/* Círculos flutuantes - otimizados */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <motion.div
-          animate={{ y: [0, -30, 0], x: [0, 20, 0] }}
-          transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
-          className="absolute top-20 left-10 w-72 h-72 bg-white/10 rounded-full blur-3xl"
-        />
-        <motion.div
-          animate={{ y: [0, 40, 0], x: [0, -30, 0] }}
-          transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
-          className="absolute bottom-20 right-20 w-96 h-96 bg-white/10 rounded-full blur-3xl"
-        />
-        <motion.div
-          animate={{ y: [0, -20, 0], x: [0, 15, 0] }}
-          transition={{ duration: 7, repeat: Infinity, ease: "easeInOut" }}
-          className="absolute top-1/2 left-1/3 w-64 h-64 bg-white/5 rounded-full blur-2xl"
-        />
+        <div className="absolute top-20 left-10 w-72 h-72 bg-white/10 rounded-full blur-3xl" />
+        <div className="absolute bottom-20 right-20 w-96 h-96 bg-white/10 rounded-full blur-3xl" />
+        <div className="absolute top-1/2 left-1/3 w-64 h-64 bg-white/5 rounded-full blur-2xl" />
       </div>
 
       {/* Notification */}
@@ -211,13 +231,9 @@ const Login = () => {
         >
           {/* Logo e Título */}
           <div>
-            <motion.div
-              animate={{ rotate: 360 }}
-              transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
-              className="text-7xl mb-6 inline-block"
-            >
+            <div className="text-7xl mb-6 inline-block">
               🌍
-            </motion.div>
+            </div>
             <h1 className="text-5xl font-bold mb-4">Bem-vindo ao EcoSphere</h1>
             <p className="text-xl text-white/90">
               Junte-se a nós na missão de tornar o mundo mais sustentável
@@ -255,9 +271,14 @@ const Login = () => {
           initial={{ opacity: 0, x: 50 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.6 }}
-          className="w-full max-w-md mx-auto"
+          className="w-full max-w-md mx-auto relative"
         >
-          <div className="bg-white/15 backdrop-blur-xl rounded-3xl p-6 border border-white/20 shadow-2xl">
+          {/* Globo de fundo */}
+          <div className="absolute -right-32 top-1/2 -translate-y-1/2 text-[400px] opacity-10 pointer-events-none select-none">
+            🌍
+          </div>
+
+          <div className="bg-white/15 backdrop-blur-xl rounded-3xl p-6 border border-white/20 shadow-2xl relative z-10">
             {/* Toggle Login/Register */}
             <div className="relative flex bg-white/20 rounded-2xl p-1 mb-3">
               <motion.div

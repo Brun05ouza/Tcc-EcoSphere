@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { gamificationAPI } from '../services/api';
 import { useUser } from '../contexts/UserContext';
+import { getRandomQuestions } from '../data/quizQuestions';
 
 const Gamification = () => {
   const [user, setUser] = useState(null);
@@ -31,6 +32,7 @@ const Gamification = () => {
   const [quizCompleted, setQuizCompleted] = useState(false);
   const [selectedAnswer, setSelectedAnswer] = useState(null);
   const [showResult, setShowResult] = useState(false);
+  const [ecoQuestions, setEcoQuestions] = useState([]);
   
   // Game states
   const [gameActive, setGameActive] = useState(false);
@@ -42,39 +44,6 @@ const Gamification = () => {
   const [pendingPoints, setPendingPoints] = useState(0);
   const [pendingType, setPendingType] = useState('');
   const [showConfirmation, setShowConfirmation] = useState(false);
-  
-  const ecoQuestions = [
-    {
-      question: "🌍 Qual é a principal causa do aquecimento global?",
-      options: ["Desmatamento", "Emissão de gases do efeito estufa", "Poluição da água", "Lixo urbano"],
-      correct: 1,
-      points: 50
-    },
-    {
-      question: "♻️ Quanto tempo leva para uma garrafa plástica se decompostar?",
-      options: ["10 anos", "50 anos", "100 anos", "450 anos"],
-      correct: 3,
-      points: 75
-    },
-    {
-      question: "🌱 Qual dessas ações economiza mais água?",
-      options: ["Banho de 5 min", "Escovar dentes com torneira fechada", "Reutilizar água da chuva", "Lavar roupa na máquina cheia"],
-      correct: 2,
-      points: 60
-    },
-    {
-      question: "🔋 Qual fonte de energia é mais sustentável?",
-      options: ["Carvão", "Petróleo", "Energia Solar", "Gás Natural"],
-      correct: 2,
-      points: 40
-    },
-    {
-      question: "🌳 Quantas árvores uma pessoa deve plantar por ano para compensar sua pegada de carbono?",
-      options: ["2-3 árvores", "5-7 árvores", "10-15 árvores", "20-25 árvores"],
-      correct: 2,
-      points: 80
-    }
-  ];
 
   const wasteItems = [
     { type: 'plastic', emoji: '🍾', points: 10 },
@@ -200,9 +169,14 @@ const Gamification = () => {
     // Mock data para badges
     setBadges([
       { id: 1, name: 'Bem-vindo', description: 'Primeira vez no EcoSphere', earned: true, points: 50, icon: '🎉' },
-      { id: 2, name: 'Primeiro Passo', description: 'Primeira classificação', earned: false, points: 100, icon: '🌱' },
+      { id: 2, name: 'Primeiro Passo', description: 'Primeira classificação', earned: true, points: 100, icon: '🌱' },
       { id: 3, name: 'Reciclador', description: '10 classificações', earned: false, points: 200, icon: '♻️' },
-      { id: 4, name: 'Eco Warrior', description: '100 EcoPoints', earned: false, points: 300, icon: '🏆' }
+      { id: 4, name: 'Eco Warrior', description: '100 EcoPoints', earned: false, points: 300, icon: '🏆' },
+      { id: 5, name: 'Guardião Verde', description: '500 EcoPoints', earned: false, points: 500, icon: '🌳' },
+      { id: 6, name: 'Mestre Ambiental', description: '1000 EcoPoints', earned: false, points: 1000, icon: '🌍' },
+      { id: 7, name: 'Sequenciador', description: '7 dias consecutivos', earned: false, points: 250, icon: '🔥' },
+      { id: 8, name: 'Quiz Master', description: 'Complete 10 quizzes', earned: false, points: 300, icon: '🧠' },
+      { id: 9, name: 'Gamer Eco', description: '1000 pontos no Eco Catcher', earned: false, points: 400, icon: '🎮' }
     ]);
     
     setLoading(false);
@@ -231,10 +205,13 @@ const Gamification = () => {
   const badgeIcons = {
     'Bem-vindo': '🎉',
     'Primeiro Passo': '🌱',
-    'Reciclador': '♾️',
+    'Reciclador': '♻️',
     'Eco Warrior': '🏆',
     'Guardião Verde': '🌳',
-    'Mestre Ambiental': '🌍'
+    'Mestre Ambiental': '🌍',
+    'Sequenciador': '🔥',
+    'Quiz Master': '🧠',
+    'Gamer Eco': '🎮'
   };
 
   if (loading) {
@@ -422,6 +399,7 @@ const Gamification = () => {
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
                     onClick={() => {
+                      setEcoQuestions(getRandomQuestions(5));
                       setQuizActive(true);
                       setCurrentQuestion(0);
                       setQuizScore(0);
@@ -521,6 +499,7 @@ const Gamification = () => {
                   <div className="grid md:grid-cols-2 gap-4">
                     <motion.button
                       onClick={() => {
+                        setEcoQuestions(getRandomQuestions(5));
                         setQuizCompleted(false);
                         setQuizActive(true);
                         setCurrentQuestion(0);
@@ -820,6 +799,46 @@ const Gamification = () => {
               animate={{ opacity: 1, y: 0 }}
               className="grid md:grid-cols-2 gap-8"
             >
+              {/* Jogos Rápidos */}
+              <div className="bg-white p-6 rounded-2xl shadow-lg">
+                <h3 className="font-bold text-lg mb-4">🎮 Jogos Rápidos</h3>
+                <div className="space-y-3">
+                  <button
+                    onClick={() => setSelectedTab('quiz')}
+                    className="w-full p-4 bg-gradient-to-r from-purple-50 to-pink-50 hover:from-purple-100 hover:to-pink-100 rounded-xl transition-all flex items-center gap-3"
+                  >
+                    <span className="text-3xl">🧠</span>
+                    <div className="text-left flex-1">
+                      <div className="font-bold">Eco Quiz</div>
+                      <div className="text-sm text-gray-600">Até 305 EcoPoints</div>
+                    </div>
+                    <i className="bi bi-arrow-right text-purple-600"></i>
+                  </button>
+                  <button
+                    onClick={() => setSelectedTab('game')}
+                    className="w-full p-4 bg-gradient-to-r from-green-50 to-blue-50 hover:from-green-100 hover:to-blue-100 rounded-xl transition-all flex items-center gap-3"
+                  >
+                    <span className="text-3xl">🎮</span>
+                    <div className="text-left flex-1">
+                      <div className="font-bold">Eco Catcher</div>
+                      <div className="text-sm text-gray-600">Pegue lixo reciclável</div>
+                    </div>
+                    <i className="bi bi-arrow-right text-green-600"></i>
+                  </button>
+                  <button
+                    onClick={() => window.location.href = '/eco-catcher'}
+                    className="w-full p-4 bg-gradient-to-r from-orange-50 to-red-50 hover:from-orange-100 hover:to-red-100 rounded-xl transition-all flex items-center gap-3"
+                  >
+                    <span className="text-3xl">🕹️</span>
+                    <div className="text-left flex-1">
+                      <div className="font-bold">Eco Catcher Phaser</div>
+                      <div className="text-sm text-gray-600">Versão completa</div>
+                    </div>
+                    <i className="bi bi-arrow-right text-orange-600"></i>
+                  </button>
+                </div>
+              </div>
+
               {/* Recent Badges */}
               <div className="bg-white p-6 rounded-2xl shadow-lg">
                 <h3 className="font-bold text-lg mb-4">🏅 Últimas Conquistas</h3>
@@ -833,28 +852,6 @@ const Gamification = () => {
                       </div>
                     </div>
                   ))}
-                </div>
-              </div>
-
-              {/* Quick Stats */}
-              <div className="bg-white p-6 rounded-2xl shadow-lg">
-                <h3 className="font-bold text-lg mb-4 flex items-center gap-2">
-                  <Icon name="dashboard" className="w-5 h-5" />
-                  Estatísticas Rápidas
-                </h3>
-                <div className="space-y-4">
-                  <div className="flex justify-between items-center">
-                    <span className="text-gray-600">Classificações hoje</span>
-                    <span className="font-bold text-green-600">12</span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-gray-600">Sequência atual</span>
-                    <span className="font-bold text-blue-600">7 dias</span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-gray-600">Próxima badge</span>
-                    <span className="font-bold text-purple-600">150 pontos</span>
-                  </div>
                 </div>
               </div>
             </motion.div>

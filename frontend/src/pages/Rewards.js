@@ -32,34 +32,34 @@ const Rewards = () => {
 
   const rewards = {
     education: [
-      { id: 1, name: 'Curso de Sustentabilidade', description: 'Certificado online de 20h sobre práticas sustentáveis', points: 300, icon: '🎓', available: true },
-      { id: 2, name: 'E-book Ambiental', description: 'Coleção de 5 e-books sobre meio ambiente', points: 150, icon: '📚', available: true },
-      { id: 3, name: 'Webinar Exclusivo', description: 'Acesso a webinars mensais com especialistas', points: 200, icon: '💻', available: true },
-      { id: 4, name: 'Mentoria Verde', description: '1h de mentoria com consultor ambiental', points: 500, icon: '👨‍🏫', available: false }
+      { id: 1, name: 'Sustentabilidade Empresarial - FGV', description: 'Curso online sobre gestão sustentável e responsabilidade socioambiental', points: 1000, icon: '🏫', available: true },
+      { id: 2, name: 'Economia Circular - SENAI', description: 'Aprenda sobre economia circular e gestão de resíduos sólidos', points: 800, icon: '♻️', available: true },
+      { id: 3, name: 'Mudanças Climáticas - USP', description: 'Curso sobre causas e consequências das mudanças climáticas globais', points: 1200, icon: '🌡️', available: true },
+      { id: 4, name: 'Gestão Ambiental - SEBRAE', description: 'Gestão ambiental para pequenas e médias empresas', points: 900, icon: '🏭', available: true }
     ],
     products: [
-      { id: 5, name: 'Garrafa Reutilizável', description: 'Garrafa de aço inox 500ml com design exclusivo', points: 200, icon: '🍶', available: true },
-      { id: 6, name: 'Kit Canudos de Bambu', description: 'Set com 4 canudos de bambu + escova de limpeza', points: 100, icon: '🎋', available: true },
-      { id: 7, name: 'Sacola Ecológica', description: 'Sacola de algodão orgânico reutilizável', points: 80, icon: '👜', available: true },
+      { id: 5, name: 'Garrafa Reutilizável', description: 'Garrafa de aço inox 500ml com design exclusivo', points: 800, icon: '🍶', available: true },
+      { id: 6, name: 'Kit Canudos de Bambu', description: 'Set com 4 canudos de bambu + escova de limpeza', points: 400, icon: '🎋', available: true },
+      { id: 7, name: 'Sacola Ecológica', description: 'Sacola de algodão orgânico reutilizável', points: 300, icon: '👜', available: true },
       { id: 8, name: 'Kit Limpeza Natural', description: 'Produtos de limpeza biodegradáveis', points: 350, icon: '🧽', available: true }
     ],
     digital: [
-      { id: 9, name: 'Tema Premium', description: 'Desbloqueie temas exclusivos para o app', points: 50, icon: '🎨', available: true },
-      { id: 10, name: 'Badge Especial', description: 'Badge única "Eco Champion" para seu perfil', points: 100, icon: '🏆', available: true },
-      { id: 11, name: 'Relatório Avançado', description: 'Acesso a relatórios detalhados por 3 meses', points: 250, icon: '📊', available: true },
-      { id: 12, name: 'Avatar Personalizado', description: 'Crie seu avatar exclusivo no app', points: 150, icon: '👤', available: true }
+      { id: 9, name: 'Tema Premium', description: 'Desbloqueie temas exclusivos para o app', points: 200, icon: '🎨', available: true },
+      { id: 10, name: 'Badge Especial', description: 'Badge única "Eco Champion" para seu perfil', points: 400, icon: '🏆', available: true },
+      { id: 11, name: 'Relatório Avançado', description: 'Acesso a relatórios detalhados por 3 meses', points: 900, icon: '📊', available: true },
+      { id: 12, name: 'Avatar Personalizado', description: 'Crie seu avatar exclusivo no app', points: 600, icon: '👤', available: true }
     ],
     experiences: [
-      { id: 13, name: 'Visita ao Parque Ecológico', description: 'Ingresso para parque ecológico + guia', points: 600, icon: '🌳', available: true },
-      { id: 14, name: 'Workshop de Reciclagem', description: 'Aprenda a fazer objetos com materiais recicláveis', points: 400, icon: '♻️', available: true },
+      { id: 13, name: 'Visita ao Parque Ecológico', description: 'Ingresso para parque ecológico + guia', points: 2500, icon: '🌳', available: true },
+      { id: 14, name: 'Workshop de Reciclagem', description: 'Aprenda a fazer objetos com materiais recicláveis', points: 1500, icon: '♻️', available: true },
       { id: 15, name: 'Trilha Ecológica', description: 'Trilha guiada em reserva ambiental', points: 500, icon: '🥾', available: false },
-      { id: 16, name: 'Palestra Ambiental', description: 'Ingresso para evento sobre sustentabilidade', points: 300, icon: '🎤', available: true }
+      { id: 16, name: 'Palestra Ambiental', description: 'Ingresso para evento sobre sustentabilidade', points: 1000, icon: '🎤', available: true }
     ],
     donations: [
-      { id: 17, name: 'Plante uma Árvore', description: 'Plantio de árvore nativa em seu nome', points: 200, icon: '🌱', available: true },
-      { id: 18, name: 'Limpeza de Praia', description: 'Apoie ação de limpeza de praias', points: 150, icon: '🏖️', available: true },
-      { id: 19, name: 'Doação para ONG', description: 'R$ 10 para ONG ambiental de sua escolha', points: 300, icon: '💚', available: true },
-      { id: 20, name: 'Projeto Comunitário', description: 'Apoie horta comunitária local', points: 400, icon: '🥬', available: true }
+      { id: 17, name: 'Plante uma Árvore', description: 'Plantio de árvore nativa em seu nome', points: 800, icon: '🌱', available: true },
+      { id: 18, name: 'Limpeza de Praia', description: 'Apoie ação de limpeza de praias', points: 600, icon: '🏖️', available: true },
+      { id: 19, name: 'Doação para ONG', description: 'R$ 10 para ONG ambiental de sua escolha', points: 1200, icon: '💚', available: true },
+      { id: 20, name: 'Projeto Comunitário', description: 'Apoie horta comunitária local', points: 1600, icon: '🥬', available: true }
     ]
   };
 

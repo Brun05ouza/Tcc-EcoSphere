@@ -53,13 +53,16 @@ const Navbar = () => {
     { path: '/dashboard', label: 'Dashboard', icon: 'dashboard' },
     { path: '/classificar-residuos', label: 'IA Resíduos', icon: 'IA' },
     { path: '/monitoramento', label: 'Monitoramento', icon: 'monitoramento' },
+    { path: '/historico', label: 'Histórico', icon: 'ecopoints' },
     { path: '/gamificacao', label: 'EcoPoints', icon: 'ecopoints' },
     { path: '/recompensas', label: 'Recompensas', icon: 'recompensas' },
     { path: '/educacao', label: 'Educação', icon: 'educacao' }
   ];
 
-  const Icon = ({ name, className = "w-5 h-5" }) => {
-    const iconStyle = { filter: 'brightness(0) invert(1)' };
+  const Icon = ({ name, className = "w-5 h-5", active = false }) => {
+    const iconStyle = active 
+      ? { filter: 'invert(48%) sepia(79%) saturate(2476%) hue-rotate(86deg) brightness(118%) contrast(119%)' } // green-600
+      : { filter: 'invert(50%) sepia(8%) saturate(400%) hue-rotate(180deg) brightness(95%) contrast(85%)' }; // gray-600
     return (
       <img 
         src={require(`../assets/icons/${name}.svg`)} 
@@ -74,85 +77,69 @@ const Navbar = () => {
     <motion.nav 
       initial={{ y: -100 }}
       animate={{ y: 0 }}
-      className="bg-gradient-to-r from-green-600 via-green-700 to-blue-600 text-white shadow-2xl sticky top-0 z-50 backdrop-blur-sm"
+      className="bg-gradient-to-r from-green-50 via-emerald-50 to-blue-50 border-b border-green-100 sticky top-0 z-50 shadow-sm backdrop-blur-sm"
     >
       <div className="container mx-auto px-4">
-        <div className="flex justify-between items-center py-4">
+        <div className="flex justify-between items-center h-16">
           {/* Logo */}
           <Link to="/" className="flex items-center space-x-2">
             <motion.div
               whileHover={{ rotate: 360 }}
               transition={{ duration: 0.6 }}
-              className="text-3xl"
+              className="text-2xl"
             >
               🌍
             </motion.div>
-            <span className="text-2xl font-bold bg-gradient-to-r from-white to-green-100 bg-clip-text text-transparent">
+            <span className="text-xl font-bold bg-gradient-to-r from-green-600 to-blue-600 bg-clip-text text-transparent">
               EcoSphere
             </span>
           </Link>
           
           {/* Desktop Menu */}
-          <div className="hidden lg:flex xl:space-x-1 lg:space-x-0.5">
+          <div className="hidden lg:flex items-center space-x-1">
             {navItems.map((item) => (
               <Link
                 key={item.path}
                 to={item.path}
-                className="relative xl:px-4 lg:px-2 py-2 rounded-xl transition-all duration-300 hover:bg-white/10"
+                className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all ${
+                  location.pathname === item.path
+                    ? 'bg-green-50 text-green-600'
+                    : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                }`}
               >
-                <motion.div
-                  whileHover={{ scale: 1.05 }}
-                  className="flex items-center xl:space-x-2 lg:space-x-1"
-                >
-                  <Icon name={item.icon} className="xl:w-5 xl:h-5 lg:w-4 lg:h-4" />
-                  <span className="font-medium xl:text-base lg:text-sm xl:block lg:hidden xl:inline">{item.label}</span>
-                </motion.div>
-                {location.pathname === item.path && (
-                  <motion.div
-                    layoutId="activeTab"
-                    className="absolute inset-0 bg-white/20 rounded-xl"
-                    initial={false}
-                  />
-                )}
+                <Icon name={item.icon} className="w-4 h-4" active={location.pathname === item.path} />
+                <span>{item.label}</span>
               </Link>
             ))}
           </div>
           
           {/* User Section */}
-          <div className="hidden lg:flex items-center xl:space-x-4 lg:space-x-2">
+          <div className="hidden lg:flex items-center space-x-3">
             {/* Notifications */}
             <div className="relative">
               <motion.button
                 whileHover={{ scale: 1.1 }}
                 whileTap={{ scale: 0.95 }}
                 onClick={() => setShowNotifications(!showNotifications)}
-                className="relative p-2 rounded-xl hover:bg-white/10 transition-colors"
+                className="relative p-2 rounded-lg hover:bg-gray-50 transition-colors"
               >
-                <i className="bi bi-bell text-lg"></i>
+                <i className="bi bi-bell text-lg text-gray-600"></i>
                 {notifications > 0 && (
-                  <motion.span
-                    initial={{ scale: 0 }}
-                    animate={{ scale: 1 }}
-                    className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center"
-                  >
+                  <span className="absolute top-1 right-1 bg-red-500 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center text-[10px]">
                     {notifications}
-                  </motion.span>
+                  </span>
                 )}
               </motion.button>
 
-              {/* Notifications Dropdown */}
               {showNotifications && (
                 <motion.div
-                  initial={{ opacity: 0, y: 10, scale: 0.95 }}
-                  animate={{ opacity: 1, y: 0, scale: 1 }}
-                  className="absolute right-0 mt-2 xl:w-80 lg:w-72 md:w-80 sm:w-72 w-64 bg-white rounded-xl shadow-2xl z-50 border border-gray-200"
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="absolute right-0 mt-2 w-80 bg-white rounded-xl shadow-xl z-50 border border-gray-200"
                 >
                   <div className="p-4">
                     <div className="flex items-center justify-between mb-4">
-                      <h3 className="font-bold text-gray-800 flex items-center gap-2">
-                        <i className="bi bi-bell-fill text-green-600"></i>
-                        Notificações
-                      </h3>
+                      <h3 className="font-bold text-gray-800">Notificações</h3>
                       <button 
                         onClick={() => setShowNotifications(false)}
                         className="text-gray-400 hover:text-gray-600"
@@ -161,8 +148,7 @@ const Navbar = () => {
                       </button>
                     </div>
 
-                    {/* Dica do Dia */}
-                    <div className="bg-gradient-to-r from-green-50 to-blue-50 p-3 rounded-lg mb-4 border border-green-200">
+                    <div className="bg-gradient-to-r from-green-50 to-blue-50 p-3 rounded-lg mb-4">
                       <div className="flex items-center gap-2 mb-2">
                         <span className="text-lg">{todayTip.icon}</span>
                         <span className="font-semibold text-green-700 text-sm">Dica Ecológica</span>
@@ -171,12 +157,8 @@ const Navbar = () => {
                       <div className="text-xs text-green-600 font-medium">{todayTip.action}</div>
                     </div>
 
-                    {/* Histórico de Pontos */}
                     <div className="mb-4">
-                      <h4 className="font-semibold text-gray-700 text-sm mb-3 flex items-center gap-2">
-                        <i className="bi bi-gem text-yellow-500"></i>
-                        Histórico de EcoPoints
-                      </h4>
+                      <h4 className="font-semibold text-gray-700 text-sm mb-3">Histórico de EcoPoints</h4>
                       <div className="space-y-2 max-h-48 overflow-y-auto">
                         {pointsHistory.length > 0 ? pointsHistory.map((item, index) => (
                           <div key={index} className="flex items-center justify-between p-2 bg-gray-50 rounded-lg">
@@ -200,74 +182,38 @@ const Navbar = () => {
                         )}
                       </div>
                     </div>
-
-                    {/* Ações Rápidas */}
-                    <div className="border-t pt-3">
-                      <div className="grid grid-cols-2 gap-2">
-                        <button 
-                          onClick={() => {
-                            navigate('/gamificacao');
-                            setShowNotifications(false);
-                          }}
-                          className="text-xs bg-green-100 hover:bg-green-200 text-green-700 px-3 py-2 rounded-lg transition-colors flex items-center gap-1 justify-center"
-                        >
-                          <i className="bi bi-trophy"></i>
-                          Ver EcoPoints
-                        </button>
-                        <button 
-                          onClick={() => {
-                            navigate('/classificar-residuos');
-                            setShowNotifications(false);
-                          }}
-                          className="text-xs bg-blue-100 hover:bg-blue-200 text-blue-700 px-3 py-2 rounded-lg transition-colors flex items-center gap-1 justify-center"
-                        >
-                          <i className="bi bi-recycle"></i>
-                          Classificar
-                        </button>
-                      </div>
-                    </div>
                   </div>
                 </motion.div>
               )}
             </div>
             
             {/* EcoPoints */}
-            <motion.div
-              whileHover={{ scale: 1.05 }}
-              className="bg-white/10 backdrop-blur-sm xl:px-4 lg:px-2 py-2 rounded-xl flex items-center xl:space-x-2 lg:space-x-1"
-            >
-              <i className="bi bi-gem text-yellow-300 xl:text-base lg:text-sm"></i>
-              <span className="font-semibold xl:text-base lg:text-sm">{user?.ecoPoints || 0}</span>
-              <span className="xl:text-sm lg:text-xs text-green-100 xl:block lg:hidden">EcoPoints</span>
-            </motion.div>
+            <div className="flex items-center gap-2 bg-gradient-to-r from-green-50 to-blue-50 px-3 py-2 rounded-lg">
+              <i className="bi bi-gem text-green-600"></i>
+              <span className="font-bold text-gray-800">{user?.ecoPoints || 0}</span>
+            </div>
             
             {/* Profile Dropdown */}
             <div className="relative group">
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                className="bg-white/10 hover:bg-white/20 xl:p-2 lg:p-1 rounded-xl transition-all duration-300 flex items-center xl:space-x-2 lg:space-x-1"
-              >
-                <i className="bi bi-person-circle xl:text-lg lg:text-base"></i>
-                <span className="font-medium xl:text-base lg:text-sm xl:block lg:hidden">{user?.name || 'Usuário'}</span>
-                <i className="bi bi-chevron-down xl:text-sm lg:text-xs xl:block lg:hidden"></i>
-              </motion.button>
+              <button className="flex items-center gap-2 p-2 rounded-lg hover:bg-gray-50 transition-colors">
+                <i className="bi bi-person-circle text-xl text-gray-600"></i>
+                <i className="bi bi-chevron-down text-xs text-gray-600"></i>
+              </button>
               
-              {/* Dropdown Menu */}
-              <div className="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
+              <div className="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50 border border-gray-200">
                 <div className="p-2">
                   <div className="px-3 py-2 text-sm text-gray-600 border-b">
                     <div className="font-medium text-gray-800 truncate">{user?.name}</div>
-                    <div className="text-xs truncate" title={user?.email}>{user?.email}</div>
+                    <div className="text-xs truncate">{user?.email}</div>
                   </div>
                   <button 
                     onClick={() => navigate('/perfil')}
-                    className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-lg flex items-center gap-2"
+                    className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-lg flex items-center gap-2"
                   >
                     <i className="bi bi-person"></i>
                     Meu Perfil
                   </button>
-                  <button className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-lg flex items-center gap-2">
+                  <button className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-lg flex items-center gap-2">
                     <i className="bi bi-gear"></i>
                     Configurações
                   </button>
@@ -285,64 +231,54 @@ const Navbar = () => {
           </div>
 
           {/* Mobile Menu Button */}
-          <motion.button
-            whileTap={{ scale: 0.95 }}
+          <button
             onClick={() => setIsOpen(!isOpen)}
-            className="lg:hidden p-2 rounded-xl hover:bg-white/10"
+            className="lg:hidden p-2 rounded-lg hover:bg-gray-50"
           >
             {isOpen ? <i className="bi bi-x-lg text-xl"></i> : <i className="bi bi-list text-xl"></i>}
-          </motion.button>
+          </button>
         </div>
 
         {/* Mobile Menu */}
-        <motion.div
-          initial={false}
-          animate={{ height: isOpen ? 'auto' : 0, opacity: isOpen ? 1 : 0 }}
-          className="lg:hidden overflow-hidden"
-        >
-          <div className="py-4 space-y-2">
-            {navItems.map((item, index) => (
-              <motion.div
-                key={item.path}
-                initial={{ x: -20, opacity: 0 }}
-                animate={{ x: 0, opacity: 1 }}
-                transition={{ delay: index * 0.1 }}
-              >
+        {isOpen && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            className="lg:hidden py-4 border-t"
+          >
+            <div className="space-y-1">
+              {navItems.map((item) => (
                 <Link
+                  key={item.path}
                   to={item.path}
                   onClick={() => setIsOpen(false)}
-                  className="flex items-center space-x-3 px-4 py-3 rounded-xl hover:bg-white/10 transition-colors"
+                  className={`block px-4 py-2 rounded-lg text-sm font-medium ${
+                    location.pathname === item.path
+                      ? 'bg-green-50 text-green-600'
+                      : 'text-gray-600 hover:bg-gray-50'
+                  }`}
                 >
-                  <Icon name={item.icon} className="w-6 h-6" />
-                  <span className="font-medium">{item.label}</span>
+                  {item.label}
                 </Link>
-              </motion.div>
-            ))}
-            
-            <div className="border-t border-white/20 pt-4 mt-4">
-              <div className="px-4 py-2 space-y-2">
-                <div className="flex items-center space-x-2">
-                  <i className="bi bi-gem text-yellow-300"></i>
-                  <span className="font-semibold">{user?.ecoPoints || 0} EcoPoints</span>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <i className="bi bi-person-circle"></i>
-                  <span className="font-medium">{user?.name || 'Usuário'}</span>
+              ))}
+              
+              <div className="border-t pt-4 mt-4 px-4">
+                <div className="flex items-center justify-between mb-3">
+                  <span className="text-sm text-gray-600">EcoPoints</span>
+                  <span className="font-bold text-green-600">{user?.ecoPoints || 0}</span>
                 </div>
                 <button 
                   onClick={handleLogout}
-                  className="w-full bg-red-500/20 hover:bg-red-500/30 px-4 py-2 rounded-xl flex items-center gap-2 justify-center"
+                  className="w-full bg-red-50 text-red-600 px-4 py-2 rounded-lg text-sm font-medium"
                 >
-                  <i className="bi bi-box-arrow-right"></i>
                   Sair
                 </button>
               </div>
             </div>
-          </div>
-        </motion.div>
+          </motion.div>
+        )}
       </div>
-      
-
     </motion.nav>
   );
 };

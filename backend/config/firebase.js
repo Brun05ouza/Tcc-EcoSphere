@@ -3,7 +3,7 @@ const admin = require('firebase-admin');
 const initializeFirebase = () => {
   try {
     if (!admin.apps.length) {
-      const serviceAccount = require('../ecosphere-web-firebase-adminsdk-fbsvc-1d90c9ddde.json');
+      const serviceAccount = require('./serviceAccountKey.json');
       
       admin.initializeApp({
         credential: admin.credential.cert(serviceAccount)

@@ -52,115 +52,87 @@ const ChatBot = () => {
     { text: 'Monitoramento ambiental', action: () => navigate('/monitoramento') }
   ];
 
-  const callOpenAI = async (message) => {
-    const apiKey = process.env.REACT_APP_OPENAI_API_KEY;
-    
-    if (!apiKey || apiKey === 'SUA_CHAVE_OPENAI_AQUI') {
-      return null;
-    }
-
-    try {
-      const response = await fetch('https://api.openai.com/v1/chat/completions', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${apiKey}`
-        },
-        body: JSON.stringify({
-          model: 'gpt-3.5-turbo',
-          messages: [{
-            role: 'system',
-            content: 'Você é o EcoBot da plataforma EcoSphere. Responda em português sobre sustentabilidade de forma amigável.'
-          }, {
-            role: 'user',
-            content: message
-          }],
-          max_tokens: 150
-        })
-      });
-
-      const data = await response.json();
-      return data.choices?.[0]?.message?.content;
-    } catch (error) {
-      return null;
-    }
-  };
-
-  const callGemini = async (message) => {
-    const apiKey = 'AIzaSyCr4UwLYqelPQ9Pl8bkt72JHMJkfG9S5V4';
-
-    try {
-      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro:generateContent?key=${apiKey}`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          contents: [{
-            parts: [{
-              text: `Responda em português: ${message}`
-            }]
-          }]
-        })
-      });
-
-      const data = await response.json();
-      return data.candidates?.[0]?.content?.parts?.[0]?.text;
-    } catch (error) {
-      return null;
-    }
-  };
-
   const callAI = async (message) => {
-    // Tentar OpenAI primeiro
-    let response = await callOpenAI(message);
-    if (response) {
-      console.log('Usando OpenAI');
-      return response;
-    }
-
-    // Fallback para Gemini
-    response = await callGemini(message);
-    if (response) {
-      console.log('Usando Gemini');
-      return response;
-    }
-
-    // Fallback para respostas locais
-    console.log('Usando respostas locais');
     return processLocalMessage(message);
   };
 
   const processLocalMessage = (message) => {
-    const lowerMessage = message.toLowerCase();
+    const lowerMessage = message.toLowerCase().trim();
     
-    if (lowerMessage.includes('dashboard')) {
+    // Respostas afirmativas
+    if (lowerMessage === 'sim' || lowerMessage === 's' || lowerMessage === 'ok' || lowerMessage === 'quero' || lowerMessage === 'claro' || lowerMessage === 'sim!' || lowerMessage === 'quero!') {
+      navigate('/classificar-residuos');
+      return '🚀 Perfeito! Redirecionando para o Classificador de Resíduos...\n\nVocê poderá tirar uma foto ou fazer upload de uma imagem para nossa IA identificar o tipo de resíduo!';
+    }
+    
+    // Saudações
+    if (lowerMessage.includes('olá') || lowerMessage.includes('ola') || lowerMessage.includes('oi') || lowerMessage.includes('bom dia') || lowerMessage.includes('boa tarde') || lowerMessage.includes('boa noite') || lowerMessage === 'oi!' || lowerMessage === 'olá!') {
+      return '👋 Olá! Bem-vindo ao EcoSphere!\n\nSou o EcoBot, seu assistente de sustentabilidade. Como posso ajudar você hoje?\n\n💡 Experimente perguntar:\n• "Como economizar água?"\n• "Dicas de reciclagem"\n• "Ver meus pontos"';
+    }
+    
+    // Navegação
+    if (lowerMessage.includes('dashboard') || lowerMessage.includes('painel')) {
       navigate('/dashboard');
       return 'Redirecionando para o Dashboard! 📊';
     }
     
-    if (lowerMessage.includes('classificar') || lowerMessage.includes('resíduo')) {
+    if (lowerMessage.includes('classificar') || lowerMessage.includes('resíduo') || lowerMessage.includes('residuo') || lowerMessage.includes('lixo') || lowerMessage.includes('ia')) {
       navigate('/classificar-residuos');
-      return 'Redirecionando para classificação de resíduos! 🤖';
+      return 'Redirecionando para classificação de resíduos! 🤖\n\nUse nossa IA para identificar o tipo de material!';
     }
     
+    if (lowerMessage.includes('gamificação') || lowerMessage.includes('gamificacao') || lowerMessage.includes('pontos') || lowerMessage.includes('ecopoints') || lowerMessage.includes('ver meus pontos') || lowerMessage.includes('meus pontos')) {
+      navigate('/gamificacao');
+      return 'Redirecionando para Gamificação! 🎮\n\nVeja seus EcoPoints e conquistas!';
+    }
+    
+    if (lowerMessage.includes('recompensa') || lowerMessage.includes('prêmio') || lowerMessage.includes('premio') || lowerMessage.includes('resgatar')) {
+      navigate('/recompensas');
+      return 'Redirecionando para Recompensas! 🎁\n\nResgate seus prêmios!';
+    }
+    
+    if (lowerMessage.includes('monitoramento') || lowerMessage.includes('clima') || lowerMessage.includes('ambiental') || lowerMessage.includes('tempo')) {
+      navigate('/monitoramento');
+      return 'Redirecionando para Monitoramento Ambiental! 🌡️\n\nVeja dados climáticos em tempo real!';
+    }
+    
+    // Reciclagem
     if (lowerMessage.includes('reciclagem') || lowerMessage.includes('reciclar')) {
-      return 'A reciclagem é fundamental! ♾️\n\n• Separe plástico, papel, vidro e metal\n• Lave embalagens antes do descarte\n• Use nossa IA para identificar materiais\n• Encontre pontos de coleta próximos\n\nQuer classificar algum resíduo agora?';
+      return 'A reciclagem é fundamental para o meio ambiente! ♻️\n\n🟢 **Plástico:** Garrafas PET, embalagens\n🟡 **Papel:** Caixas, jornais, revistas\n🔵 **Vidro:** Garrafas, potes\n🔴 **Metal:** Latas de alumínio\n\n💡 **Dica:** Lave as embalagens antes de descartar!\n\nQuer classificar algum resíduo com nossa IA?';
     }
     
-    if (lowerMessage.includes('sustentabilidade') || lowerMessage.includes('meio ambiente')) {
-      return 'Sustentabilidade é cuidar do nosso planeta! 🌍\n\n• Reduza o consumo de plástico\n• Economize água e energia\n• Prefira transporte público\n• Recicle corretamente\n• Plante árvores\n\nCada ação conta para um futuro melhor!';
+    // Sustentabilidade
+    if (lowerMessage.includes('sustentabilidade') || lowerMessage.includes('meio ambiente') || lowerMessage.includes('planeta')) {
+      return 'Sustentabilidade é cuidar do nosso planeta para as próximas gerações! 🌍\n\n✅ **Ações importantes:**\n• Reduza o consumo de plástico\n• Economize água e energia\n• Prefira transporte público\n• Recicle corretamente\n• Plante árvores\n• Compre produtos sustentáveis\n\n🌱 Cada pequena ação faz diferença!';
     }
     
-    if (lowerMessage.includes('energia') || lowerMessage.includes('elétrica')) {
-      return 'Economizar energia é essencial! ⚡\n\n• Use lâmpadas LED\n• Desligue aparelhos da tomada\n• Aproveite luz natural\n• Use eletrodomésticos eficientes\n• Instale painéis solares se possível';
+    // Energia
+    if (lowerMessage.includes('energia') || lowerMessage.includes('elétrica') || lowerMessage.includes('luz')) {
+      return 'Economizar energia é essencial! ⚡\n\n💡 **Dicas práticas:**\n• Use lâmpadas LED (70% mais econômicas)\n• Desligue aparelhos da tomada\n• Aproveite luz natural\n• Use eletrodomésticos eficientes (selo A)\n• Instale painéis solares se possível\n• Regule o ar-condicionado para 23°C\n\n🌟 Economize energia e dinheiro!';
     }
     
-    if (lowerMessage.includes('água')) {
-      return 'A água é preciosa! 💧\n\n• Feche a torneira ao escovar dentes\n• Tome banhos mais rápidos\n• Conserte vazamentos\n• Reutilize água da chuva\n• Use máquinas só com carga cheia';
+    // Água
+    if (lowerMessage.includes('água') || lowerMessage.includes('agua')) {
+      return 'A água é um recurso precioso! 💧\n\n🚫 **Evite desperdício:**\n• Feche a torneira ao escovar dentes (12L economizados)\n• Tome banhos de 5-10 minutos\n• Conserte vazamentos imediatamente\n• Reutilize água da chuva\n• Use máquinas só com carga cheia\n• Lave calçadas com vassoura, não mangueira\n\n🌊 Preserve este recurso vital!';
     }
     
-    return 'Olá! 🌱 Sou o EcoBot, seu assistente de sustentabilidade! Posso ajudar com:\n\n• Dicas de reciclagem\n• Economia de energia\n• Conservação da água\n• Navegação no site\n\nO que você gostaria de saber?';
+    // Plástico
+    if (lowerMessage.includes('plástico') || lowerMessage.includes('plastico')) {
+      return 'O plástico é um dos maiores poluidores! 🚫\n\n♻️ **Como reduzir:**\n• Use sacolas reutilizáveis\n• Evite canudos plásticos\n• Prefira garrafas reutilizáveis\n• Compre a granel\n• Recuse embalagens desnecessárias\n\n🌍 O plástico leva 400 anos para se decompor!';
+    }
+    
+    // Compostagem
+    if (lowerMessage.includes('compostagem') || lowerMessage.includes('orgânico')) {
+      return 'Compostagem transforma lixo em adubo! 🌱\n\n✅ **Pode compostar:**\n• Cascas de frutas e legumes\n• Borra de café\n• Folhas secas\n• Restos de plantas\n\n❌ **Não compostar:**\n• Carnes e laticnios\n• Óleos e gorduras\n• Fezes de animais\n\n🌿 Reduza 50% do seu lixo!';
+    }
+    
+    // Ajuda geral
+    if (lowerMessage.includes('ajuda') || lowerMessage.includes('help') || lowerMessage.includes('o que você faz')) {
+      return '🤖 **Sou o EcoBot!** Seu assistente de sustentabilidade.\n\n💬 **Posso ajudar com:**\n• Dicas de reciclagem\n• Economia de energia e água\n• Informações sobre sustentabilidade\n• Navegação no site\n• Classificação de resíduos\n\n🌟 Pergunte qualquer coisa sobre meio ambiente!';
+    }
+    
+    // Resposta padrão
+    return '🌱 Olá! Sou o EcoBot, seu assistente de sustentabilidade!\n\n💬 **Pergunte sobre:**\n• Reciclagem e compostagem\n• Economia de energia\n• Conservação da água\n• Redução de plástico\n• Sustentabilidade\n\n🚀 **Ou navegue:**\n• "Ver meus pontos"\n• "Classificar resíduo"\n• "Monitoramento"\n\nComo posso ajudar?';
   };
 
   const sendMessage = async () => {
@@ -178,27 +150,16 @@ const ChatBot = () => {
     setInputText('');
     setIsTyping(true);
 
-    try {
-      const botResponse = await callAI(messageText);
-      const botMessage = {
-        id: Date.now() + 1,
-        text: botResponse,
-        sender: 'bot',
-        timestamp: new Date()
-      };
+    const botResponse = await callAI(messageText);
+    const botMessage = {
+      id: Date.now() + 1,
+      text: botResponse,
+      sender: 'bot',
+      timestamp: new Date()
+    };
 
-      setMessages(prev => [...prev, botMessage]);
-    } catch (error) {
-      const errorMessage = {
-        id: Date.now() + 1,
-        text: 'Desculpe, ocorreu um erro. Tente novamente.',
-        sender: 'bot',
-        timestamp: new Date()
-      };
-      setMessages(prev => [...prev, errorMessage]);
-    } finally {
-      setIsTyping(false);
-    }
+    setMessages(prev => [...prev, botMessage]);
+    setIsTyping(false);
   };
 
   const handleKeyPress = (e) => {

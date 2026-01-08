@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Line, Doughnut, Bar } from 'react-chartjs-2';
 import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend, ArcElement, BarElement } from 'chart.js';
 import { useEcoPoints } from '../hooks/useEcoPoints';
 import { gamificationAPI } from '../services/api';
+import DailyQuiz from '../components/DailyQuiz';
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend, ArcElement, BarElement);
 
@@ -17,6 +18,7 @@ const Dashboard = () => {
     level: 'Iniciante'
   });
   const [loading, setLoading] = useState(true);
+  const [showDailyQuiz, setShowDailyQuiz] = useState(false);
   const { ecoPoints } = useEcoPoints();
 
   const Icon = ({ name, className = "w-5 h-5", white = false }) => {
@@ -147,6 +149,78 @@ const Dashboard = () => {
           ))}
         </div>
 
+        {/* Quiz Diário e Calculadora de Carbono */}
+        <div className="grid lg:grid-cols-2 gap-6 mb-8">
+          {/* Quiz Diário */}
+          <motion.div
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            className="bg-gradient-to-r from-purple-500 to-pink-500 p-6 rounded-2xl shadow-lg text-white cursor-pointer"
+            onClick={() => setShowDailyQuiz(true)}
+            whileHover={{ scale: 1.02 }}
+          >
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-2xl font-bold mb-2">🧠 Quiz Diário</h3>
+                <p className="text-purple-100 mb-4">Teste seus conhecimentos e ganhe pontos!</p>
+                <div className="flex items-center gap-2">
+                  <span className="text-3xl">🔥</span>
+                  <span className="font-bold">7 dias de sequência</span>
+                </div>
+              </div>
+              <div className="text-6xl">🎯</div>
+            </div>
+          </motion.div>
+
+          {/* Calculadora de Carbono */}
+          <motion.div
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            className="bg-gradient-to-r from-green-500 to-blue-500 p-6 rounded-2xl shadow-lg text-white cursor-pointer"
+            onClick={() => window.location.href = '/calculadora-carbono'}
+            whileHover={{ scale: 1.02 }}
+          >
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-2xl font-bold mb-2">🌍 Pegada de Carbono</h3>
+                <p className="text-green-100 mb-4">Calcule seu impacto ambiental!</p>
+                <div className="flex items-center gap-2">
+                  <span className="text-3xl">📊</span>
+                  <span className="font-bold">Descubra agora</span>
+                </div>
+              </div>
+              <div className="text-6xl">🌱</div>
+            </div>
+          </motion.div>
+        </div>
+
+        {/* Impacto Coletivo */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-gradient-to-r from-orange-500 to-red-500 p-6 rounded-2xl shadow-lg text-white mb-8"
+        >
+          <h3 className="text-2xl font-bold mb-4">🌎 Impacto Coletivo da Plataforma</h3>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div>
+              <div className="text-3xl font-bold">12.547</div>
+              <div className="text-orange-100 text-sm">Classificações Totais</div>
+            </div>
+            <div>
+              <div className="text-3xl font-bold">31.4 ton</div>
+              <div className="text-orange-100 text-sm">CO2 Economizado</div>
+            </div>
+            <div>
+              <div className="text-3xl font-bold">1.427</div>
+              <div className="text-orange-100 text-sm">Árvores Equivalentes</div>
+            </div>
+            <div>
+              <div className="text-3xl font-bold">3.892</div>
+              <div className="text-orange-100 text-sm">Usuários Ativos</div>
+            </div>
+          </div>
+        </motion.div>
+
         {/* Charts Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8 mb-6 lg:mb-8">
           {/* EcoPoints Progress */}
@@ -237,6 +311,11 @@ const Dashboard = () => {
             )}
           </div>
         </motion.div>
+
+        {/* Daily Quiz Modal */}
+        <AnimatePresence>
+          {showDailyQuiz && <DailyQuiz onClose={() => setShowDailyQuiz(false)} />}
+        </AnimatePresence>
       </div>
     </div>
   );
