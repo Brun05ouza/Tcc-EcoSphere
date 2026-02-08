@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useUser } from '../contexts/UserContext';
+import { AppIcon } from '../components/ui/AppIcon';
+import { Gift } from 'lucide-react';
 
 const Rewards = () => {
   const [selectedCategory, setSelectedCategory] = useState('education');
@@ -8,63 +10,51 @@ const Rewards = () => {
   const [showRedeemModal, setShowRedeemModal] = useState(false);
   const [selectedReward, setSelectedReward] = useState(null);
   const [showNotificationModal, setShowNotificationModal] = useState(false);
-  const [notificationData, setNotificationData] = useState({ type: '', message: '', icon: '' });
-
-  const Icon = ({ name, className = "w-5 h-5", white = false }) => {
-    const iconStyle = white ? { filter: 'brightness(0) invert(1)' } : { filter: 'invert(40%) sepia(93%) saturate(500%) hue-rotate(100deg)' };
-    return (
-      <img 
-        src={require(`../assets/icons/${name}.svg`)} 
-        alt={name} 
-        className={className}
-        style={iconStyle}
-      />
-    );
-  };
+  const [notificationData, setNotificationData] = useState({ type: '', message: '', iconName: 'sparkles' });
 
   const categories = [
-    { id: 'education', label: 'Educação', icon: 'bi-book', color: 'from-blue-500 to-cyan-500' },
-    { id: 'products', label: 'Eco-Friendly', icon: 'bi-leaf', color: 'from-green-500 to-emerald-500' },
-    { id: 'digital', label: 'Digital', icon: 'bi-phone', color: 'from-purple-500 to-pink-500' },
-    { id: 'experiences', label: 'Experiências', icon: 'bi-compass', color: 'from-orange-500 to-red-500' },
-    { id: 'donations', label: 'Doações', icon: 'bi-heart', color: 'from-pink-500 to-rose-500' }
+    { id: 'education', label: 'Educação', iconName: 'book', color: 'from-blue-500 to-cyan-500' },
+    { id: 'products', label: 'Eco-Friendly', iconName: 'leaf', color: 'from-green-500 to-emerald-500' },
+    { id: 'digital', label: 'Digital', iconName: 'smartphone', color: 'from-purple-500 to-pink-500' },
+    { id: 'experiences', label: 'Experiências', iconName: 'globe', color: 'from-orange-500 to-red-500' },
+    { id: 'donations', label: 'Doações', iconName: 'heart', color: 'from-pink-500 to-rose-500' }
   ];
 
   const rewards = {
     education: [
-      { id: 1, name: 'Sustentabilidade Empresarial - FGV', description: 'Curso online sobre gestão sustentável e responsabilidade socioambiental', points: 1000, icon: '🏫', available: true },
-      { id: 2, name: 'Economia Circular - SENAI', description: 'Aprenda sobre economia circular e gestão de resíduos sólidos', points: 800, icon: '♻️', available: true },
-      { id: 3, name: 'Mudanças Climáticas - USP', description: 'Curso sobre causas e consequências das mudanças climáticas globais', points: 1200, icon: '🌡️', available: true },
-      { id: 4, name: 'Gestão Ambiental - SEBRAE', description: 'Gestão ambiental para pequenas e médias empresas', points: 900, icon: '🏭', available: true }
+      { id: 1, name: 'Sustentabilidade Empresarial - FGV', description: 'Curso online sobre gestão sustentável e responsabilidade socioambiental', points: 1000, iconName: 'graduation', available: true },
+      { id: 2, name: 'Economia Circular - SENAI', description: 'Aprenda sobre economia circular e gestão de resíduos sólidos', points: 800, iconName: 'recycle', available: true },
+      { id: 3, name: 'Mudanças Climáticas - USP', description: 'Curso sobre causas e consequências das mudanças climáticas globais', points: 1200, iconName: 'thermometer', available: true },
+      { id: 4, name: 'Gestão Ambiental - SEBRAE', description: 'Gestão ambiental para pequenas e médias empresas', points: 900, iconName: 'factory', available: true }
     ],
     products: [
-      { id: 5, name: 'Garrafa Reutilizável', description: 'Garrafa de aço inox 500ml com design exclusivo', points: 800, icon: '🍶', available: true },
-      { id: 6, name: 'Kit Canudos de Bambu', description: 'Set com 4 canudos de bambu + escova de limpeza', points: 400, icon: '🎋', available: true },
-      { id: 7, name: 'Sacola Ecológica', description: 'Sacola de algodão orgânico reutilizável', points: 300, icon: '👜', available: true },
-      { id: 8, name: 'Kit Limpeza Natural', description: 'Produtos de limpeza biodegradáveis', points: 350, icon: '🧽', available: true }
+      { id: 5, name: 'Garrafa Reutilizável', description: 'Garrafa de aço inox 500ml com design exclusivo', points: 800, iconName: 'bottle', available: true },
+      { id: 6, name: 'Kit Canudos de Bambu', description: 'Set com 4 canudos de bambu + escova de limpeza', points: 400, iconName: 'leaf', available: true },
+      { id: 7, name: 'Sacola Ecológica', description: 'Sacola de algodão orgânico reutilizável', points: 300, iconName: 'bag', available: true },
+      { id: 8, name: 'Kit Limpeza Natural', description: 'Produtos de limpeza biodegradáveis', points: 350, iconName: 'droplets', available: true }
     ],
     digital: [
-      { id: 9, name: 'Tema Premium', description: 'Desbloqueie temas exclusivos para o app', points: 200, icon: '🎨', available: true },
-      { id: 10, name: 'Badge Especial', description: 'Badge única "Eco Champion" para seu perfil', points: 400, icon: '🏆', available: true },
-      { id: 11, name: 'Relatório Avançado', description: 'Acesso a relatórios detalhados por 3 meses', points: 900, icon: '📊', available: true },
-      { id: 12, name: 'Avatar Personalizado', description: 'Crie seu avatar exclusivo no app', points: 600, icon: '👤', available: true }
+      { id: 9, name: 'Tema Premium', description: 'Desbloqueie temas exclusivos para o app', points: 200, iconName: 'palette', available: true },
+      { id: 10, name: 'Badge Especial', description: 'Badge única "Eco Champion" para seu perfil', points: 400, iconName: 'trophy', available: true },
+      { id: 11, name: 'Relatório Avançado', description: 'Acesso a relatórios detalhados por 3 meses', points: 900, iconName: 'chart', available: true },
+      { id: 12, name: 'Avatar Personalizado', description: 'Crie seu avatar exclusivo no app', points: 600, iconName: 'user', available: true }
     ],
     experiences: [
-      { id: 13, name: 'Visita ao Parque Ecológico', description: 'Ingresso para parque ecológico + guia', points: 2500, icon: '🌳', available: true },
-      { id: 14, name: 'Workshop de Reciclagem', description: 'Aprenda a fazer objetos com materiais recicláveis', points: 1500, icon: '♻️', available: true },
-      { id: 15, name: 'Trilha Ecológica', description: 'Trilha guiada em reserva ambiental', points: 500, icon: '🥾', available: false },
-      { id: 16, name: 'Palestra Ambiental', description: 'Ingresso para evento sobre sustentabilidade', points: 1000, icon: '🎤', available: true }
+      { id: 13, name: 'Visita ao Parque Ecológico', description: 'Ingresso para parque ecológico + guia', points: 2500, iconName: 'tree', available: true },
+      { id: 14, name: 'Workshop de Reciclagem', description: 'Aprenda a fazer objetos com materiais recicláveis', points: 1500, iconName: 'recycle', available: true },
+      { id: 15, name: 'Trilha Ecológica', description: 'Trilha guiada em reserva ambiental', points: 500, iconName: 'footprints', available: false },
+      { id: 16, name: 'Palestra Ambiental', description: 'Ingresso para evento sobre sustentabilidade', points: 1000, iconName: 'mic', available: true }
     ],
     donations: [
-      { id: 17, name: 'Plante uma Árvore', description: 'Plantio de árvore nativa em seu nome', points: 800, icon: '🌱', available: true },
-      { id: 18, name: 'Limpeza de Praia', description: 'Apoie ação de limpeza de praias', points: 600, icon: '🏖️', available: true },
-      { id: 19, name: 'Doação para ONG', description: 'R$ 10 para ONG ambiental de sua escolha', points: 1200, icon: '💚', available: true },
-      { id: 20, name: 'Projeto Comunitário', description: 'Apoie horta comunitária local', points: 1600, icon: '🥬', available: true }
+      { id: 17, name: 'Plante uma Árvore', description: 'Plantio de árvore nativa em seu nome', points: 800, iconName: 'leaf', available: true },
+      { id: 18, name: 'Limpeza de Praia', description: 'Apoie ação de limpeza de praias', points: 600, iconName: 'beach', available: true },
+      { id: 19, name: 'Doação para ONG', description: 'R$ 10 para ONG ambiental de sua escolha', points: 1200, iconName: 'heart', available: true },
+      { id: 20, name: 'Projeto Comunitário', description: 'Apoie horta comunitária local', points: 1600, iconName: 'salad', available: true }
     ]
   };
 
-  const showNotification = (type, message, icon) => {
-    setNotificationData({ type, message, icon });
+  const showNotification = (type, message, iconName) => {
+    setNotificationData({ type, message, iconName: iconName || (type === 'success' ? 'sparkles' : 'warning') });
     setShowNotificationModal(true);
   };
 
@@ -76,7 +66,7 @@ const Rewards = () => {
       showNotification(
         'error',
         `Você precisa de ${reward.points - user.ecoPoints} EcoPoints a mais para resgatar este item.`,
-        '😢'
+        'warning'
       );
     }
   };
@@ -91,13 +81,13 @@ const Rewards = () => {
       showNotification(
         'success',
         `Parabéns! Você resgatou: ${selectedReward.name}`,
-        '🎉'
+        'sparkles'
       );
     } else {
       showNotification(
         'error',
         'Erro ao processar resgate. Tente novamente.',
-        '😢'
+        'warning'
       );
     }
   };
@@ -112,7 +102,7 @@ const Rewards = () => {
           className="text-center mb-8"
         >
           <h1 className="text-5xl font-bold bg-gradient-to-r from-green-600 to-blue-600 bg-clip-text text-transparent mb-4 flex items-center justify-center gap-3">
-            <Icon name="recompensas" className="w-14 h-14" />
+            <Gift size={48} className="text-green-600" />
             Resgate de EcoPoints
           </h1>
           <p className="text-xl text-gray-600">Troque seus pontos por recompensas incríveis!</p>
@@ -125,7 +115,7 @@ const Rewards = () => {
           className="bg-gradient-to-r from-green-600 to-blue-600 rounded-3xl p-6 text-white mb-8 text-center"
         >
           <div className="flex items-center justify-center gap-4">
-            <i className="bi bi-gem text-3xl text-yellow-300"></i>
+            <Gift size={36} className="text-yellow-300 shrink-0" />
             <div>
               <div className="text-3xl font-bold">{user?.ecoPoints || 0}</div>
               <div className="text-green-100">EcoPoints Disponíveis</div>
@@ -147,7 +137,7 @@ const Rewards = () => {
                   : 'bg-white/50 text-gray-600 hover:bg-white/80'
               }`}
             >
-              <i className={`${category.icon} mr-2`}></i>
+              <AppIcon name={category.iconName} size={20} className="mr-2 inline" />
               {category.label}
             </motion.button>
           ))}
@@ -174,14 +164,14 @@ const Rewards = () => {
                 }`}
               >
                 <div className="text-center mb-4">
-                  <div className="text-5xl mb-3">{reward.icon}</div>
+                  <div className="mb-3 flex justify-center"><AppIcon name={reward.iconName} size={48} className="text-green-600" /></div>
                   <h3 className="font-bold text-lg mb-2">{reward.name}</h3>
                   <p className="text-gray-600 text-sm leading-relaxed">{reward.description}</p>
                 </div>
 
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center gap-2">
-                    <i className="bi bi-gem text-yellow-500"></i>
+                    <Gift size={20} className="text-yellow-500 shrink-0" />
                     <span className="font-bold text-lg">{reward.points}</span>
                     <span className="text-sm text-gray-500">pontos</span>
                   </div>
@@ -231,7 +221,7 @@ const Rewards = () => {
                 onClick={(e) => e.stopPropagation()}
               >
                 <div className="text-center">
-                  <div className="text-6xl mb-4">{selectedReward.icon}</div>
+                  <div className="mb-4 flex justify-center"><AppIcon name={selectedReward.iconName} size={64} className="text-green-600" /></div>
                   <h2 className="text-2xl font-bold mb-2">{selectedReward.name}</h2>
                   <p className="text-gray-600 mb-6">{selectedReward.description}</p>
                   
@@ -290,7 +280,9 @@ const Rewards = () => {
                 className="bg-white rounded-2xl p-8 max-w-sm w-full text-center"
                 onClick={(e) => e.stopPropagation()}
               >
-                <div className="text-6xl mb-4">{notificationData.icon}</div>
+                <div className="mb-4 flex justify-center">
+                  <AppIcon name={notificationData.iconName} size={64} className={notificationData.type === 'success' ? 'text-green-500' : 'text-red-500'} />
+                </div>
                 
                 <h3 className={`text-xl font-bold mb-3 ${
                   notificationData.type === 'success' ? 'text-green-600' : 'text-red-600'

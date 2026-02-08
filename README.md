@@ -22,12 +22,12 @@ Sistema web completo para gestão ambiental com IA, gamificação e monitorament
 - Tailwind CSS
 - Framer Motion
 - React Router
+- **Supabase** (Auth + Banco de dados)
 
-### Backend
-- Node.js
-- Express.js
-- Firebase Firestore
-- JWT Authentication
+### Backend (Supabase)
+- Autenticação (email/senha + Google OAuth)
+- PostgreSQL (tabelas: profiles, waste_classifications, user_game_actions)
+- Row Level Security (RLS)
 
 ### APIs Integradas
 - Google OAuth 2.0
@@ -45,21 +45,17 @@ git clone https://github.com/seu-usuario/ecosphere.git
 cd ecosphere
 ```
 
-### 2. Configure o Backend
-```bash
-cd backend
-npm install
-cp .env.example .env
-# Configure as variáveis no .env
-npm run dev
-```
+### 2. Configure o Supabase
+- Crie um projeto em [supabase.com](https://supabase.com)
+- No SQL Editor, execute o script em `supabase/migrations/001_ecosphere_schema.sql`
+- Em **Settings > API**, copie a URL e a chave `anon`
 
 ### 3. Configure o Frontend
 ```bash
 cd frontend
 npm install
 cp .env.example .env
-# Configure as variáveis no .env
+# No .env: REACT_APP_SUPABASE_URL e REACT_APP_SUPABASE_ANON_KEY
 npm start
 ```
 
@@ -70,28 +66,18 @@ Para classificação de resíduos com IA real:
 
 ## ⚙️ Configuração
 
-### Variáveis de Ambiente
+### Variáveis de Ambiente (frontend/.env)
 
-**Backend (.env)**
 ```
-JWT_SECRET=seu_jwt_secret
-FIREBASE_PROJECT_ID=seu_project_id
-```
-
-**Frontend (.env)**
-```
-REACT_APP_API_URL=http://localhost:3001/api
-REACT_APP_GOOGLE_CLIENT_ID=seu_google_client_id
-REACT_APP_OPENAI_API_KEY=sua_chave_openai
-REACT_APP_GEMINI_API_KEY=sua_chave_gemini
+REACT_APP_SUPABASE_URL=https://seu-projeto.supabase.co
+REACT_APP_SUPABASE_ANON_KEY=sua_anon_key
+REACT_APP_GOOGLE_CLIENT_ID=seu_google_client_id   # opcional
 ```
 
-### Firebase Setup
-1. Crie projeto no Firebase Console
-2. Ative Firestore Database
-3. Configure Authentication (Google)
-4. Baixe service account key
-5. Coloque em `backend/config/`
+### Supabase
+1. Crie projeto no [Supabase](https://supabase.com)
+2. Rode o SQL em `supabase/migrations/001_ecosphere_schema.sql`
+3. Em Authentication > Providers, ative Email e (opcional) Google
 
 ## 🚀 Deploy
 
@@ -101,11 +87,8 @@ cd frontend
 npm run build
 ```
 
-### Backend (Railway/Heroku)
-```bash
-cd backend
-npm start
-```
+### Backend
+O backend é o **Supabase** (Auth + Banco de dados). Basta manter o projeto Supabase ativo; não há servidor próprio para deploy.
 
 ## 📱 Uso
 

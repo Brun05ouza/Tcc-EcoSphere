@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useUser } from '../contexts/UserContext';
-import { gamificationAPI } from '../services/api';
+import { gamificationAPI, userAPI } from '../services/api';
+import { FileText, Settings, Lock, Save } from 'lucide-react';
+import { AppIcon } from '../components/ui/AppIcon';
 
 const Profile = () => {
   const [user, setUser] = useState(null);
@@ -39,14 +41,24 @@ const Profile = () => {
   }, []);
 
   const loadStats = async () => {
-    // Usar dados do contexto/localStorage ao invés de API
     const userData = JSON.parse(localStorage.getItem('user') || '{}');
-    setStats({
-      ecoPoints: userData.ecoPoints || 0,
-      level: userData.level || 'Iniciante',
-      badges: 0, // Placeholder
-      classifications: 0 // Placeholder
-    });
+    try {
+      const res = await gamificationAPI.getProfile();
+      const d = res.data || {};
+      setStats({
+        ecoPoints: d.ecoPoints ?? userData.ecoPoints ?? 0,
+        level: d.level || userData.level || 'Iniciante',
+        badges: (d.badges || []).length,
+        classifications: d.totalClassifications ?? 0,
+      });
+    } catch {
+      setStats({
+        ecoPoints: userData.ecoPoints || 0,
+        level: userData.level || 'Iniciante',
+        badges: 0,
+        classifications: 0,
+      });
+    }
   };
 
   const handleInputChange = (e) => {
@@ -67,12 +79,17 @@ const Profile = () => {
     });
   };
 
-  const handleSave = () => {
-    // Atualizar localStorage
+  const handleSave = async () => {
     const updatedUser = { ...user, ...formData };
     localStorage.setItem('user', JSON.stringify(updatedUser));
+    sessionStorage.setItem('user', JSON.stringify(updatedUser));
     setUser(updatedUser);
-    alert('Perfil atualizado com sucesso!');
+    try {
+      await userAPI.updateProfile({ name: formData.name, email: formData.email });
+      alert('Perfil atualizado com sucesso!');
+    } catch (e) {
+      alert('Perfil salvo localmente. Erro ao sincronizar com o servidor.');
+    }
   };
 
   const interests = [
@@ -90,7 +107,7 @@ const Profile = () => {
           className="text-center mb-8"
         >
           <div className="w-24 h-24 bg-gradient-to-r from-green-500 to-blue-500 rounded-full flex items-center justify-center mx-auto mb-4">
-            <i className="bi bi-person text-4xl text-white"></i>
+            <AppIcon name="user" size={48} className="text-white" />
           </div>
           <h1 className="text-4xl font-bold bg-gradient-to-r from-green-600 to-blue-600 bg-clip-text text-transparent mb-2">
             Meu Perfil
@@ -101,10 +118,10 @@ const Profile = () => {
         {/* Stats Cards */}
         <div className="grid md:grid-cols-4 gap-4 mb-8">
           {[
-            { label: 'EcoPoints', value: stats.ecoPoints || 0, icon: '💎', color: 'from-green-500 to-emerald-500' },
-            { label: 'Nível', value: stats.level || 'Iniciante', icon: '🏆', color: 'from-blue-500 to-cyan-500' },
-            { label: 'Badges', value: stats.badges || 0, icon: '🏅', color: 'from-purple-500 to-pink-500' },
-            { label: 'Classificações', value: stats.classifications || 0, icon: '🤖', color: 'from-orange-500 to-red-500' }
+            { label: 'EcoPoints', value: stats.ecoPoints || 0, iconName: 'star', color: 'from-green-500 to-emerald-500' },
+            { label: 'Nível', value: stats.level || 'Iniciante', iconName: 'trophy', color: 'from-blue-500 to-cyan-500' },
+            { label: 'Badges', value: stats.badges || 0, iconName: 'award', color: 'from-purple-500 to-pink-500' },
+            { label: 'Classificações', value: stats.classifications || 0, iconName: 'bot', color: 'from-orange-500 to-red-500' }
           ].map((stat, index) => (
             <motion.div
               key={index}
@@ -114,7 +131,7 @@ const Profile = () => {
               className="bg-white p-4 rounded-2xl shadow-lg text-center"
             >
               <div className={`w-12 h-12 bg-gradient-to-r ${stat.color} rounded-xl flex items-center justify-center mx-auto mb-2`}>
-                <span className="text-2xl">{stat.icon}</span>
+                <AppIcon name={stat.iconName} size={28} className="text-gray-600" />
               </div>
               <div className="text-2xl font-bold text-gray-800">{stat.value}</div>
               <div className="text-sm text-gray-600">{stat.label}</div>
@@ -154,7 +171,7 @@ const Profile = () => {
         >
           {activeTab === 'personal' && (
             <div>
-              <h2 className="text-2xl font-bold mb-6">📋 Informações Pessoais</h2>
+              <h2 className="text-2xl font-bold mb-6 flex items-center gap-2"><FileText size={28} /> Informações Pessoais</h2>
               <div className="grid md:grid-cols-2 gap-6">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">Nome Completo</label>
@@ -241,7 +258,7 @@ const Profile = () => {
 
           {activeTab === 'preferences' && (
             <div>
-              <h2 className="text-2xl font-bold mb-6">⚙️ Preferências</h2>
+              <h2 className="text-2xl font-bold mb-6 flex items-center gap-2"><Settings size={28} /> Preferências</h2>
               <div className="space-y-6">
                 <div>
                   <h3 className="text-lg font-semibold mb-4">Interesses Ambientais</h3>
@@ -284,7 +301,7 @@ const Profile = () => {
 
           {activeTab === 'security' && (
             <div>
-              <h2 className="text-2xl font-bold mb-6">🔒 Segurança</h2>
+              <h2 className="text-2xl font-bold mb-6 flex items-center gap-2"><Lock size={28} /> Segurança</h2>
               <div className="space-y-6">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">Senha Atual</label>
@@ -331,7 +348,8 @@ const Profile = () => {
               onClick={handleSave}
               className="bg-gradient-to-r from-green-500 to-blue-500 text-white px-8 py-3 rounded-xl font-bold hover:shadow-lg transition-all"
             >
-              💾 Salvar Alterações
+              <Save size={20} className="inline mr-2" />
+              Salvar Alterações
             </motion.button>
           </div>
         </motion.div>

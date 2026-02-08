@@ -1,24 +1,14 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import InteractiveCourse from '../components/InteractiveCourse';
+import { AppIcon } from '../components/ui/AppIcon';
+import { BookOpen, Check } from 'lucide-react';
 
 const Education = () => {
   const [selectedCategory, setSelectedCategory] = useState('courses');
   const [selectedCourse, setSelectedCourse] = useState(null);
   const [showInteractiveCourse, setShowInteractiveCourse] = useState(false);
   const [participatingChallenges, setParticipatingChallenges] = useState([]);
-
-  const Icon = ({ name, className = "w-5 h-5", white = false }) => {
-    const iconStyle = white ? { filter: 'brightness(0) invert(1)' } : { filter: 'invert(40%) sepia(93%) saturate(500%) hue-rotate(100deg)' };
-    return (
-      <img 
-        src={require(`../assets/icons/${name}.svg`)} 
-        alt={name} 
-        className={className}
-        style={iconStyle}
-      />
-    );
-  };
 
   const courses = [
     {
@@ -28,7 +18,7 @@ const Education = () => {
       duration: '15 min',
       level: 'Iniciante',
       progress: 0,
-      icon: '♾️',
+      iconName: 'recycle',
       color: 'from-green-500 to-emerald-500',
       lessons: [
         'Introdução à Reciclagem',
@@ -44,7 +34,7 @@ const Education = () => {
       duration: '10 min',
       level: 'Intermediário',
       progress: 0,
-      icon: '🏢',
+      iconName: 'factory',
       color: 'from-blue-500 to-cyan-500',
       lessons: [
         'Mobilidade Sustentável',
@@ -60,7 +50,7 @@ const Education = () => {
       duration: '10 min',
       level: 'Avançado',
       progress: 0,
-      icon: '🌍',
+      iconName: 'globe',
       color: 'from-purple-500 to-pink-500',
       lessons: [
         'Causas das Mudanças Climáticas',
@@ -78,7 +68,7 @@ const Education = () => {
       description: 'Separe seu lixo corretamente por 7 dias consecutivos',
       reward: 150,
       duration: '7 dias',
-      icon: '♻️',
+      iconName: 'recycle',
       difficulty: 'Fácil',
       tasks: [
         'Separar plástico, papel, vidro e metal',
@@ -93,7 +83,7 @@ const Education = () => {
       description: 'Reduza seu consumo de água em 20% durante 15 dias',
       reward: 250,
       duration: '15 dias',
-      icon: '💧',
+      iconName: 'droplets',
       difficulty: 'Médio',
       tasks: [
         'Banhos de no máximo 10 minutos',
@@ -108,7 +98,7 @@ const Education = () => {
       description: 'Use transporte público, bicicleta ou caminhada por 10 dias',
       reward: 200,
       duration: '10 dias',
-      icon: '🚲',
+      iconName: 'bike',
       difficulty: 'Médio',
       tasks: [
         'Evitar uso de carro particular',
@@ -123,7 +113,7 @@ const Education = () => {
       description: 'Evite produtos com plástico descartável por 5 dias',
       reward: 180,
       duration: '5 dias',
-      icon: '🚫',
+      iconName: 'warning',
       difficulty: 'Difícil',
       tasks: [
         'Usar sacolas reutilizáveis',
@@ -138,7 +128,7 @@ const Education = () => {
       description: 'Reduza consumo de energia em 15% durante 14 dias',
       reward: 220,
       duration: '14 dias',
-      icon: '⚡',
+      iconName: 'zap',
       difficulty: 'Médio',
       tasks: [
         'Desligar aparelhos da tomada',
@@ -153,7 +143,7 @@ const Education = () => {
       description: 'Inicie e mantenha uma composteira por 21 dias',
       reward: 300,
       duration: '21 dias',
-      icon: '🌱',
+      iconName: 'leaf',
       difficulty: 'Difícil',
       tasks: [
         'Montar composteira',
@@ -178,7 +168,7 @@ const Education = () => {
       title: 'Economize Água no Banho',
       content: 'Reduza o tempo de banho em 2 minutos e economize até 20 litros de água por dia.',
       category: 'Água',
-      icon: '🚿',
+      iconName: 'droplets',
       color: 'from-blue-400 to-cyan-400'
     },
     {
@@ -186,7 +176,7 @@ const Education = () => {
       title: 'Reutilize Embalagens',
       content: 'Transforme potes de vidro em organizadores e reduza o desperdício.',
       category: 'Reciclagem',
-      icon: '🏺',
+      iconName: 'bottle',
       color: 'from-green-400 to-emerald-400'
     },
     {
@@ -194,7 +184,7 @@ const Education = () => {
       title: 'Plante uma Árvore',
       content: 'Uma árvore pode absorver até 22kg de CO2 por ano. Plante e faça a diferença!',
       category: 'Natureza',
-      icon: '🌳',
+      iconName: 'tree',
       color: 'from-green-500 to-lime-500'
     },
     {
@@ -202,7 +192,7 @@ const Education = () => {
       title: 'Sacolas Reutilizáveis',
       content: 'Use sacolas de pano nas compras e evite até 500 sacolas plásticas por ano.',
       category: 'Consumo',
-      icon: '🛍️',
+      iconName: 'bag',
       color: 'from-purple-400 to-pink-400'
     },
     {
@@ -210,7 +200,7 @@ const Education = () => {
       title: 'Desligue Aparelhos',
       content: 'Tire da tomada aparelhos em standby e economize até 12% na conta de luz.',
       category: 'Energia',
-      icon: '🔌',
+      iconName: 'plug',
       color: 'from-yellow-400 to-orange-400'
     },
     {
@@ -218,7 +208,7 @@ const Education = () => {
       title: 'Compostagem Doméstica',
       content: 'Transforme restos orgânicos em adubo e reduza 50% do seu lixo.',
       category: 'Reciclagem',
-      icon: '🌱',
+      iconName: 'leaf',
       color: 'from-green-400 to-teal-400'
     },
     {
@@ -226,7 +216,7 @@ const Education = () => {
       title: 'Evite Canudos Plásticos',
       content: 'Use canudos de metal ou bambu. Brasileiros descartam 1 bilhão de canudos/dia.',
       category: 'Consumo',
-      icon: '🥤',
+      iconName: 'bottle',
       color: 'from-red-400 to-pink-400'
     },
     {
@@ -234,7 +224,7 @@ const Education = () => {
       title: 'Lâmpadas LED',
       content: 'Troque por LED e economize até 80% de energia com maior durabilidade.',
       category: 'Energia',
-      icon: '💡',
+      iconName: 'lightbulb',
       color: 'from-yellow-300 to-amber-400'
     },
     {
@@ -242,7 +232,7 @@ const Education = () => {
       title: 'Reaproveite Água da Chuva',
       content: 'Colete água da chuva para regar plantas e lavar áreas externas.',
       category: 'Água',
-      icon: '🌧️',
+      iconName: 'rain',
       color: 'from-blue-500 to-indigo-500'
     },
     {
@@ -250,7 +240,7 @@ const Education = () => {
       title: 'Compre Produtos Locais',
       content: 'Reduza emissões de transporte comprando de produtores locais.',
       category: 'Consumo',
-      icon: '🏪',
+      iconName: 'store',
       color: 'from-orange-400 to-red-400'
     },
     {
@@ -258,7 +248,7 @@ const Education = () => {
       title: 'Evite Desperdício de Alimentos',
       content: 'Planeje refeições e aproveite sobras. 30% dos alimentos vão para o lixo.',
       category: 'Consumo',
-      icon: '🍽️',
+      iconName: 'utensils',
       color: 'from-amber-400 to-orange-500'
     },
     {
@@ -266,7 +256,7 @@ const Education = () => {
       title: 'Use Transporte Público',
       content: 'Um ônibus tira 40 carros da rua e reduz emissões em até 95%.',
       category: 'Mobilidade',
-      icon: '🚌',
+      iconName: 'bus',
       color: 'from-blue-400 to-purple-400'
     },
     {
@@ -274,7 +264,7 @@ const Education = () => {
       title: 'Recicle Eletrônicos',
       content: 'Descarte celulares e baterias em pontos especializados. Contêm metais pesados.',
       category: 'Reciclagem',
-      icon: '📱',
+      iconName: 'smartphone',
       color: 'from-gray-400 to-slate-500'
     },
     {
@@ -282,7 +272,7 @@ const Education = () => {
       title: 'Reduza Uso de Papel',
       content: 'Prefira documentos digitais. Uma árvore produz apenas 8.333 folhas A4.',
       category: 'Consumo',
-      icon: '📄',
+      iconName: 'file',
       color: 'from-slate-300 to-gray-400'
     },
     {
@@ -290,7 +280,7 @@ const Education = () => {
       title: 'Lave Roupa com Água Fria',
       content: 'Economize até 90% da energia usada pela máquina de lavar.',
       category: 'Energia',
-      icon: '👕',
+      iconName: 'shirt',
       color: 'from-cyan-400 to-blue-500'
     },
     {
@@ -298,7 +288,7 @@ const Education = () => {
       title: 'Cultive Horta Caseira',
       content: 'Produza alimentos orgânicos em casa e reduza embalagens e transporte.',
       category: 'Natureza',
-      icon: '🥬',
+      iconName: 'salad',
       color: 'from-lime-400 to-green-500'
     },
     {
@@ -306,7 +296,7 @@ const Education = () => {
       title: 'Evite Produtos Descartáveis',
       content: 'Prefira itens reutilizáveis: copos, talheres e pratos duráveis.',
       category: 'Consumo',
-      icon: '🍴',
+      iconName: 'utensils',
       color: 'from-pink-400 to-rose-500'
     },
     {
@@ -314,7 +304,7 @@ const Education = () => {
       title: 'Doe o que Não Usa',
       content: 'Roupas e objetos em bom estado podem ter nova vida com outras pessoas.',
       category: 'Consumo',
-      icon: '👔',
+      iconName: 'shirt',
       color: 'from-violet-400 to-purple-500'
     }
   ];
@@ -329,7 +319,7 @@ const Education = () => {
           className="text-center mb-8"
         >
           <h1 className="text-5xl font-bold bg-gradient-to-r from-green-600 to-blue-600 bg-clip-text text-transparent mb-4 flex items-center justify-center gap-3">
-            <Icon name="educacao" className="w-14 h-14" />
+            <BookOpen size={48} className="text-green-600" />
             Educação Ambiental
           </h1>
           <p className="text-xl text-gray-600">Aprenda, pratique e transforme o mundo!</p>
@@ -339,20 +329,20 @@ const Education = () => {
         <div className="flex justify-center mb-8">
           <div className="bg-white rounded-2xl p-2 shadow-lg">
             {[
-              { id: 'courses', label: 'Cursos', icon: 'bi-book' },
-              { id: 'challenges', label: 'Desafios', icon: 'bi-trophy' },
-              { id: 'tips', label: 'Dicas', icon: 'bi-lightbulb' }
+              { id: 'courses', label: 'Cursos', iconName: 'book' },
+              { id: 'challenges', label: 'Desafios', iconName: 'trophy' },
+              { id: 'tips', label: 'Dicas', iconName: 'lightbulb' }
             ].map((tab) => (
               <button
                 key={tab.id}
                 onClick={() => setSelectedCategory(tab.id)}
-                className={`px-6 py-3 rounded-xl transition-all ${
+                className={`px-6 py-3 rounded-xl transition-all flex items-center ${
                   selectedCategory === tab.id
                     ? 'bg-gradient-to-r from-green-500 to-blue-500 text-white shadow-md'
                     : 'text-gray-600 hover:text-gray-800'
                 }`}
               >
-                <i className={`${tab.icon} mr-2`}></i>
+                <AppIcon name={tab.iconName} size={20} className="mr-2" />
                 {tab.label}
               </button>
             ))}
@@ -383,7 +373,7 @@ const Education = () => {
                   }}
                 >
                   <div className={`h-32 bg-gradient-to-r ${course.color} flex items-center justify-center`}>
-                    <span className="text-6xl">{course.icon}</span>
+                    <AppIcon name={course.iconName} size={56} className="text-white" />
                   </div>
                   
                   <div className="p-6">
@@ -452,11 +442,11 @@ const Education = () => {
                     className="bg-white rounded-2xl shadow-lg p-6"
                   >
                     <div className="text-center mb-4">
-                      <div className="text-5xl mb-2">{challenge.icon}</div>
+                      <div className="mb-2 flex justify-center"><AppIcon name={challenge.iconName} size={48} className="text-green-600" /></div>
                       <h3 className="font-bold text-lg">{challenge.title}</h3>
                       {isParticipating && (
-                        <span className="inline-block mt-2 px-3 py-1 bg-green-100 text-green-700 text-xs font-bold rounded-full">
-                          ✓ Participando
+                        <span className="inline-flex items-center gap-1 mt-2 px-3 py-1 bg-green-100 text-green-700 text-xs font-bold rounded-full">
+                          <Check size={14} /> Participando
                         </span>
                       )}
                     </div>
@@ -489,7 +479,7 @@ const Education = () => {
                       <ul className="space-y-1">
                         {challenge.tasks.map((task, idx) => (
                           <li key={idx} className="text-xs text-gray-600 flex items-start gap-2">
-                            <span className="text-green-500 mt-0.5">✓</span>
+                            <Check size={14} className="text-green-500 mt-0.5 shrink-0" />
                             <span>{task}</span>
                           </li>
                         ))}
@@ -530,7 +520,7 @@ const Education = () => {
                   className="bg-white rounded-2xl shadow-lg overflow-hidden"
                 >
                   <div className={`h-24 bg-gradient-to-r ${tip.color} flex items-center justify-center`}>
-                    <span className="text-5xl">{tip.icon}</span>
+                    <AppIcon name={tip.iconName} size={40} className="text-white" />
                   </div>
                   
                   <div className="p-5">

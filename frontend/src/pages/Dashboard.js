@@ -5,6 +5,7 @@ import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement
 import { useEcoPoints } from '../hooks/useEcoPoints';
 import { gamificationAPI } from '../services/api';
 import DailyQuiz from '../components/DailyQuiz';
+import { Brain, Flame, Target, Globe, BarChart3, Leaf } from 'lucide-react';
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend, ArcElement, BarElement);
 
@@ -124,10 +125,10 @@ const Dashboard = () => {
         {/* Stats Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-8">
           {[
-            { icon: "ecopoints", emoji: "💎", title: "EcoPoints", value: userStats.ecoPoints.toLocaleString(), color: "from-green-500 to-emerald-600", suffix: "" },
-            { icon: "rocket", emoji: "⚡", title: "Ações Realizadas", value: userStats.actions, color: "from-blue-500 to-cyan-600", suffix: "" },
-            { icon: "recompensas", emoji: "🏅", title: "Badges Conquistadas", value: userStats.badges, color: "from-purple-500 to-pink-600", suffix: "" },
-            { icon: "ecopoints", emoji: "🏆", title: "Nível Atual", value: userStats.level, color: "from-orange-500 to-red-600", suffix: "" }
+            { icon: "ecopoints", title: "EcoPoints", value: userStats.ecoPoints.toLocaleString(), color: "from-green-500 to-emerald-600", suffix: "" },
+            { icon: "rocket", title: "Ações Realizadas", value: userStats.actions, color: "from-blue-500 to-cyan-600", suffix: "" },
+            { icon: "recompensas", title: "Badges Conquistadas", value: userStats.badges, color: "from-purple-500 to-pink-600", suffix: "" },
+            { icon: "ecopoints", title: "Nível Atual", value: userStats.level, color: "from-orange-500 to-red-600", suffix: "" }
           ].map((stat, index) => (
             <motion.div
               key={index}
@@ -137,7 +138,6 @@ const Dashboard = () => {
               whileHover={{ y: -5, scale: 1.02 }}
               className="bg-white p-4 sm:p-6 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 relative overflow-hidden"
             >
-              <div className="absolute top-2 right-2 text-xl opacity-20">{stat.emoji}</div>
               <div className={`w-12 h-12 rounded-xl bg-gradient-to-r ${stat.color} flex items-center justify-center mb-4 shadow-lg p-2`}>
                 <Icon name={stat.icon} className="w-full h-full" white />
               </div>
@@ -161,14 +161,14 @@ const Dashboard = () => {
           >
             <div className="flex items-center justify-between">
               <div>
-                <h3 className="text-2xl font-bold mb-2">🧠 Quiz Diário</h3>
+                <h3 className="text-2xl font-bold mb-2 flex items-center gap-2"><Brain size={28} /> Quiz Diário</h3>
                 <p className="text-purple-100 mb-4">Teste seus conhecimentos e ganhe pontos!</p>
                 <div className="flex items-center gap-2">
-                  <span className="text-3xl">🔥</span>
+                  <Flame size={28} />
                   <span className="font-bold">7 dias de sequência</span>
                 </div>
               </div>
-              <div className="text-6xl">🎯</div>
+              <Target size={56} className="text-white/90" />
             </div>
           </motion.div>
 
@@ -182,14 +182,14 @@ const Dashboard = () => {
           >
             <div className="flex items-center justify-between">
               <div>
-                <h3 className="text-2xl font-bold mb-2">🌍 Pegada de Carbono</h3>
+                <h3 className="text-2xl font-bold mb-2 flex items-center gap-2"><Globe size={28} /> Pegada de Carbono</h3>
                 <p className="text-green-100 mb-4">Calcule seu impacto ambiental!</p>
                 <div className="flex items-center gap-2">
-                  <span className="text-3xl">📊</span>
+                  <BarChart3 size={28} />
                   <span className="font-bold">Descubra agora</span>
                 </div>
               </div>
-              <div className="text-6xl">🌱</div>
+              <Leaf size={56} className="text-white/90" />
             </div>
           </motion.div>
         </div>
@@ -200,7 +200,7 @@ const Dashboard = () => {
           animate={{ opacity: 1, y: 0 }}
           className="bg-gradient-to-r from-orange-500 to-red-500 p-6 rounded-2xl shadow-lg text-white mb-8"
         >
-          <h3 className="text-2xl font-bold mb-4">🌎 Impacto Coletivo da Plataforma</h3>
+          <h3 className="text-2xl font-bold mb-4 flex items-center gap-2"><Globe size={28} /> Impacto Coletivo da Plataforma</h3>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <div>
               <div className="text-3xl font-bold">12.547</div>
@@ -304,7 +304,7 @@ const Dashboard = () => {
               </motion.div>
             )) : (
               <div className="text-center py-8">
-                <div className="text-6xl mb-4">🌱</div>
+                <Leaf size={64} className="mx-auto mb-4 text-green-400" />
                 <p className="text-gray-500 mb-2">Nenhuma atividade ainda</p>
                 <p className="text-sm text-gray-400">Comece classificando resíduos ou jogando!</p>
               </div>

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useUser } from '../contexts/UserContext';
+import { Brain, Flame, Sparkles } from 'lucide-react';
 
 const DailyQuiz = ({ onClose }) => {
   const [answered, setAnswered] = useState(false);
@@ -44,10 +45,10 @@ const DailyQuiz = ({ onClose }) => {
         {!answered ? (
           <>
             <div className="text-center mb-6">
-              <div className="text-5xl mb-3">🧠</div>
+              <div className="mb-3 flex justify-center"><Brain size={56} className="text-purple-500" /></div>
               <h2 className="text-2xl font-bold mb-2">Quiz Diário</h2>
               <div className="flex items-center justify-center gap-2 text-orange-600">
-                <span className="text-2xl">🔥</span>
+                <Flame size={28} className="text-orange-500" />
                 <span className="font-bold">{streak} dias de sequência!</span>
               </div>
             </div>
@@ -76,8 +77,8 @@ const DailyQuiz = ({ onClose }) => {
           </>
         ) : (
           <div className="text-center">
-            <div className="text-6xl mb-4">
-              {selectedAnswer === dailyQuestion.correct ? '🎉' : '😅'}
+            <div className="mb-4 flex justify-center">
+              {selectedAnswer === dailyQuestion.correct ? <Sparkles size={64} className="text-green-500" /> : <Brain size={64} className="text-amber-500" />}
             </div>
             <h2 className="text-2xl font-bold mb-4">
               {selectedAnswer === dailyQuestion.correct ? 'Parabéns!' : 'Quase lá!'}
@@ -89,7 +90,7 @@ const DailyQuiz = ({ onClose }) => {
                   +{dailyQuestion.points} EcoPoints
                 </div>
                 <div className="flex items-center justify-center gap-2 text-orange-600">
-                  <span className="text-xl">🔥</span>
+                  <Flame size={24} />
                   <span className="font-bold">{streak} dias de sequência!</span>
                 </div>
               </div>

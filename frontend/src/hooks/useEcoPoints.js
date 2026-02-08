@@ -11,12 +11,12 @@ export const useEcoPoints = () => {
     try {
       setLoading(true);
       setError(null);
-      console.log('🔄 useEcoPoints: Carregando EcoPoints...');
+      console.log('useEcoPoints: Carregando EcoPoints...');
       
       const response = await gamificationAPI.getProfile();
       const newPoints = response.data.ecoPoints || 0;
       
-      console.log('💰 useEcoPoints: EcoPoints carregados:', newPoints);
+      console.log('useEcoPoints: EcoPoints carregados:', newPoints);
       setEcoPoints(newPoints);
       
       // Atualizar localStorage
@@ -29,7 +29,7 @@ export const useEcoPoints = () => {
       
       return newPoints;
     } catch (err) {
-      console.error('❌ useEcoPoints: Erro ao carregar EcoPoints:', err);
+      console.error('useEcoPoints: Erro ao carregar EcoPoints:', err);
       setError(err);
       return null;
     } finally {
@@ -42,7 +42,7 @@ export const useEcoPoints = () => {
     try {
       setLoading(true);
       setError(null);
-      console.log(`🎮 useEcoPoints: Adicionando ${points} pontos do tipo ${type}`);
+      console.log(`useEcoPoints: Adicionando ${points} pontos do tipo ${type}`);
       
       const payload = {
         type: type,
@@ -53,7 +53,7 @@ export const useEcoPoints = () => {
       const response = await gamificationAPI.registrarAcao(payload);
       const newPoints = response.data.ecoPoints;
       
-      console.log('💰 useEcoPoints: Novos EcoPoints:', newPoints);
+      console.log('useEcoPoints: Novos EcoPoints:', newPoints);
       setEcoPoints(newPoints);
       
       // Atualizar localStorage
@@ -72,7 +72,7 @@ export const useEcoPoints = () => {
       
       return response.data;
     } catch (err) {
-      console.error('❌ useEcoPoints: Erro ao adicionar pontos:', err);
+      console.error('useEcoPoints: Erro ao adicionar pontos:', err);
       setError(err);
       throw err;
     } finally {
@@ -83,7 +83,7 @@ export const useEcoPoints = () => {
   // Escutar eventos de atualização
   useEffect(() => {
     const handleEcoPointsUpdate = (event) => {
-      console.log('📡 useEcoPoints: Evento recebido:', event.detail);
+      console.log('useEcoPoints: Evento recebido:', event.detail);
       if (event.detail && event.detail.newPoints !== undefined) {
         setEcoPoints(event.detail.newPoints);
       }

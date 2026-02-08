@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Line, Doughnut } from 'react-chartjs-2';
-import { Cloud, CloudRain, Sun, Wind, Droplets, Eye, Gauge, ThermometerSun, MapPin, Calendar, Clock, Sunrise, Sunset, Zap } from 'lucide-react';
+import { Cloud, CloudRain, Sun, Wind, Droplets, Eye, Gauge, ThermometerSun, MapPin, Calendar, Clock, Sunrise, Sunset, Zap, AlertTriangle, Check } from 'lucide-react';
+import { AppIcon } from '../components/ui/AppIcon';
 
 const Environmental = () => {
   const [selectedState, setSelectedState] = useState('RJ');
@@ -183,9 +184,9 @@ const Environmental = () => {
   }, [selectedCity]);
 
   const getAirQualityStatus = (aqi) => {
-    if (aqi <= 50) return { status: 'Bom', color: 'text-green-600', bgColor: 'bg-green-100', icon: '😊' };
-    if (aqi <= 100) return { status: 'Moderado', color: 'text-yellow-600', bgColor: 'bg-yellow-100', icon: '😐' };
-    return { status: 'Ruim', color: 'text-red-600', bgColor: 'bg-red-100', icon: '😷' };
+    if (aqi <= 50) return { status: 'Bom', color: 'text-green-600', bgColor: 'bg-green-100', iconName: 'success' };
+    if (aqi <= 100) return { status: 'Moderado', color: 'text-yellow-600', bgColor: 'bg-yellow-100', iconName: 'warning' };
+    return { status: 'Ruim', color: 'text-red-600', bgColor: 'bg-red-100', iconName: 'error' };
   };
 
   const getUVLevel = (uv) => {
@@ -341,7 +342,7 @@ const Environmental = () => {
                 <div className="text-5xl font-bold text-gray-800 mb-2">{environmentalData.qualidadeAr.aqi}</div>
                 <div className={`text-lg font-semibold ${airQuality.color}`}>{airQuality.status}</div>
               </div>
-              <div className="text-6xl">{airQuality.icon}</div>
+              <AppIcon name={airQuality.iconName} size={64} className={airQuality.color} />
             </div>
             <div className="mt-4 h-2 bg-gray-200 rounded-full overflow-hidden">
               <div 
@@ -368,7 +369,11 @@ const Environmental = () => {
               <Sun className="w-16 h-16 text-orange-500" />
             </div>
             <div className="mt-4 text-sm text-gray-600">
-              {environmentalData.uv > 7 ? '⚠️ Use protetor solar!' : '✓ Proteção recomendada'}
+              {environmentalData.uv > 7 ? (
+                <span className="inline-flex items-center gap-2"><AlertTriangle size={18} className="text-orange-500" /> Use protetor solar!</span>
+              ) : (
+                <span className="inline-flex items-center gap-2"><Check size={18} className="text-green-500" /> Proteção recomendada</span>
+              )}
             </div>
           </motion.div>
         </div>

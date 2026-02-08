@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import Phaser from 'phaser';
 import { motion } from 'framer-motion';
-import { Trophy, Play, RotateCcw } from 'lucide-react';
+import { Trophy, Play, RotateCcw, Gamepad2 } from 'lucide-react';
 
 // MainMenu Scene
 class MainMenu extends Phaser.Scene {
@@ -115,7 +115,7 @@ class GameScene extends Phaser.Scene {
       strokeThickness: 4
     }).setOrigin(0.5, 0);
 
-    this.livesText = this.add.text(width - 20, 20, '❤️ '.repeat(this.lives), {
+    this.livesText = this.add.text(width - 20, 20, 'Vidas: ' + this.lives, {
       fontSize: '28px'
     }).setOrigin(1, 0);
 
@@ -229,7 +229,7 @@ class GameScene extends Phaser.Scene {
       this.combo = 0;
       this.multiplier = 1;
       this.comboText.setText('');
-      this.livesText.setText('❤️ '.repeat(this.lives));
+      this.livesText.setText('Vidas: ' + this.lives);
       this.cameras.main.shake(200, 0.01);
       
       if (this.lives <= 0) {
@@ -379,8 +379,9 @@ export default function EcoCatcher() {
             animate={{ opacity: 1, y: 0 }}
             className="text-center"
           >
-            <h1 className="text-5xl font-bold mb-6 bg-gradient-to-r from-green-600 to-blue-600 bg-clip-text text-transparent">
-              🎮 Eco Catcher
+            <h1 className="text-5xl font-bold mb-6 bg-gradient-to-r from-green-600 to-blue-600 bg-clip-text text-transparent flex items-center justify-center gap-3">
+              <Gamepad2 size={48} className="text-green-600" />
+              Eco Catcher
             </h1>
 
             <motion.div
@@ -402,22 +403,22 @@ export default function EcoCatcher() {
                 <div className="bg-blue-50 p-6 rounded-2xl">
                   <h3 className="text-xl font-bold text-blue-800 mb-4">Como Jogar</h3>
                   <ul className="text-left space-y-2 text-gray-700">
-                    <li>⌨️ Use as setas ← → para mover</li>
-                    <li>🎯 Colete lixo reciclável</li>
-                    <li>❌ Evite lixo orgânico</li>
-                    <li>⏱️ 60 segundos de jogo</li>
-                    <li>❤️ 3 vidas disponíveis</li>
+                    <li>Use as setas para mover</li>
+                    <li>Colete lixo reciclável</li>
+                    <li>Evite lixo orgânico</li>
+                    <li>60 segundos de jogo</li>
+                    <li>3 vidas disponíveis</li>
                   </ul>
                 </div>
 
                 <div className="bg-green-50 p-6 rounded-2xl">
                   <h3 className="text-xl font-bold text-green-800 mb-4">Pontuação</h3>
                   <ul className="text-left space-y-2">
-                    <li className="text-blue-600 font-semibold">🔵 Plástico: +10 pts</li>
-                    <li className="text-green-600 font-semibold">🟢 Vidro: +15 pts</li>
-                    <li className="text-yellow-600 font-semibold">🟡 Metal: +20 pts</li>
-                    <li className="text-red-600 font-semibold">🟤 Orgânico: -10 pts</li>
-                    <li className="text-purple-600 font-semibold">⚡ Combo x2 após 5 acertos!</li>
+                    <li className="text-blue-600 font-semibold">Plástico: +10 pts</li>
+                    <li className="text-green-600 font-semibold">Vidro: +15 pts</li>
+                    <li className="text-yellow-600 font-semibold">Metal: +20 pts</li>
+                    <li className="text-red-600 font-semibold">Orgânico: -10 pts</li>
+                    <li className="text-purple-600 font-semibold">Combo x2 após 5 acertos!</li>
                   </ul>
                 </div>
               </div>
@@ -434,7 +435,7 @@ export default function EcoCatcher() {
             </motion.div>
 
             <div className="bg-white rounded-2xl shadow-lg p-6">
-              <h3 className="text-2xl font-bold text-gray-800 mb-4">🏆 Ranking</h3>
+              <h3 className="text-2xl font-bold text-gray-800 mb-4 flex items-center gap-2"><Trophy size={28} /> Ranking</h3>
               <p className="text-gray-600">Em breve: Top 10 jogadores!</p>
             </div>
           </motion.div>

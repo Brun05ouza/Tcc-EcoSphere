@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useUser } from '../contexts/UserContext';
+import { AppIcon } from './ui/AppIcon';
+import { ChevronRight, Sparkles } from 'lucide-react';
 
 const InteractiveCourse = ({ course, onClose }) => {
   const [started, setStarted] = useState(false);
@@ -158,7 +160,7 @@ const InteractiveCourse = ({ course, onClose }) => {
       >
         {!started ? (
           <div className="text-center">
-            <div className="text-5xl mb-4">{course.icon}</div>
+            <div className="mb-4 flex justify-center"><AppIcon name={course.iconName} size={56} className="text-green-600" /></div>
             <h2 className="text-2xl font-bold mb-2">{currentCourseData.title}</h2>
             <p className="text-gray-600 mb-6">{course.description}</p>
             
@@ -167,7 +169,7 @@ const InteractiveCourse = ({ course, onClose }) => {
               <ul className="space-y-2">
                 {course.lessons.map((lesson, index) => (
                   <li key={index} className="flex items-center gap-2 text-sm">
-                    <span className="text-green-500">▶</span>
+                    <ChevronRight size={16} className="text-green-500 shrink-0" />
                     {lesson}
                   </li>
                 ))}
@@ -275,7 +277,7 @@ const InteractiveCourse = ({ course, onClose }) => {
           </>
         ) : (
           <div className="text-center">
-            <div className="text-6xl mb-4">🎉</div>
+            <div className="mb-4 flex justify-center"><Sparkles size={64} className="text-green-500" /></div>
             <h2 className="text-3xl font-bold mb-4">Parabéns!</h2>
             <p className="text-xl text-gray-600 mb-6">
               Você completou o curso: <span className="font-bold">{currentCourseData.title}</span>

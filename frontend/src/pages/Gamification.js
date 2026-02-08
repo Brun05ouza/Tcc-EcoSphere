@@ -3,6 +3,8 @@ import { motion } from 'framer-motion';
 import { gamificationAPI } from '../services/api';
 import { useUser } from '../contexts/UserContext';
 import { getRandomQuestions } from '../data/quizQuestions';
+import { Sparkles, Trophy, Recycle, Leaf, TreePine, Globe, Flame, Brain, Gamepad2, Award, Target, Check, X, BarChart3, RotateCcw, Medal } from 'lucide-react';
+import { AppIcon } from '../components/ui/AppIcon';
 
 const Gamification = () => {
   const [user, setUser] = useState(null);
@@ -46,11 +48,11 @@ const Gamification = () => {
   const [showConfirmation, setShowConfirmation] = useState(false);
 
   const wasteItems = [
-    { type: 'plastic', emoji: '🍾', points: 10 },
-    { type: 'paper', emoji: '📄', points: 15 },
-    { type: 'glass', emoji: '🍺', points: 20 },
-    { type: 'metal', emoji: '🥫', points: 25 },
-    { type: 'battery', emoji: '🔋', points: 50 }
+    { type: 'plastic', iconName: 'bottle', points: 10 },
+    { type: 'paper', iconName: 'paper', points: 15 },
+    { type: 'glass', iconName: 'wine', points: 20 },
+    { type: 'metal', iconName: 'wine', points: 25 },
+    { type: 'battery', iconName: 'battery', points: 50 }
   ];
 
   useEffect(() => {
@@ -148,43 +150,61 @@ const Gamification = () => {
   }, [gameActive]);
 
   const loadGamificationData = async () => {
-    // Usar dados locais ao invés de API
     const userData = JSON.parse(localStorage.getItem('user') || '{}');
-    
-    setGamificationData({
-      ecoPoints: userData.ecoPoints || 0,
-      level: userData.level || 'Iniciante',
-      totalClassifications: 0
-    });
-    
-    // Mock data para ranking
-    setRanking([
-      { position: 1, name: 'EcoMaster', points: 2500, avatar: '🌟', level: 'Expert' },
-      { position: 2, name: 'GreenHero', points: 2100, avatar: '🌱', level: 'Avançado' },
-      { position: 3, name: userData.name || 'Você', points: userData.ecoPoints || 0, avatar: '🧑', level: userData.level || 'Iniciante', isCurrentUser: true },
-      { position: 4, name: 'EcoWarrior', points: 1500, avatar: '♻️', level: 'Intermediário' },
-      { position: 5, name: 'NatureLover', points: 1200, avatar: '🌿', level: 'Iniciante' }
-    ]);
-    
-    // Mock data para badges
-    setBadges([
-      { id: 1, name: 'Bem-vindo', description: 'Primeira vez no EcoSphere', earned: true, points: 50, icon: '🎉' },
-      { id: 2, name: 'Primeiro Passo', description: 'Primeira classificação', earned: true, points: 100, icon: '🌱' },
-      { id: 3, name: 'Reciclador', description: '10 classificações', earned: false, points: 200, icon: '♻️' },
-      { id: 4, name: 'Eco Warrior', description: '100 EcoPoints', earned: false, points: 300, icon: '🏆' },
-      { id: 5, name: 'Guardião Verde', description: '500 EcoPoints', earned: false, points: 500, icon: '🌳' },
-      { id: 6, name: 'Mestre Ambiental', description: '1000 EcoPoints', earned: false, points: 1000, icon: '🌍' },
-      { id: 7, name: 'Sequenciador', description: '7 dias consecutivos', earned: false, points: 250, icon: '🔥' },
-      { id: 8, name: 'Quiz Master', description: 'Complete 10 quizzes', earned: false, points: 300, icon: '🧠' },
-      { id: 9, name: 'Gamer Eco', description: '1000 pontos no Eco Catcher', earned: false, points: 400, icon: '🎮' }
-    ]);
-    
+    try {
+      const [profileRes, rankingRes, badgesRes] = await Promise.all([
+        gamificationAPI.getProfile(),
+        gamificationAPI.getRanking(),
+        gamificationAPI.getBadges(),
+      ]);
+      setGamificationData({
+        ecoPoints: profileRes.data?.ecoPoints ?? userData.ecoPoints ?? 0,
+        level: profileRes.data?.level || userData.level || 'Iniciante',
+        totalClassifications: profileRes.data?.totalClassifications ?? 0,
+      });
+      setRanking((rankingRes.data || []).map((r, i) => ({
+        position: r.position,
+        name: r.name,
+        points: r.points,
+        level: r.level,
+        isCurrentUser: r.isCurrentUser,
+        avatarIcon: r.isCurrentUser ? 'user' : ['sparkles', 'leaf', 'recycle', 'leafy', 'globe', 'trophy', 'tree', 'flame', 'gamepad', 'sparkle'][i] || 'user',
+      })));
+      setBadges((badgesRes.data || []).map((b) => ({
+        ...b,
+        iconName: badgeIcons[b.name] || 'award',
+      })));
+    } catch {
+      setGamificationData({
+        ecoPoints: userData.ecoPoints || 0,
+        level: userData.level || 'Iniciante',
+        totalClassifications: 0,
+      });
+      setRanking([
+        { position: 1, name: 'EcoMaster', points: 2500, avatarIcon: 'sparkles', level: 'Expert' },
+        { position: 2, name: 'GreenHero', points: 2100, avatarIcon: 'leaf', level: 'Avançado' },
+        { position: 3, name: userData.name || 'Você', points: userData.ecoPoints || 0, avatarIcon: 'user', level: userData.level || 'Iniciante', isCurrentUser: true },
+        { position: 4, name: 'EcoWarrior', points: 1500, avatarIcon: 'recycle', level: 'Intermediário' },
+        { position: 5, name: 'NatureLover', points: 1200, avatarIcon: 'leafy', level: 'Iniciante' },
+      ]);
+      setBadges([
+        { id: 1, name: 'Bem-vindo', description: 'Primeira vez no EcoSphere', earned: true, points: 50, iconName: 'sparkles' },
+        { id: 2, name: 'Primeiro Passo', description: 'Primeira classificação', earned: true, points: 100, iconName: 'leaf' },
+        { id: 3, name: 'Reciclador', description: '10 classificações', earned: false, points: 200, iconName: 'recycle' },
+        { id: 4, name: 'Eco Warrior', description: '100 EcoPoints', earned: false, points: 300, iconName: 'trophy' },
+        { id: 5, name: 'Guardião Verde', description: '500 EcoPoints', earned: false, points: 500, iconName: 'tree' },
+        { id: 6, name: 'Mestre Ambiental', description: '1000 EcoPoints', earned: false, points: 1000, iconName: 'globe' },
+        { id: 7, name: 'Sequenciador', description: '7 dias consecutivos', earned: false, points: 250, iconName: 'flame' },
+        { id: 8, name: 'Quiz Master', description: 'Complete 10 quizzes', earned: false, points: 300, iconName: 'brain' },
+        { id: 9, name: 'Gamer Eco', description: '1000 pontos no Eco Catcher', earned: false, points: 400, iconName: 'gamepad' },
+      ]);
+    }
     setLoading(false);
   };
   
   const addEcoPoints = async (points, type = 'game') => {
     try {
-      console.log(`🎮 Adicionando ${points} pontos do tipo ${type}`);
+      console.log(`Adicionando ${points} pontos do tipo ${type}`);
       
       const actionName = type === 'quiz' ? 'Eco Quiz' : type === 'eco_catcher' ? 'Eco Catcher' : 'Jogo';
       const newTotal = addEcoPointsContext(points, actionName);
@@ -197,21 +217,21 @@ const Gamification = () => {
       
       return true;
     } catch (error) {
-      console.error('❌ Erro ao adicionar pontos:', error);
+      console.error('Erro ao adicionar pontos:', error);
       return false;
     }
   };
 
   const badgeIcons = {
-    'Bem-vindo': '🎉',
-    'Primeiro Passo': '🌱',
-    'Reciclador': '♻️',
-    'Eco Warrior': '🏆',
-    'Guardião Verde': '🌳',
-    'Mestre Ambiental': '🌍',
-    'Sequenciador': '🔥',
-    'Quiz Master': '🧠',
-    'Gamer Eco': '🎮'
+    'Bem-vindo': 'sparkles',
+    'Primeiro Passo': 'leaf',
+    'Reciclador': 'recycle',
+    'Eco Warrior': 'trophy',
+    'Guardião Verde': 'tree',
+    'Mestre Ambiental': 'globe',
+    'Sequenciador': 'flame',
+    'Quiz Master': 'brain',
+    'Gamer Eco': 'gamepad'
   };
 
   if (loading) {
@@ -232,7 +252,7 @@ const Gamification = () => {
       progress: Math.min(gamificationData?.totalClassifications || 0, 5), 
       total: 5, 
       reward: 100, 
-      icon: '🎯' 
+      iconName: 'target' 
     },
     { 
       id: 2, 
@@ -240,7 +260,7 @@ const Gamification = () => {
       progress: Math.min(contextUser?.ecoPoints || gamificationData?.ecoPoints || 0, 100), 
       total: 100, 
       reward: 50, 
-      icon: '💎' 
+      iconName: 'star' 
     },
     { 
       id: 3, 
@@ -248,7 +268,7 @@ const Gamification = () => {
       progress: badges.filter(b => b.earned).length > 0 ? 1 : 0, 
       total: 1, 
       reward: 25, 
-      icon: '🏅' 
+      iconName: 'award' 
     }
   ];
 
@@ -262,7 +282,7 @@ const Gamification = () => {
             animate={{ opacity: 1, scale: 1 }}
             className="bg-white rounded-3xl p-8 max-w-md mx-4 text-center"
           >
-            <div className="text-6xl mb-4">🎉</div>
+            <Sparkles size={64} className="mx-auto mb-4 text-green-500" />
             <h2 className="text-2xl font-bold mb-4">Parabéns!</h2>
             <p className="text-gray-600 mb-6">
               Você ganhou <span className="font-bold text-green-600">{pendingPoints} EcoPoints</span> no {pendingType === 'quiz' ? 'Eco Quiz' : 'Eco Catcher'}!
@@ -276,10 +296,8 @@ const Gamification = () => {
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 onClick={async () => {
-                  console.log(`🔴 CONFIRMANDO: ${pendingPoints} pontos do tipo ${pendingType}`);
                   const success = await addEcoPoints(pendingPoints, pendingType);
                   if (success) {
-                    console.log('✅ Pontos adicionados com sucesso!');
                     setShowConfirmation(false);
                     setPendingPoints(0);
                     setPendingType('');
@@ -289,13 +307,14 @@ const Gamification = () => {
                       loadGamificationData();
                     }, 1000);
                   } else {
-                    console.log('❌ Falha ao adicionar pontos!');
+                    console.log('Falha ao adicionar pontos');
                     alert('Erro ao adicionar pontos. Tente novamente.');
                   }
                 }}
                 className="flex-1 bg-gradient-to-r from-green-500 to-blue-500 text-white px-6 py-3 rounded-xl font-bold hover:shadow-lg transition-all"
               >
-                ✅ Confirmar EcoPoints
+                <Check size={20} className="inline mr-2" />
+                Confirmar EcoPoints
               </motion.button>
               <motion.button
                 whileHover={{ scale: 1.05 }}
@@ -307,7 +326,8 @@ const Gamification = () => {
                 }}
                 className="px-6 py-3 border-2 border-gray-300 rounded-xl font-bold hover:bg-gray-50 transition-all"
               >
-                ❌ Cancelar
+                <X size={20} className="inline mr-2" />
+                Cancelar
               </motion.button>
             </div>
           </motion.div>
@@ -390,7 +410,7 @@ const Gamification = () => {
             >
               {!quizActive && !quizCompleted && (
                 <div className="text-center">
-                  <div className="text-8xl mb-6">🧠</div>
+                  <Brain size={96} className="mx-auto mb-6 text-purple-500" />
                   <h2 className="text-3xl font-bold mb-4">Eco Quiz Challenge!</h2>
                   <p className="text-gray-600 mb-8 text-lg">
                     Teste seus conhecimentos sobre sustentabilidade e ganhe até <span className="font-bold text-green-600">305 EcoPoints</span>!
@@ -408,7 +428,8 @@ const Gamification = () => {
                     }}
                     className="bg-gradient-to-r from-green-500 to-blue-500 text-white px-8 py-4 rounded-2xl font-bold text-lg hover:shadow-lg transition-all"
                   >
-                    🚀 Começar Quiz!
+                    <Sparkles size={20} className="inline mr-2" />
+                    Começar Quiz!
                   </motion.button>
                 </div>
               )}
@@ -488,7 +509,7 @@ const Gamification = () => {
               
               {quizCompleted && !showConfirmation && (
                 <div className="text-center">
-                  <div className="text-8xl mb-6">🏆</div>
+                  <Trophy size={96} className="mx-auto mb-6 text-yellow-500" />
                   <h2 className="text-3xl font-bold mb-4">Quiz Completo!</h2>
                   <div className="text-6xl font-bold text-green-600 mb-4">
                     {quizScore} EcoPoints
@@ -509,7 +530,8 @@ const Gamification = () => {
                       }}
                       className="bg-gradient-to-r from-green-500 to-blue-500 text-white px-6 py-3 rounded-xl font-bold"
                     >
-                      🔄 Jogar Novamente
+                      <RotateCcw size={20} className="inline mr-2" />
+                      Jogar Novamente
                     </motion.button>
                     <motion.button
                       onClick={() => {
@@ -518,7 +540,8 @@ const Gamification = () => {
                       }}
                       className="bg-gray-500 text-white px-6 py-3 rounded-xl font-bold"
                     >
-                      📊 Ver Dashboard
+                      <BarChart3 size={20} className="inline mr-2" />
+                      Ver Dashboard
                     </motion.button>
                   </div>
                 </div>
@@ -534,7 +557,7 @@ const Gamification = () => {
             >
               {!gameActive && !gameOver && (
                 <div className="text-center">
-                  <div className="text-8xl mb-6">🎮</div>
+                  <Gamepad2 size={96} className="mx-auto mb-6 text-blue-500" />
                   <h2 className="text-3xl font-bold mb-4">Eco Catcher!</h2>
                   <p className="text-gray-600 mb-8 text-lg">
                     Pegue o lixo reciclável que cai do céu! Use ← → ou A/D para mover.
@@ -552,7 +575,8 @@ const Gamification = () => {
                     }}
                     className="bg-gradient-to-r from-green-500 to-blue-500 text-white px-8 py-4 rounded-2xl font-bold text-lg hover:shadow-lg transition-all"
                   >
-                    🚀 Começar Jogo!
+                    <Sparkles size={20} className="inline mr-2" />
+                    Começar Jogo!
                   </motion.button>
                 </div>
               )}
@@ -576,10 +600,10 @@ const Gamification = () => {
                   >
                     {/* Player */}
                     <div 
-                      className="absolute bottom-2 w-12 h-12 bg-green-600 rounded-full flex items-center justify-center text-2xl transition-all duration-100"
+                      className="absolute bottom-2 w-12 h-12 bg-green-600 rounded-full flex items-center justify-center transition-all duration-100"
                       style={{ left: `${playerPos}%` }}
                     >
-                      🧑
+                      <AppIcon name="user" size={28} className="text-white" />
                     </div>
                     
                     {/* Falling Items */}
@@ -593,7 +617,7 @@ const Gamification = () => {
                           transform: 'translate(-50%, -50%)'
                         }}
                       >
-                        {item.emoji}
+                        <AppIcon name={item.iconName} size={28} className="text-gray-700" />
                       </div>
                     ))}
                     
@@ -606,7 +630,7 @@ const Gamification = () => {
                   <div className="mt-4 grid grid-cols-5 gap-2 text-center text-xs">
                     {wasteItems.map(item => (
                       <div key={item.type} className="bg-gray-50 p-2 rounded">
-                        <div className="text-lg">{item.emoji}</div>
+                        <div className="text-lg"><AppIcon name={item.iconName} size={24} className="text-gray-700" /></div>
                         <div className="font-bold">{item.points}pts</div>
                       </div>
                     ))}
@@ -616,7 +640,7 @@ const Gamification = () => {
               
               {gameOver && !showConfirmation && (
                 <div className="text-center">
-                  <div className="text-8xl mb-6">🏆</div>
+                  <Trophy size={96} className="mx-auto mb-6 text-yellow-500" />
                   <h2 className="text-3xl font-bold mb-4">Parabéns!</h2>
                   <div className="text-6xl font-bold text-green-600 mb-4">
                     {gameScore} EcoPoints
@@ -636,7 +660,8 @@ const Gamification = () => {
                       }}
                       className="bg-gradient-to-r from-green-500 to-blue-500 text-white px-6 py-3 rounded-xl font-bold"
                     >
-                      🔄 Jogar Novamente
+                      <RotateCcw size={20} className="inline mr-2" />
+                      Jogar Novamente
                     </motion.button>
                     <motion.button
                       onClick={() => {
@@ -645,7 +670,8 @@ const Gamification = () => {
                       }}
                       className="bg-gray-500 text-white px-6 py-3 rounded-xl font-bold"
                     >
-                      📊 Ver Dashboard
+                      <BarChart3 size={20} className="inline mr-2" />
+                      Ver Dashboard
                     </motion.button>
                   </div>
                 </div>
@@ -670,10 +696,8 @@ const Gamification = () => {
                   }`}
                 >
                   <div className="text-center">
-                    <div className={`text-6xl mb-4 ${
-                      badge.earned ? 'grayscale-0' : 'grayscale'
-                    }`}>
-                      {badgeIcons[badge.name] || '🏅'}
+                    <div className={`mb-4 flex justify-center ${badge.earned ? 'grayscale-0' : 'grayscale'}`}>
+                      <AppIcon name={badge.iconName || badgeIcons[badge.name] || 'award'} size={48} />
                     </div>
                     <h3 className="font-bold text-lg mb-2">{badge.name}</h3>
                     <p className="text-gray-600 text-sm mb-4">{badge.description}</p>
@@ -718,11 +742,11 @@ const Gamification = () => {
                         'bg-blue-100 text-blue-800'
                       }`}>
                         {player.position <= 3 ? 
-                          ['', '🥇', '🥈', '🥉'][player.position] : 
+                          <Medal size={24} className={player.position === 1 ? 'text-yellow-600' : player.position === 2 ? 'text-gray-600' : 'text-orange-600'} /> : 
                           player.position
                         }
                       </div>
-                      <div className="text-2xl">{player.avatar}</div>
+                      <AppIcon name={player.avatarIcon} size={32} className="text-gray-700" />
                       <div>
                         <div className="font-semibold">{player.name}</div>
                         <div className="text-sm text-gray-600">
@@ -755,7 +779,7 @@ const Gamification = () => {
                   className="bg-white p-6 rounded-2xl shadow-lg"
                 >
                   <div className="flex items-center gap-4 mb-4">
-                    <div className="text-3xl">{mission.icon}</div>
+                    <AppIcon name={mission.iconName} size={32} className="text-green-600" />
                     <div className="flex-1">
                       <h3 className="font-bold">{mission.title}</h3>
                       <div className="text-sm text-gray-600">
@@ -779,8 +803,9 @@ const Gamification = () => {
                   
                   <div className="text-center">
                     {mission.progress === mission.total ? (
-                      <button className="bg-green-500 text-white px-4 py-2 rounded-xl font-medium">
-                        ✓ Concluída
+                      <button className="bg-green-500 text-white px-4 py-2 rounded-xl font-medium inline-flex items-center gap-2">
+                        <Check size={18} />
+                        Concluída
                       </button>
                     ) : (
                       <button className="bg-blue-500 text-white px-4 py-2 rounded-xl font-medium hover:bg-blue-600 transition-colors">
@@ -801,13 +826,13 @@ const Gamification = () => {
             >
               {/* Jogos Rápidos */}
               <div className="bg-white p-6 rounded-2xl shadow-lg">
-                <h3 className="font-bold text-lg mb-4">🎮 Jogos Rápidos</h3>
+                <h3 className="font-bold text-lg mb-4 flex items-center gap-2"><Gamepad2 size={24} /> Jogos Rápidos</h3>
                 <div className="space-y-3">
                   <button
                     onClick={() => setSelectedTab('quiz')}
                     className="w-full p-4 bg-gradient-to-r from-purple-50 to-pink-50 hover:from-purple-100 hover:to-pink-100 rounded-xl transition-all flex items-center gap-3"
                   >
-                    <span className="text-3xl">🧠</span>
+                    <Brain size={32} className="text-purple-500 shrink-0" />
                     <div className="text-left flex-1">
                       <div className="font-bold">Eco Quiz</div>
                       <div className="text-sm text-gray-600">Até 305 EcoPoints</div>
@@ -818,7 +843,7 @@ const Gamification = () => {
                     onClick={() => setSelectedTab('game')}
                     className="w-full p-4 bg-gradient-to-r from-green-50 to-blue-50 hover:from-green-100 hover:to-blue-100 rounded-xl transition-all flex items-center gap-3"
                   >
-                    <span className="text-3xl">🎮</span>
+                    <Gamepad2 size={32} className="text-green-500 shrink-0" />
                     <div className="text-left flex-1">
                       <div className="font-bold">Eco Catcher</div>
                       <div className="text-sm text-gray-600">Pegue lixo reciclável</div>
@@ -829,7 +854,7 @@ const Gamification = () => {
                     onClick={() => window.location.href = '/eco-catcher'}
                     className="w-full p-4 bg-gradient-to-r from-orange-50 to-red-50 hover:from-orange-100 hover:to-red-100 rounded-xl transition-all flex items-center gap-3"
                   >
-                    <span className="text-3xl">🕹️</span>
+                    <Gamepad2 size={32} className="text-orange-500 shrink-0" />
                     <div className="text-left flex-1">
                       <div className="font-bold">Eco Catcher Phaser</div>
                       <div className="text-sm text-gray-600">Versão completa</div>
@@ -841,11 +866,11 @@ const Gamification = () => {
 
               {/* Recent Badges */}
               <div className="bg-white p-6 rounded-2xl shadow-lg">
-                <h3 className="font-bold text-lg mb-4">🏅 Últimas Conquistas</h3>
+                <h3 className="font-bold text-lg mb-4 flex items-center gap-2"><Award size={24} /> Últimas Conquistas</h3>
                 <div className="space-y-3">
                   {badges.filter(b => b.earned).slice(-3).map((badge) => (
                     <div key={badge.id} className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl">
-                      <span className="text-2xl">{badge.icon}</span>
+                      <AppIcon name={badge.iconName} size={28} className="text-gray-700 shrink-0" />
                       <div className="flex-1">
                         <div className="font-medium">{badge.name}</div>
                         <div className="text-sm text-gray-600">+{badge.points} EcoPoints</div>

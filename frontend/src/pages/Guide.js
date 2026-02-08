@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
+import { Rocket, Target } from 'lucide-react';
+import { AppIcon } from '../components/ui/AppIcon';
 
 const Guide = () => {
   const [currentStep, setCurrentStep] = useState(0);
@@ -9,11 +11,11 @@ const Guide = () => {
   const steps = [
     {
       id: 1,
-      title: "Bem-vindo ao EcoSphere! 🌍",
+      title: "Bem-vindo ao EcoSphere!",
       description: "Vamos começar sua jornada sustentável com práticas simples e eficazes.",
       content: "O EcoSphere foi criado para te ajudar a adotar práticas sustentáveis no dia a dia. Através de desafios, educação e gamificação, você vai aprender a fazer a diferença para o planeta!",
       action: "Começar Jornada",
-      icon: "🌱"
+      iconName: "leaf"
     },
     {
       id: 2,
@@ -21,7 +23,7 @@ const Guide = () => {
       description: "Use nossa IA para identificar corretamente onde descartar cada tipo de lixo.",
       content: "A separação correta do lixo é fundamental para a reciclagem. Nossa IA te ajuda a identificar se um resíduo é plástico, papel, vidro ou metal, e onde descartá-lo.",
       action: "Classificar Primeiro Resíduo",
-      icon: "🤖",
+      iconName: "bot",
       route: "/classificar-residuos"
     },
     {
@@ -30,7 +32,7 @@ const Guide = () => {
       description: "Acompanhe dados ambientais da sua região em tempo real.",
       content: "Fique por dentro da qualidade do ar, temperatura e umidade da sua cidade. Conhecimento é o primeiro passo para a ação!",
       action: "Ver Dados Ambientais",
-      icon: "🌡️",
+      iconName: "thermometer",
       route: "/monitoramento"
     },
     {
@@ -39,7 +41,7 @@ const Guide = () => {
       description: "Complete desafios e ganhe pontos por suas ações sustentáveis.",
       content: "Cada ação conta! Classifique resíduos, complete quiz ecológicos e jogos para ganhar EcoPoints e subir no ranking.",
       action: "Explorar EcoPoints",
-      icon: "🏆",
+      iconName: "trophy",
       route: "/gamificacao"
     },
     {
@@ -48,7 +50,7 @@ const Guide = () => {
       description: "Acesse cursos, dicas e desafios para expandir seu conhecimento ambiental.",
       content: "Aprenda sobre sustentabilidade através de cursos interativos, dicas práticas e desafios que você pode aplicar no seu dia a dia.",
       action: "Começar a Aprender",
-      icon: "📚",
+      iconName: "book",
       route: "/educacao"
     }
   ];
@@ -58,25 +60,25 @@ const Guide = () => {
       title: "Reduza seu Lixo",
       description: "Diminua em 30% a produção de resíduos em casa",
       tips: ["Use sacolas reutilizáveis", "Evite produtos descartáveis", "Compre apenas o necessário"],
-      icon: "🗑️"
+      iconName: "trash"
     },
     {
       title: "Economize Energia",
       description: "Reduza o consumo energético em 20%",
       tips: ["Desligue aparelhos da tomada", "Use lâmpadas LED", "Aproveite luz natural"],
-      icon: "⚡"
+      iconName: "zap"
     },
     {
       title: "Preserve a Água",
       description: "Diminua o consumo de água em 25%",
       tips: ["Banhos mais curtos", "Feche a torneira ao escovar dentes", "Reutilize água da chuva"],
-      icon: "💧"
+      iconName: "droplets"
     },
     {
       title: "Transporte Sustentável",
       description: "Use transporte público ou bicicleta 3x por semana",
       tips: ["Caminhe distâncias curtas", "Use bike ou transporte público", "Compartilhe caronas"],
-      icon: "🚲"
+      iconName: "bike"
     }
   ];
 
@@ -132,7 +134,7 @@ const Guide = () => {
           className="bg-white rounded-3xl shadow-xl p-8 mb-8"
         >
           <div className="text-center mb-6">
-            <div className="text-6xl mb-4">{steps[currentStep].icon}</div>
+            <div className="mb-4 flex justify-center"><AppIcon name={steps[currentStep].iconName} size={64} className="text-green-600" /></div>
             <h2 className="text-3xl font-bold mb-4">{steps[currentStep].title}</h2>
             <p className="text-xl text-gray-600 mb-6">{steps[currentStep].description}</p>
             <p className="text-gray-700 leading-relaxed">{steps[currentStep].content}</p>
@@ -167,7 +169,7 @@ const Guide = () => {
             animate={{ opacity: 1, y: 0 }}
             className="bg-white rounded-3xl shadow-xl p-8"
           >
-            <h2 className="text-2xl font-bold mb-6 text-center">🎯 Seus Objetivos Sustentáveis</h2>
+            <h2 className="text-2xl font-bold mb-6 text-center flex items-center justify-center gap-2"><Target size={28} /> Seus Objetivos Sustentáveis</h2>
             <div className="grid md:grid-cols-2 gap-6">
               {objectives.map((objective, index) => (
                 <motion.div
@@ -178,7 +180,7 @@ const Guide = () => {
                   className="border border-gray-200 rounded-2xl p-6 hover:shadow-lg transition-all"
                 >
                   <div className="flex items-center mb-4">
-                    <span className="text-3xl mr-3">{objective.icon}</span>
+                    <AppIcon name={objective.iconName} size={32} className="mr-3 shrink-0 text-green-600" />
                     <div>
                       <h3 className="font-bold text-lg">{objective.title}</h3>
                       <p className="text-sm text-gray-600">{objective.description}</p>
@@ -205,7 +207,8 @@ const Guide = () => {
                 onClick={() => navigate('/dashboard')}
                 className="bg-gradient-to-r from-green-500 to-blue-500 text-white px-8 py-4 rounded-xl font-bold text-lg hover:shadow-lg transition-all"
               >
-                🚀 Ir para o Dashboard
+                <Rocket size={22} className="inline mr-2" />
+                Ir para o Dashboard
               </button>
             </div>
           </motion.div>

@@ -1,6 +1,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
+import { Globe } from 'lucide-react';
 
 const Footer = () => {
   return (
@@ -14,7 +15,7 @@ const Footer = () => {
               whileInView={{ opacity: 1, y: 0 }}
               className="flex items-center space-x-2 mb-4"
             >
-              <span className="text-3xl">🌍</span>
+              <Globe size={32} className="text-white" strokeWidth={1.5} />
               <span className="text-2xl font-bold">EcoSphere</span>
             </motion.div>
             <p className="text-gray-300 text-sm leading-relaxed mb-4">

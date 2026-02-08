@@ -12,7 +12,7 @@ export const useWasteClassifier = () => {
     'Plástico': {
       bin: 'Lixeira Vermelha',
       tips: 'Lave e remova rótulos. Plástico pode ser reciclado múltiplas vezes.',
-      icon: '♻️',
+      iconName: 'recycle',
       color: 'from-red-500 to-pink-500',
       bgColor: 'bg-red-50',
       textColor: 'text-red-800'
@@ -20,7 +20,7 @@ export const useWasteClassifier = () => {
     'Metal': {
       bin: 'Lixeira Amarela',
       tips: 'Lave bem antes de descartar. Metais economizam muita energia na reciclagem.',
-      icon: '🥫',
+      iconName: 'wine',
       color: 'from-yellow-500 to-orange-500',
       bgColor: 'bg-yellow-50',
       textColor: 'text-yellow-800'
@@ -28,7 +28,7 @@ export const useWasteClassifier = () => {
     'Vidro': {
       bin: 'Lixeira Verde',
       tips: 'Remova tampas e rótulos. Vidro pode ser reciclado infinitamente.',
-      icon: '🍶',
+      iconName: 'bottle',
       color: 'from-green-500 to-emerald-500',
       bgColor: 'bg-green-50',
       textColor: 'text-green-800'
@@ -36,7 +36,7 @@ export const useWasteClassifier = () => {
     'Papel': {
       bin: 'Lixeira Azul',
       tips: 'Mantenha seco e limpo. Remova fitas adesivas e grampos.',
-      icon: '📄',
+      iconName: 'paper',
       color: 'from-blue-500 to-cyan-500',
       bgColor: 'bg-blue-50',
       textColor: 'text-blue-800'
@@ -44,7 +44,7 @@ export const useWasteClassifier = () => {
     'Orgânico': {
       bin: 'Lixeira Marrom',
       tips: 'Pode virar adubo! Separe restos de alimentos e cascas.',
-      icon: '🍎',
+      iconName: 'leaf',
       color: 'from-amber-600 to-orange-600',
       bgColor: 'bg-amber-50',
       textColor: 'text-amber-800'
@@ -52,7 +52,7 @@ export const useWasteClassifier = () => {
     'Eletrônico': {
       bin: 'Coleta Especial',
       tips: 'Leve a pontos de coleta especializados. Contém materiais tóxicos.',
-      icon: '📱',
+      iconName: 'smartphone',
       color: 'from-purple-500 to-indigo-500',
       bgColor: 'bg-purple-50',
       textColor: 'text-purple-800'
@@ -68,7 +68,7 @@ export const useWasteClassifier = () => {
         try {
           const loadedModel = await tf.loadLayersModel('/models/waste-classifier/model.json');
           setModel(loadedModel);
-          console.log('✅ Modelo Teachable Machine carregado com sucesso');
+          console.log('Modelo Teachable Machine carregado com sucesso');
         } catch (err) {
           console.log('⚠️ Modelo não encontrado, usando classificação simulada');
           setModel('simulated');

@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { userAPI } from '../services/api';
 import { useUser } from '../contexts/UserContext';
 import GoogleLogin from '../components/GoogleLogin';
-import { Brain, Recycle, BarChart3, Trophy } from 'lucide-react';
+import { Brain, Recycle, BarChart3, Trophy, Globe } from 'lucide-react';
 
 const Login = () => {
   const [isLogin, setIsLogin] = useState(true);
@@ -18,6 +18,7 @@ const Login = () => {
   const [notification, setNotification] = useState(null);
   const navigate = useNavigate();
   const { updateUser } = useUser();
+  const useSupabase = !!(process.env.REACT_APP_SUPABASE_URL && process.env.REACT_APP_SUPABASE_ANON_KEY);
 
   const showNotification = (message, type = 'error') => {
     setNotification({ message, type });
@@ -46,82 +47,82 @@ const Login = () => {
     return levels[score] || levels[0];
   };
 
-  const handleGoogleSuccess = async (googleData) => {
+  const handleGoogleClick = async () => {
     setLoading(true);
     try {
-      const response = await userAPI.googleLogin(googleData);
-      updateUser(response.data.user, response.data.token);
-      showNotification('🎉 Login com Google realizado!', 'success');
-      setTimeout(() => navigate('/'), 1000);
+      await userAPI.googleLogin();
+      showNotification('Redirecionando para o Google...', 'success');
     } catch (error) {
-      showNotification('❌ Erro no login com Google', 'error');
-    } finally {
+      showNotification('Erro no login com Google', 'error');
       setLoading(false);
     }
   };
 
   const handleGoogleError = (error) => {
-    showNotification('❌ Erro na autenticação Google', 'error');
+    showNotification('Erro na autenticação Google', 'error');
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!process.env.REACT_APP_SUPABASE_URL || !process.env.REACT_APP_SUPABASE_ANON_KEY) {
+      showNotification('Configure REACT_APP_SUPABASE_URL e REACT_APP_SUPABASE_ANON_KEY no arquivo .env do frontend.', 'error');
+      return;
+    }
     setLoading(true);
 
     try {
       if (isLogin) {
         if (!formData.email || !formData.password) {
-          showNotification('📝 Preencha todos os campos para continuar', 'warning');
+          showNotification('Preencha todos os campos para continuar', 'warning');
+          setLoading(false);
           return;
         }
 
         if (!formData.email.includes('@')) {
-          showNotification('📧 Digite um email válido', 'error');
+          showNotification('Digite um email válido', 'error');
+          setLoading(false);
           return;
         }
 
         const response = await userAPI.login({
           email: formData.email,
           password: formData.password
-        }).catch(() => {
-          // Fallback para login local
-          const users = JSON.parse(localStorage.getItem('users') || '[]');
-          const user = users.find(u => u.email === formData.email && u.password === formData.password);
-
-          if (!user) {
-            throw new Error('Email ou senha incorretos');
-          }
-
-          return { data: { user, token: 'local_token_' + Date.now() } };
         });
 
-        updateUser(response.data.user, response.data.token);
-        showNotification('🎉 Login realizado com sucesso!', 'success');
+        if (response.data?.user && response.data?.token) {
+          updateUser(response.data.user, response.data.token);
+        }
+        showNotification('Login realizado com sucesso!', 'success');
         setTimeout(() => navigate('/'), 1000);
       } else {
         if (!formData.name || !formData.email || !formData.password || !formData.confirmPassword) {
-          showNotification('📝 Preencha todos os campos para continuar', 'warning');
+          showNotification('Preencha todos os campos para continuar', 'warning');
+          setLoading(false);
           return;
         }
 
         if (!formData.email.includes('@')) {
-          showNotification('📧 Digite um email válido', 'error');
+          showNotification('Digite um email válido', 'error');
+          setLoading(false);
           return;
         }
 
         if (formData.password !== formData.confirmPassword) {
-          showNotification('🔒 As senhas não coincidem', 'error');
+          showNotification('As senhas não coincidem', 'error');
+          setLoading(false);
           return;
         }
 
         if (formData.password.length < 6) {
-          showNotification('🔐 A senha deve ter pelo menos 6 caracteres', 'error');
+          showNotification('A senha deve ter pelo menos 6 caracteres', 'error');
+          setLoading(false);
           return;
         }
 
         const passwordStrength = getPasswordStrength(formData.password);
         if (passwordStrength.strength < 60) {
-          showNotification('⚠️ Use uma senha mais forte para maior segurança', 'warning');
+          showNotification('Use uma senha mais forte para maior segurança', 'warning');
+          setLoading(false);
           return;
         }
 
@@ -129,45 +130,39 @@ const Login = () => {
           name: formData.name,
           email: formData.email,
           password: formData.password
-        }).catch(() => {
-          // Fallback para registro local
-          const users = JSON.parse(localStorage.getItem('users') || '[]');
-          
-          if (users.find(u => u.email === formData.email)) {
-            throw new Error('Email já cadastrado');
-          }
-
-          const newUser = {
-            id: Date.now(),
-            name: formData.name,
-            email: formData.email,
-            password: formData.password,
-            ecoPoints: 0,
-            level: 'Iniciante',
-            createdAt: new Date().toISOString()
-          };
-
-          users.push(newUser);
-          localStorage.setItem('users', JSON.stringify(users));
-
-          return { data: { user: newUser, token: 'local_token_' + Date.now() } };
         });
 
-        updateUser(response.data.user, response.data.token);
-        showNotification('🎉 Conta criada com sucesso!', 'success');
-        setTimeout(() => navigate('/'), 1000);
+        if (response.data?.user && response.data?.token) {
+          updateUser(response.data.user, response.data.token);
+          showNotification('Conta criada com sucesso!', 'success');
+          setTimeout(() => navigate('/'), 1000);
+        } else if (response.data?.user) {
+          updateUser(response.data.user, null);
+          showNotification('Conta criada! Confirme seu email no link que enviamos para entrar.', 'success');
+          setTimeout(() => navigate('/'), 3000);
+        } else {
+          showNotification('Conta criada com sucesso!', 'success');
+          setTimeout(() => navigate('/'), 1000);
+        }
       }
     } catch (error) {
-      let message = '❌ Erro ao fazer login/registro';
-      
-      if (error.response?.status === 401) {
-        message = '🔐 Email ou senha incorretos';
-      } else if (error.response?.status === 409) {
-        message = '📧 Este email já está cadastrado';
-      } else if (error.response?.data?.message) {
-        message = error.response.data.message;
+      const isAbort = error?.name === 'AbortError' || /signal is aborted|aborted without reason/i.test(error?.message || '');
+      if (isAbort) {
+        return;
       }
-      
+      let message = 'Erro ao fazer login/registro';
+      const errMsg = error?.message || error?.response?.data?.message || '';
+      if (/Tempo esgotado|timeout|Verifique sua conexão/i.test(errMsg)) {
+        message = 'A requisição demorou demais. Verifique sua internet e se o Supabase está acessível (URL e chave no .env).';
+      } else if (error?.response?.status === 401) {
+        message = 'Email ou senha incorretos';
+      } else if (error?.response?.status === 409 || /already registered|already exists|duplicate/i.test(errMsg)) {
+        message = 'Este email já está cadastrado';
+      } else if (errMsg) {
+        if (/confirm your email|email not confirmed/i.test(errMsg)) message = 'Confirme seu email para entrar. Verifique a caixa de entrada.';
+        else if (/invalid login|invalid credentials/i.test(errMsg)) message = 'Email ou senha incorretos';
+        else message = errMsg.length > 80 ? errMsg.slice(0, 80) + '…' : errMsg;
+      }
       showNotification(message, 'error');
     } finally {
       setLoading(false);
@@ -231,8 +226,8 @@ const Login = () => {
         >
           {/* Logo e Título */}
           <div>
-            <div className="text-7xl mb-6 inline-block">
-              🌍
+            <div className="mb-6 inline-block">
+              <Globe size={72} className="text-white" strokeWidth={1.5} />
             </div>
             <h1 className="text-5xl font-bold mb-4">Bem-vindo ao EcoSphere</h1>
             <p className="text-xl text-white/90">
@@ -274,8 +269,8 @@ const Login = () => {
           className="w-full max-w-md mx-auto relative"
         >
           {/* Globo de fundo */}
-          <div className="absolute -right-32 top-1/2 -translate-y-1/2 text-[400px] opacity-10 pointer-events-none select-none">
-            🌍
+          <div className="absolute -right-32 top-1/2 -translate-y-1/2 opacity-10 pointer-events-none select-none">
+            <Globe size={320} className="text-white" strokeWidth={1} />
           </div>
 
           <div className="bg-white/15 backdrop-blur-xl rounded-3xl p-6 border border-white/20 shadow-2xl relative z-10">
@@ -453,9 +448,11 @@ const Login = () => {
 
               <div className="mt-3">
                 <GoogleLogin
-                  onSuccess={handleGoogleSuccess}
+                  onGoogleClick={handleGoogleClick}
+                  onSuccess={handleGoogleClick}
                   onError={handleGoogleError}
                   text="Continuar com Google"
+                  useSupabase={useSupabase}
                 />
               </div>
             </div>

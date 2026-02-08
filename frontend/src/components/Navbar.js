@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useUser } from '../contexts/UserContext';
+import { Globe, Leaf, Recycle, Droplets, Bike, Lightbulb, Bell, Sparkles, Gift, User, Settings, LogOut, ChevronDown, Menu, X } from 'lucide-react';
+import { AppIcon } from './ui/AppIcon';
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -12,12 +14,12 @@ const Navbar = () => {
   const navigate = useNavigate();
 
   const ecoTips = [
-    { icon: '🌱', text: 'Já plantou uma árvore hoje?', action: 'Plante uma muda!' },
-    { icon: '♻️', text: 'Separou o lixo reciclável?', action: 'Recicle agora!' },
-    { icon: '💧', text: 'Economizou água hoje?', action: 'Feche a torneira!' },
-    { icon: '🚲', text: 'Que tal usar a bike hoje?', action: 'Pedale mais!' },
-    { icon: '💡', text: 'Apagou as luzes desnecessárias?', action: 'Economize energia!' },
-    { icon: '🌍', text: 'Fez sua parte pelo planeta?', action: 'Continue assim!' }
+    { iconName: 'leaf', text: 'Já plantou uma árvore hoje?', action: 'Plante uma muda!' },
+    { iconName: 'recycle', text: 'Separou o lixo reciclável?', action: 'Recicle agora!' },
+    { iconName: 'droplets', text: 'Economizou água hoje?', action: 'Feche a torneira!' },
+    { iconName: 'bike', text: 'Que tal usar a bike hoje?', action: 'Pedale mais!' },
+    { iconName: 'lightbulb', text: 'Apagou as luzes desnecessárias?', action: 'Economize energia!' },
+    { iconName: 'globe', text: 'Fez sua parte pelo planeta?', action: 'Continue assim!' }
   ];
 
   const getPointsHistory = () => {
@@ -32,7 +34,7 @@ const Navbar = () => {
           hour: '2-digit',
           minute: '2-digit'
         }),
-        icon: item.points > 0 ? '🎆' : '🎁'
+        iconName: item.points > 0 ? 'sparkles' : 'gift'
       }));
     } catch {
       return [];
@@ -88,7 +90,7 @@ const Navbar = () => {
               transition={{ duration: 0.6 }}
               className="text-2xl"
             >
-              🌍
+              <Globe size={28} className="text-green-600" strokeWidth={2} />
             </motion.div>
             <span className="text-xl font-bold bg-gradient-to-r from-green-600 to-blue-600 bg-clip-text text-transparent">
               EcoSphere
@@ -123,7 +125,7 @@ const Navbar = () => {
                 onClick={() => setShowNotifications(!showNotifications)}
                 className="relative p-2 rounded-lg hover:bg-gray-50 transition-colors"
               >
-                <i className="bi bi-bell text-lg text-gray-600"></i>
+                <Bell size={20} className="text-gray-600" />
                 {notifications > 0 && (
                   <span className="absolute top-1 right-1 bg-red-500 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center text-[10px]">
                     {notifications}
@@ -144,13 +146,13 @@ const Navbar = () => {
                         onClick={() => setShowNotifications(false)}
                         className="text-gray-400 hover:text-gray-600"
                       >
-                        <i className="bi bi-x-lg"></i>
+                        <X size={18} />
                       </button>
                     </div>
 
                     <div className="bg-gradient-to-r from-green-50 to-blue-50 p-3 rounded-lg mb-4">
                       <div className="flex items-center gap-2 mb-2">
-                        <span className="text-lg">{todayTip.icon}</span>
+                        <AppIcon name={todayTip.iconName} size={20} className="text-green-600" />
                         <span className="font-semibold text-green-700 text-sm">Dica Ecológica</span>
                       </div>
                       <p className="text-sm text-gray-700 mb-2">{todayTip.text}</p>
@@ -163,7 +165,7 @@ const Navbar = () => {
                         {pointsHistory.length > 0 ? pointsHistory.map((item, index) => (
                           <div key={index} className="flex items-center justify-between p-2 bg-gray-50 rounded-lg">
                             <div className="flex items-center gap-2">
-                              <span className="text-sm">{item.icon}</span>
+                              <AppIcon name={item.iconName} size={18} className="text-gray-600" />
                               <div>
                                 <div className="text-xs font-medium text-gray-800">{item.action}</div>
                                 <div className="text-xs text-gray-500">{item.time}</div>
@@ -189,15 +191,15 @@ const Navbar = () => {
             
             {/* EcoPoints */}
             <div className="flex items-center gap-2 bg-gradient-to-r from-green-50 to-blue-50 px-3 py-2 rounded-lg">
-              <i className="bi bi-gem text-green-600"></i>
+              <Sparkles size={18} className="text-green-600" />
               <span className="font-bold text-gray-800">{user?.ecoPoints || 0}</span>
             </div>
             
             {/* Profile Dropdown */}
             <div className="relative group">
               <button className="flex items-center gap-2 p-2 rounded-lg hover:bg-gray-50 transition-colors">
-                <i className="bi bi-person-circle text-xl text-gray-600"></i>
-                <i className="bi bi-chevron-down text-xs text-gray-600"></i>
+                <User size={22} className="text-gray-600" />
+                <ChevronDown size={14} className="text-gray-600" />
               </button>
               
               <div className="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50 border border-gray-200">
@@ -210,11 +212,11 @@ const Navbar = () => {
                     onClick={() => navigate('/perfil')}
                     className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-lg flex items-center gap-2"
                   >
-                    <i className="bi bi-person"></i>
+                    <User size={16} />
                     Meu Perfil
                   </button>
                   <button className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-lg flex items-center gap-2">
-                    <i className="bi bi-gear"></i>
+                    <Settings size={16} />
                     Configurações
                   </button>
                   <hr className="my-1" />
@@ -222,7 +224,7 @@ const Navbar = () => {
                     onClick={handleLogout}
                     className="w-full text-left px-3 py-2 text-sm text-red-600 hover:bg-red-50 rounded-lg flex items-center gap-2"
                   >
-                    <i className="bi bi-box-arrow-right"></i>
+                    <LogOut size={16} />
                     Sair
                   </button>
                 </div>
@@ -235,7 +237,7 @@ const Navbar = () => {
             onClick={() => setIsOpen(!isOpen)}
             className="lg:hidden p-2 rounded-lg hover:bg-gray-50"
           >
-            {isOpen ? <i className="bi bi-x-lg text-xl"></i> : <i className="bi bi-list text-xl"></i>}
+            {isOpen ? <X size={24} /> : <Menu size={24} />}
           </button>
         </div>
 

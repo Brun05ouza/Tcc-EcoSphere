@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-// Usando Font Awesome via CDN
+import { Camera, Leaf, Users, TrendingUp, TreePine } from 'lucide-react';
+import { AppIcon } from '../components/ui/AppIcon';
 
 const Home = () => {
   const [stats, setStats] = useState({ users: 0, actions: 0, co2: 0 });
@@ -74,9 +75,10 @@ const Home = () => {
           </Link>
           <Link 
             to="/classificar-residuos" 
-            className="bg-white border-2 border-green-600 text-green-600 hover:bg-green-600 hover:text-white px-8 py-4 rounded-xl text-lg font-semibold shadow-lg transform hover:scale-105 transition-all duration-200"
+            className="bg-white border-2 border-green-600 text-green-600 hover:bg-green-600 hover:text-white px-8 py-4 rounded-xl text-lg font-semibold shadow-lg transform hover:scale-105 transition-all duration-200 flex items-center gap-2 justify-center"
           >
-            📸 Testar IA
+            <Camera size={22} />
+            Testar IA
           </Link>
         </motion.div>
       </motion.div>
@@ -95,10 +97,10 @@ const Home = () => {
         
         <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
           {[
-            { icon: "monitoramento", emoji: "🌍", title: "Monitoramento Ambiental", desc: "Dados em tempo real de temperatura, qualidade do ar e mais", color: "from-blue-500 to-cyan-500" },
-            { icon: "IA", emoji: "🤖", title: "IA para Resíduos", desc: "Classifique resíduos automaticamente com visão computacional", color: "from-green-500 to-emerald-500" },
-            { icon: "ecopoints", emoji: "🏆", title: "Gamificação", desc: "Ganhe EcoPoints e badges por ações sustentáveis", color: "from-yellow-500 to-orange-500" },
-            { icon: "educacao", emoji: "🎓", title: "Educação", desc: "Cursos e desafios para aprender sobre sustentabilidade", color: "from-purple-500 to-pink-500" }
+            { icon: "monitoramento", iconName: "globe", title: "Monitoramento Ambiental", desc: "Dados em tempo real de temperatura, qualidade do ar e mais", color: "from-blue-500 to-cyan-500" },
+            { icon: "IA", iconName: "bot", title: "IA para Resíduos", desc: "Classifique resíduos automaticamente com visão computacional", color: "from-green-500 to-emerald-500" },
+            { icon: "ecopoints", iconName: "trophy", title: "Gamificação", desc: "Ganhe EcoPoints e badges por ações sustentáveis", color: "from-yellow-500 to-orange-500" },
+            { icon: "educacao", iconName: "graduation", title: "Educação", desc: "Cursos e desafios para aprender sobre sustentabilidade", color: "from-purple-500 to-pink-500" }
           ].map((feature, index) => (
             <motion.div
               key={index}
@@ -108,8 +110,8 @@ const Home = () => {
               transition={{ delay: index * 0.1, duration: 0.6 }}
               className="bg-white p-8 rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 text-center group relative overflow-hidden"
             >
-              <div className="absolute top-4 right-4 text-3xl opacity-20 group-hover:opacity-40 transition-opacity">
-                {feature.emoji}
+              <div className="absolute top-4 right-4 opacity-20 group-hover:opacity-40 transition-opacity">
+                <AppIcon name={feature.iconName} size={28} className="text-gray-600" />
               </div>
               <div className={`w-16 h-16 mx-auto mb-6 rounded-2xl bg-gradient-to-r ${feature.color} flex items-center justify-center transform group-hover:rotate-12 transition-transform duration-300 shadow-lg p-3`}>
                 <Icon name={feature.icon} className="w-full h-full" white />
@@ -134,14 +136,17 @@ const Home = () => {
             whileInView={{ y: 0 }}
             className="text-4xl font-bold text-center mb-12"
           >
-            🌱 Impacto da Comunidade
+            <span className="flex items-center justify-center gap-2">
+              <Leaf size={36} className="text-white" />
+              Impacto da Comunidade
+            </span>
           </motion.h2>
           
           <div className="grid md:grid-cols-3 gap-8 text-center">
             {[
-              { icon: "bi bi-people-fill", emoji: "👥", value: stats.users.toLocaleString(), label: "Usuários Ativos", suffix: "" },
-              { icon: "bi bi-graph-up-arrow", emoji: "📈", value: stats.actions.toLocaleString(), label: "Ações Sustentáveis", suffix: "" },
-              { icon: "bi bi-tree-fill", emoji: "🌳", value: stats.co2, label: "CO₂ Evitado", suffix: " ton" }
+              { IconComp: Users, value: stats.users.toLocaleString(), label: "Usuários Ativos", suffix: "" },
+              { IconComp: TrendingUp, value: stats.actions.toLocaleString(), label: "Ações Sustentáveis", suffix: "" },
+              { IconComp: TreePine, value: stats.co2, label: "CO₂ Evitado", suffix: " ton" }
             ].map((stat, index) => (
               <motion.div
                 key={index}
@@ -151,8 +156,10 @@ const Home = () => {
                 transition={{ delay: index * 0.2, duration: 0.6 }}
                 className="bg-white/10 backdrop-blur-sm p-8 rounded-2xl hover:bg-white/20 transition-all duration-300 relative overflow-hidden"
               >
-                <div className="absolute top-2 right-2 text-2xl opacity-30">{stat.emoji}</div>
-                <i className={`${stat.icon} text-5xl mx-auto mb-4 text-white/90 block`}></i>
+                <div className="absolute top-2 right-2 opacity-30">
+                  <stat.IconComp size={28} className="text-white" />
+                </div>
+                <stat.IconComp size={48} className="mx-auto mb-4 text-white/90" />
                 <div className="text-4xl font-bold mb-2">
                   {stat.value}{stat.suffix}
                 </div>

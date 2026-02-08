@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
+import { AppIcon } from '../components/ui/AppIcon';
+import { Globe } from 'lucide-react';
 
 const CarbonCalculator = () => {
   const [step, setStep] = useState(0);
@@ -11,61 +13,61 @@ const CarbonCalculator = () => {
       id: 'transport',
       title: 'Transporte',
       question: 'Como você se desloca diariamente?',
-      icon: '🚗',
+      iconName: 'car',
       options: [
-        { label: 'Carro próprio (gasolina)', value: 2.3, icon: '🚗' },
-        { label: 'Carro próprio (flex/etanol)', value: 1.5, icon: '🚙' },
-        { label: 'Transporte público', value: 0.5, icon: '🚌' },
-        { label: 'Bicicleta/Caminhada', value: 0, icon: '🚲' },
-        { label: 'Moto', value: 1.2, icon: '🏍️' }
+        { label: 'Carro próprio (gasolina)', value: 2.3, iconName: 'car' },
+        { label: 'Carro próprio (flex/etanol)', value: 1.5, iconName: 'car' },
+        { label: 'Transporte público', value: 0.5, iconName: 'bus' },
+        { label: 'Bicicleta/Caminhada', value: 0, iconName: 'bike' },
+        { label: 'Moto', value: 1.2, iconName: 'car' }
       ]
     },
     {
       id: 'energy',
       title: 'Energia',
       question: 'Qual seu consumo mensal de energia?',
-      icon: '⚡',
+      iconName: 'zap',
       options: [
-        { label: 'Até 100 kWh', value: 0.3, icon: '💡' },
-        { label: '100-200 kWh', value: 0.6, icon: '🔌' },
-        { label: '200-300 kWh', value: 0.9, icon: '⚡' },
-        { label: 'Mais de 300 kWh', value: 1.5, icon: '🔥' }
+        { label: 'Até 100 kWh', value: 0.3, iconName: 'lightbulb' },
+        { label: '100-200 kWh', value: 0.6, iconName: 'plug' },
+        { label: '200-300 kWh', value: 0.9, iconName: 'zap' },
+        { label: 'Mais de 300 kWh', value: 1.5, iconName: 'flame' }
       ]
     },
     {
       id: 'food',
       title: 'Alimentação',
       question: 'Qual sua dieta predominante?',
-      icon: '🍽️',
+      iconName: 'utensils',
       options: [
-        { label: 'Vegana', value: 0.5, icon: '🥗' },
-        { label: 'Vegetariana', value: 0.8, icon: '🥕' },
-        { label: 'Onívora (pouca carne)', value: 1.2, icon: '🍗' },
-        { label: 'Onívora (muita carne)', value: 2.0, icon: '🥩' }
+        { label: 'Vegana', value: 0.5, iconName: 'salad' },
+        { label: 'Vegetariana', value: 0.8, iconName: 'leaf' },
+        { label: 'Onívora (pouca carne)', value: 1.2, iconName: 'utensils' },
+        { label: 'Onívora (muita carne)', value: 2.0, iconName: 'utensils' }
       ]
     },
     {
       id: 'waste',
       title: 'Resíduos',
       question: 'Você recicla seu lixo?',
-      icon: '♻️',
+      iconName: 'recycle',
       options: [
-        { label: 'Sempre separo e reciclo', value: 0.1, icon: '✅' },
-        { label: 'Às vezes reciclo', value: 0.3, icon: '🔄' },
-        { label: 'Raramente reciclo', value: 0.6, icon: '⚠️' },
-        { label: 'Não reciclo', value: 1.0, icon: '❌' }
+        { label: 'Sempre separo e reciclo', value: 0.1, iconName: 'success' },
+        { label: 'Às vezes reciclo', value: 0.3, iconName: 'recycle' },
+        { label: 'Raramente reciclo', value: 0.6, iconName: 'warning' },
+        { label: 'Não reciclo', value: 1.0, iconName: 'error' }
       ]
     },
     {
       id: 'consumption',
       title: 'Consumo',
       question: 'Com que frequência compra produtos novos?',
-      icon: '🛍️',
+      iconName: 'bag',
       options: [
-        { label: 'Raramente, só necessário', value: 0.3, icon: '✨' },
-        { label: 'Mensalmente', value: 0.6, icon: '📦' },
-        { label: 'Semanalmente', value: 1.0, icon: '🛒' },
-        { label: 'Muito frequente', value: 1.5, icon: '💳' }
+        { label: 'Raramente, só necessário', value: 0.3, iconName: 'sparkles' },
+        { label: 'Mensalmente', value: 0.6, iconName: 'bag' },
+        { label: 'Semanalmente', value: 1.0, iconName: 'bag' },
+        { label: 'Muito frequente', value: 1.5, iconName: 'bag' }
       ]
     }
   ];
@@ -112,7 +114,7 @@ const CarbonCalculator = () => {
             className="bg-white rounded-3xl shadow-2xl p-8"
           >
             <div className="text-center mb-8">
-              <div className="text-6xl mb-4">🌍</div>
+              <div className="mb-4 flex justify-center"><Globe size={64} className="text-green-600" /></div>
               <h2 className="text-3xl font-bold mb-2">Sua Pegada de Carbono</h2>
               <p className="text-gray-600">Resultado do cálculo</p>
             </div>
@@ -152,7 +154,7 @@ const CarbonCalculator = () => {
             </div>
 
             <div className="bg-blue-50 p-6 rounded-2xl mb-6">
-              <h3 className="font-bold text-blue-800 mb-3">💡 Dicas para Reduzir</h3>
+              <h3 className="font-bold text-blue-800 mb-3 flex items-center gap-2"><AppIcon name="lightbulb" size={24} /> Dicas para Reduzir</h3>
               <ul className="space-y-2 text-sm text-blue-700">
                 <li>• Use transporte público ou bicicleta</li>
                 <li>• Reduza consumo de carne vermelha</li>
@@ -184,8 +186,9 @@ const CarbonCalculator = () => {
           animate={{ opacity: 1, y: 0 }}
           className="text-center mb-8"
         >
-          <h1 className="text-5xl font-bold bg-gradient-to-r from-green-600 to-blue-600 bg-clip-text text-transparent mb-4">
-            🌍 Calculadora de Pegada de Carbono
+          <h1 className="text-5xl font-bold bg-gradient-to-r from-green-600 to-blue-600 bg-clip-text text-transparent mb-4 flex items-center justify-center gap-3">
+            <Globe size={48} className="text-green-600" />
+            Calculadora de Pegada de Carbono
           </h1>
           <p className="text-xl text-gray-600">Descubra seu impacto ambiental</p>
         </motion.div>
@@ -211,7 +214,7 @@ const CarbonCalculator = () => {
           className="bg-white rounded-3xl shadow-2xl p-8"
         >
           <div className="text-center mb-8">
-            <div className="text-6xl mb-4">{currentQuestion.icon}</div>
+            <div className="mb-4 flex justify-center"><AppIcon name={currentQuestion.iconName} size={56} className="text-green-600" /></div>
             <h2 className="text-2xl font-bold mb-2">{currentQuestion.title}</h2>
             <p className="text-gray-600">{currentQuestion.question}</p>
           </div>
@@ -225,7 +228,7 @@ const CarbonCalculator = () => {
                 onClick={() => handleAnswer(option.value)}
                 className="w-full p-4 bg-gray-50 hover:bg-gradient-to-r hover:from-green-50 hover:to-blue-50 rounded-xl text-left transition-all flex items-center gap-4 border-2 border-transparent hover:border-green-500"
               >
-                <span className="text-3xl">{option.icon}</span>
+                <AppIcon name={option.iconName} size={32} className="text-green-600 shrink-0" />
                 <span className="font-medium text-gray-800">{option.label}</span>
               </motion.button>
             ))}

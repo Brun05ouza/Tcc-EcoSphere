@@ -5,6 +5,8 @@ import { useEnterKey } from '../hooks/useEnterKey';
 import { useUser } from '../contexts/UserContext';
 import { wasteAPI } from '../services/api';
 import { useWasteClassifier } from '../hooks/useWasteClassifier';
+import { Check, Camera } from 'lucide-react';
+import { AppIcon } from '../components/ui/AppIcon';
 
 const WasteClassifier = () => {
   const [selectedFile, setSelectedFile] = useState(null);
@@ -137,7 +139,7 @@ const WasteClassifier = () => {
       // Adicionar EcoPoints
       const newTotal = addEcoPoints(points, `Classificação: ${result.class}`);
       
-      console.log('🎮 IA Classificou:', result.class, 'Confiança:', (result.confidence * 100).toFixed(1) + '%');
+      console.log('IA Classificou:', result.class, 'Confiança:', (result.confidence * 100).toFixed(1) + '%');
       
       setClassification({
         type: result.class,
@@ -145,7 +147,7 @@ const WasteClassifier = () => {
         points: points,
         tips: result.tips,
         bin: result.bin,
-        icon: result.icon,
+        iconName: result.iconName,
         color: result.color,
         bgColor: result.bgColor,
         textColor: result.textColor,
@@ -156,7 +158,7 @@ const WasteClassifier = () => {
       setShowSuccess(true);
       setTimeout(() => setShowSuccess(false), 3000);
       
-      // Salvar no backend (opcional)
+      // Salvar no Supabase
       try {
         await wasteAPI.saveClassification({
           category: result.class,
@@ -164,7 +166,7 @@ const WasteClassifier = () => {
           points: points
         });
       } catch (err) {
-        console.log('Erro ao salvar no backend:', err);
+        console.log('Erro ao salvar no Supabase:', err);
       }
       
     } catch (error) {
@@ -261,7 +263,7 @@ const WasteClassifier = () => {
                         transition={{ repeat: Infinity, duration: 2 }}
                         className="text-6xl mb-4"
                       >
-                        📷
+                        <Camera size={32} className="text-gray-600" />
                       </motion.div>
                       <p className="text-lg mb-2">Arraste uma imagem aqui ou</p>
                       <p className="text-sm text-gray-400">Clique para selecionar</p>
@@ -357,7 +359,7 @@ const WasteClassifier = () => {
                       transition={{ delay: 0.3 }}
                       className="text-center text-sm text-gray-500 mt-2"
                     >
-                      ⌨️ Pressione <kbd className="px-2 py-1 bg-gray-200 rounded text-xs">Enter</kbd> para classificar
+                      Pressione <kbd className="px-2 py-1 bg-gray-200 rounded text-xs">Enter</kbd> para classificar
                     </motion.p>
                   )}
                 </div>
@@ -396,9 +398,9 @@ const WasteClassifier = () => {
                         <motion.span 
                           animate={{ rotate: [0, 10, -10, 0] }}
                           transition={{ repeat: 3, duration: 0.5 }}
-                          className="text-4xl mr-4"
+                          className="mr-4 flex items-center justify-center w-14 h-14 rounded-xl bg-green-100"
                         >
-                          {classification.icon}
+                          <AppIcon name={classification.iconName} size={36} className="text-green-700" />
                         </motion.span>
                         <div>
                           <div className={`text-2xl font-bold ${classification.textColor}`}>
@@ -461,7 +463,8 @@ const WasteClassifier = () => {
                         onClick={() => navigate('/guia')}
                         className="bg-gradient-to-r from-green-500 to-blue-500 text-white px-6 py-3 rounded-xl font-bold hover:shadow-lg transition-all"
                       >
-                        ✅ Continuar Guia Sustentável
+                        <Check size={20} className="inline mr-2" />
+                        Continuar Guia Sustentável
                       </motion.button>
                     </div>
                   </div>
@@ -479,9 +482,9 @@ const WasteClassifier = () => {
           className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mt-8 sm:mt-12"
         >
           {[
-            { icon: "bi bi-lightbulb", emoji: "💡", title: "Como Funciona", desc: "Nossa IA analisa a imagem e identifica o tipo de material usando visão computacional avançada.", color: "from-blue-500 to-cyan-500" },
-            { icon: "bi bi-trophy", emoji: "🏆", title: "Ganhe Pontos", desc: "Cada classificação correta gera EcoPoints que podem ser trocados por recompensas!", color: "from-green-500 to-emerald-500" },
-            { icon: "bi bi-heart-fill", emoji: "🌍", title: "Impacto Real", desc: "Suas ações contribuem para um planeta mais sustentável e consciente.", color: "from-purple-500 to-pink-500" }
+            { iconName: "lightbulb", title: "Como Funciona", desc: "Nossa IA analisa a imagem e identifica o tipo de material usando visão computacional avançada.", color: "from-blue-500 to-cyan-500" },
+            { iconName: "trophy", title: "Ganhe Pontos", desc: "Cada classificação correta gera EcoPoints que podem ser trocados por recompensas!", color: "from-green-500 to-emerald-500" },
+            { iconName: "globe", title: "Impacto Real", desc: "Suas ações contribuem para um planeta mais sustentável e consciente.", color: "from-purple-500 to-pink-500" }
           ].map((card, index) => (
             <motion.div
               key={index}
@@ -491,9 +494,11 @@ const WasteClassifier = () => {
               whileHover={{ y: -5, scale: 1.02 }}
               className="bg-white p-4 sm:p-6 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 relative overflow-hidden"
             >
-              <div className="absolute top-2 right-2 text-2xl opacity-20">{card.emoji}</div>
+              <div className="absolute top-2 right-2 opacity-20">
+                <AppIcon name={card.iconName} size={28} className="text-gray-500" />
+              </div>
               <div className={`w-12 h-12 rounded-xl bg-gradient-to-r ${card.color} flex items-center justify-center mb-4 shadow-lg`}>
-                <i className={`${card.icon} text-xl text-white`}></i>
+                <AppIcon name={card.iconName} size={28} className="text-white" />
               </div>
               <h3 className="font-bold text-gray-800 mb-2">{card.title}</h3>
               <p className="text-gray-600 text-sm leading-relaxed">{card.desc}</p>
