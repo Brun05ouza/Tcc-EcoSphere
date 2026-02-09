@@ -212,7 +212,7 @@ const Environmental = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-green-50 to-blue-50 py-8">
+    <div className="min-h-screen bg-surface-50 py-8 md:py-12">
       <div className="container mx-auto px-4 max-w-7xl">
         {/* Header */}
         <motion.div
@@ -222,7 +222,7 @@ const Environmental = () => {
         >
           <h1 className="text-4xl font-bold mb-6 flex items-center gap-3">
             <Cloud className="w-10 h-10 text-blue-600" />
-            <span className="bg-gradient-to-r from-blue-600 to-green-600 bg-clip-text text-transparent">
+            <span className="bg-gradient-to-r from-eco-700 via-teal-600 to-eco-700 bg-clip-text text-transparent">
               Monitoramento Ambiental
             </span>
           </h1>

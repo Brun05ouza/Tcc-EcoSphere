@@ -5,7 +5,7 @@ import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement
 import { useEcoPoints } from '../hooks/useEcoPoints';
 import { gamificationAPI } from '../services/api';
 import DailyQuiz from '../components/DailyQuiz';
-import { Brain, Flame, Target, Globe, BarChart3, Leaf } from 'lucide-react';
+import { Brain, Flame, Target, BarChart3, Leaf } from 'lucide-react';
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend, ArcElement, BarElement);
 
@@ -97,38 +97,36 @@ const Dashboard = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-surface-50 flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-500 mx-auto mb-4"></div>
-          <p className="text-gray-600">Carregando dashboard...</p>
+          <div className="animate-spin rounded-full h-12 w-12 border-2 border-eco-200 border-t-eco-600 rounded-full mx-auto mb-4"></div>
+          <p className="text-stone-600 font-medium">Carregando dashboard...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
-      <div className="container mx-auto px-4">
-        {/* Header */}
+    <div className="min-h-screen bg-surface-50 py-8 md:py-12">
+      <div className="section-container">
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="mb-8"
+          className="mb-10"
         >
           <h1 className="text-4xl font-bold mb-2 flex items-center gap-3">
-            <Icon name="dashboard" className="w-10 h-10" />
-            <span className="bg-gradient-to-r from-green-600 to-blue-600 bg-clip-text text-transparent">Dashboard EcoSphere</span>
+            <Icon name="dashboard" className="w-10 h-10 text-eco-600" />
+            <span className="bg-gradient-to-r from-eco-700 via-teal-600 to-eco-700 bg-clip-text text-transparent">Dashboard EcoSphere</span>
           </h1>
-          <p className="text-gray-600">Acompanhe seu progresso sustentável</p>
+          <p className="text-stone-600">Acompanhe seu progresso sustentável</p>
         </motion.div>
 
-        {/* Stats Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-8">
           {[
-            { icon: "ecopoints", title: "EcoPoints", value: userStats.ecoPoints.toLocaleString(), color: "from-green-500 to-emerald-600", suffix: "" },
+            { icon: "ecopoints", title: "EcoPoints", value: userStats.ecoPoints.toLocaleString(), color: "from-eco-500 to-emerald-600", suffix: "" },
             { icon: "rocket", title: "Ações Realizadas", value: userStats.actions, color: "from-blue-500 to-cyan-600", suffix: "" },
-            { icon: "recompensas", title: "Badges Conquistadas", value: userStats.badges, color: "from-purple-500 to-pink-600", suffix: "" },
-            { icon: "ecopoints", title: "Nível Atual", value: userStats.level, color: "from-orange-500 to-red-600", suffix: "" }
+            { icon: "recompensas", title: "Badges Conquistadas", value: userStats.badges, color: "from-violet-500 to-purple-600", suffix: "" },
+            { icon: "ecopoints", title: "Nível Atual", value: userStats.level, color: "from-amber-500 to-orange-600", suffix: "" }
           ].map((stat, index) => (
             <motion.div
               key={index}
@@ -136,13 +134,13 @@ const Dashboard = () => {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: index * 0.1 }}
               whileHover={{ y: -5, scale: 1.02 }}
-              className="bg-white p-4 sm:p-6 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 relative overflow-hidden"
+              className="card-hover p-6"
             >
-              <div className={`w-12 h-12 rounded-xl bg-gradient-to-r ${stat.color} flex items-center justify-center mb-4 shadow-lg p-2`}>
+              <div className={`w-12 h-12 rounded-xl bg-gradient-to-r ${stat.color} flex items-center justify-center mb-4 shadow-soft p-2`}>
                 <Icon name={stat.icon} className="w-full h-full" white />
               </div>
-              <h3 className="text-sm font-medium text-gray-600 mb-1">{stat.title}</h3>
-              <div className="text-2xl font-bold text-gray-800">
+              <h3 className="text-sm font-medium text-stone-600 mb-1">{stat.title}</h3>
+              <div className="text-2xl font-bold text-stone-800">
                 {stat.value}{stat.suffix}
               </div>
             </motion.div>
@@ -151,11 +149,10 @@ const Dashboard = () => {
 
         {/* Quiz Diário e Calculadora de Carbono */}
         <div className="grid lg:grid-cols-2 gap-6 mb-8">
-          {/* Quiz Diário */}
           <motion.div
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
-            className="bg-gradient-to-r from-purple-500 to-pink-500 p-6 rounded-2xl shadow-lg text-white cursor-pointer"
+            className="bg-gradient-to-r from-violet-500 to-purple-600 p-6 rounded-2xl shadow-soft-lg text-white cursor-pointer hover:shadow-glow transition-shadow"
             onClick={() => setShowDailyQuiz(true)}
             whileHover={{ scale: 1.02 }}
           >
@@ -172,17 +169,16 @@ const Dashboard = () => {
             </div>
           </motion.div>
 
-          {/* Calculadora de Carbono */}
           <motion.div
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
-            className="bg-gradient-to-r from-green-500 to-blue-500 p-6 rounded-2xl shadow-lg text-white cursor-pointer"
+            className="bg-gradient-to-r from-eco-500 to-teal-600 p-6 rounded-2xl shadow-soft-lg text-white cursor-pointer hover:shadow-glow transition-shadow"
             onClick={() => window.location.href = '/calculadora-carbono'}
             whileHover={{ scale: 1.02 }}
           >
             <div className="flex items-center justify-between">
               <div>
-                <h3 className="text-2xl font-bold mb-2 flex items-center gap-2"><Globe size={28} /> Pegada de Carbono</h3>
+                <h3 className="text-2xl font-bold mb-2 flex items-center gap-2"><img src={require('../assets/icons/globo-icon.png')} alt="" width={28} height={28} style={{ filter: 'brightness(0) invert(1)' }} /> Pegada de Carbono</h3>
                 <p className="text-green-100 mb-4">Calcule seu impacto ambiental!</p>
                 <div className="flex items-center gap-2">
                   <BarChart3 size={28} />
@@ -194,13 +190,12 @@ const Dashboard = () => {
           </motion.div>
         </div>
 
-        {/* Impacto Coletivo */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="bg-gradient-to-r from-orange-500 to-red-500 p-6 rounded-2xl shadow-lg text-white mb-8"
+          className="bg-gradient-to-r from-amber-500 to-orange-600 p-6 rounded-2xl shadow-soft-lg text-white mb-8"
         >
-          <h3 className="text-2xl font-bold mb-4 flex items-center gap-2"><Globe size={28} /> Impacto Coletivo da Plataforma</h3>
+          <h3 className="text-2xl font-bold mb-4 flex items-center gap-2"><img src={require('../assets/icons/globo-icon.png')} alt="" width={28} height={28} style={{ filter: 'brightness(0) invert(1)' }} /> Impacto Coletivo da Plataforma</h3>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <div>
               <div className="text-3xl font-bold">12.547</div>
@@ -228,10 +223,10 @@ const Dashboard = () => {
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.4 }}
-            className="bg-white p-4 sm:p-6 rounded-2xl shadow-lg"
+            className="card p-6"
           >
             <h3 className="text-xl font-semibold mb-4 flex items-center">
-              <i className="bi bi-graph-up text-green-600 mr-2 text-xl"></i>
+              <i className="bi bi-graph-up text-eco-600 mr-2 text-xl"></i>
               Evolução EcoPoints
             </h3>
             <Line data={ecoPointsData} options={{ responsive: true, plugins: { legend: { display: false } } }} />
@@ -242,10 +237,10 @@ const Dashboard = () => {
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.5 }}
-            className="bg-white p-4 sm:p-6 rounded-2xl shadow-lg"
+            className="card p-6"
           >
             <h3 className="text-xl font-semibold mb-4 flex items-center">
-              <i className="bi bi-pie-chart text-green-600 mr-2 text-xl"></i>
+              <i className="bi bi-pie-chart text-eco-600 mr-2 text-xl"></i>
               Distribuição de Ações
             </h3>
             <Doughnut data={actionsData} options={{ responsive: true, plugins: { legend: { position: 'bottom' } } }} />
@@ -260,7 +255,7 @@ const Dashboard = () => {
           className="bg-white p-4 sm:p-6 rounded-2xl shadow-lg mb-6 sm:mb-8"
         >
           <h3 className="text-xl font-semibold mb-4 flex items-center">
-            <i className="bi bi-calendar-week text-green-600 mr-2 text-xl"></i>
+            <i className="bi bi-calendar-week text-eco-600 mr-2 text-xl"></i>
             Atividade Semanal
           </h3>
           <Bar data={weeklyData} options={{ responsive: true, plugins: { legend: { display: false } } }} />
@@ -285,7 +280,7 @@ const Dashboard = () => {
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: 0.8 + index * 0.1 }}
-                className="flex items-center justify-between p-4 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors"
+                className="flex items-center justify-between p-4 bg-stone-50 rounded-xl hover:bg-stone-100 transition-colors"
               >
                 <div className="flex items-center">
                   {typeof activity.icon === 'string' && !activity.icon.includes('�') ? (
@@ -300,13 +295,13 @@ const Dashboard = () => {
                     <p className="text-sm text-gray-500">{activity.time}</p>
                   </div>
                 </div>
-                <span className="text-green-600 font-semibold">{activity.points}</span>
+                <span className="text-eco-600 font-semibold">{activity.points}</span>
               </motion.div>
             )) : (
               <div className="text-center py-8">
-                <Leaf size={64} className="mx-auto mb-4 text-green-400" />
-                <p className="text-gray-500 mb-2">Nenhuma atividade ainda</p>
-                <p className="text-sm text-gray-400">Comece classificando resíduos ou jogando!</p>
+                <Leaf size={64} className="mx-auto mb-4 text-eco-400" />
+                <p className="text-stone-500 mb-2">Nenhuma atividade ainda</p>
+                <p className="text-sm text-stone-400">Comece classificando resíduos ou jogando!</p>
               </div>
             )}
           </div>

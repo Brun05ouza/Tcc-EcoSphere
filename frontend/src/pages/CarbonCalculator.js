@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { AppIcon } from '../components/ui/AppIcon';
-import { Globe } from 'lucide-react';
 
 const CarbonCalculator = () => {
   const [step, setStep] = useState(0);
@@ -106,7 +105,7 @@ const CarbonCalculator = () => {
 
   if (result) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50 py-8">
+      <div className="min-h-screen bg-surface-50 py-8">
         <div className="container mx-auto px-4 max-w-3xl">
           <motion.div
             initial={{ opacity: 0, scale: 0.9 }}
@@ -114,7 +113,7 @@ const CarbonCalculator = () => {
             className="bg-white rounded-3xl shadow-2xl p-8"
           >
             <div className="text-center mb-8">
-              <div className="mb-4 flex justify-center"><Globe size={64} className="text-green-600" /></div>
+              <div className="mb-4 flex justify-center"><img src={require('../assets/icons/globo-icon.png')} alt="" width={64} height={64} className="text-green-600" style={{ filter: 'invert(40%) sepia(93%) saturate(500%) hue-rotate(100deg)' }} /></div>
               <h2 className="text-3xl font-bold mb-2">Sua Pegada de Carbono</h2>
               <p className="text-gray-600">Resultado do cálculo</p>
             </div>
@@ -186,8 +185,8 @@ const CarbonCalculator = () => {
           animate={{ opacity: 1, y: 0 }}
           className="text-center mb-8"
         >
-          <h1 className="text-5xl font-bold bg-gradient-to-r from-green-600 to-blue-600 bg-clip-text text-transparent mb-4 flex items-center justify-center gap-3">
-            <Globe size={48} className="text-green-600" />
+          <h1 className="text-5xl font-bold bg-gradient-to-r from-eco-700 via-teal-600 to-eco-700 bg-clip-text text-transparent mb-4 flex items-center justify-center gap-3">
+            <img src={require('../assets/icons/globo-icon.png')} alt="" width={48} height={48} className="text-green-600" style={{ filter: 'invert(40%) sepia(93%) saturate(500%) hue-rotate(100deg)' }} />
             Calculadora de Pegada de Carbono
           </h1>
           <p className="text-xl text-gray-600">Descubra seu impacto ambiental</p>

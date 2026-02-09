@@ -180,7 +180,7 @@ const WasteClassifier = () => {
 
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50 py-8">
+    <div className="min-h-screen bg-surface-50 py-8 md:py-12">
       <div className="container mx-auto px-4">
         <motion.div
           initial={{ opacity: 0, y: -20 }}
@@ -188,7 +188,7 @@ const WasteClassifier = () => {
           className="text-center mb-12"
         >
           <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-4">
-            <span className="bg-gradient-to-r from-green-600 to-blue-600 bg-clip-text text-transparent flex items-center justify-center gap-3 pb-2">
+            <span className="bg-gradient-to-r from-eco-700 via-teal-600 to-eco-700 bg-clip-text text-transparent flex items-center justify-center gap-3 pb-2">
               <div className="w-12 h-12 flex-shrink-0">
                 <Icon name="IA" className="w-full h-full" />
               </div>
@@ -228,11 +228,11 @@ const WasteClassifier = () => {
             <motion.div
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
-              className="bg-white p-4 sm:p-6 lg:p-8 rounded-3xl shadow-xl"
+              className="card p-6 lg:p-8"
             >
               <div 
-                className={`border-3 border-dashed rounded-2xl p-8 text-center transition-all duration-300 ${
-                  dragActive ? 'border-green-500 bg-green-50' : 'border-gray-300'
+                className={`border-2 border-dashed rounded-2xl p-8 text-center transition-all duration-300 ${
+                  dragActive ? 'border-eco-500 bg-eco-50' : 'border-stone-300'
                 }`}
                 onDragEnter={handleDrag}
                 onDragLeave={handleDrag}
@@ -284,7 +284,7 @@ const WasteClassifier = () => {
                   <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
                     <label
                       htmlFor="file-input"
-                      className="bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white px-6 py-3 rounded-xl cursor-pointer flex items-center justify-center gap-2 transform hover:scale-105 transition-all duration-200 shadow-lg w-full sm:w-auto"
+                      className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-semibold bg-gradient-to-br from-eco-600 to-teal-600 text-white shadow-soft hover:shadow-glow cursor-pointer w-full sm:w-auto transition-all"
                     >
                       <i className="bi bi-cloud-upload text-lg"></i>
                       Selecionar Imagem
@@ -292,7 +292,7 @@ const WasteClassifier = () => {
                     
                     <button
                       onClick={startCamera}
-                      className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white px-6 py-3 rounded-xl flex items-center justify-center gap-2 transform hover:scale-105 transition-all duration-200 shadow-lg w-full sm:w-auto"
+                      className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-semibold bg-white border-2 border-teal-200 text-teal-700 hover:bg-teal-50 w-full sm:w-auto transition-all"
                     >
                       <Icon name="camera" className="w-5 h-5" white />
                       Abrir Câmera
@@ -334,7 +334,7 @@ const WasteClassifier = () => {
                     animate={{ opacity: 1, y: 0 }}
                     onClick={classifyWaste}
                     disabled={loading}
-                    className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white py-4 rounded-xl font-semibold disabled:opacity-50 flex items-center justify-center gap-2 transform hover:scale-105 transition-all duration-200"
+                    className="w-full bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-700 hover:to-purple-700 text-white py-4 rounded-xl font-semibold disabled:opacity-50 flex items-center justify-center gap-2 transition-all duration-200 shadow-soft"
                   >
                     {loading ? (
                       <>
@@ -373,7 +373,7 @@ const WasteClassifier = () => {
                   initial={{ opacity: 0, x: 20 }}
                   animate={{ opacity: 1, x: 0 }}
                   exit={{ opacity: 0, x: 20 }}
-                  className="bg-white p-8 rounded-3xl shadow-xl"
+                  className="card p-8"
                 >
                   <div className="flex items-center justify-between mb-6">
                     <h2 className="text-2xl font-bold text-gray-800">Resultado da Análise</h2>
@@ -461,7 +461,7 @@ const WasteClassifier = () => {
                     <div className="mt-6 text-center">
                       <motion.button
                         onClick={() => navigate('/guia')}
-                        className="bg-gradient-to-r from-green-500 to-blue-500 text-white px-6 py-3 rounded-xl font-bold hover:shadow-lg transition-all"
+                        className="btn-primary px-6 py-3"
                       >
                         <Check size={20} className="inline mr-2" />
                         Continuar Guia Sustentável
@@ -492,7 +492,7 @@ const WasteClassifier = () => {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.5 + index * 0.1 }}
               whileHover={{ y: -5, scale: 1.02 }}
-              className="bg-white p-4 sm:p-6 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 relative overflow-hidden"
+              className="card-hover p-6 relative overflow-hidden"
             >
               <div className="absolute top-2 right-2 opacity-20">
                 <AppIcon name={card.iconName} size={28} className="text-gray-500" />

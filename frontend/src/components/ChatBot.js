@@ -178,7 +178,7 @@ const ChatBot = () => {
             initial={{ opacity: 0, x: 20, y: 10 }}
             animate={{ opacity: 1, x: 0, y: 0 }}
             exit={{ opacity: 0, x: 20, y: 10 }}
-            className="fixed bottom-24 right-6 bg-gradient-to-r from-green-500 to-blue-500 text-white px-4 py-2 rounded-lg shadow-lg z-50 whitespace-nowrap"
+            className="fixed bottom-24 right-6 bg-gradient-to-r from-eco-600 to-teal-600 text-white px-4 py-2 rounded-xl shadow-soft-lg z-50 whitespace-nowrap"
           >
             <div className="flex items-center gap-2">
               <MessageCircle size={20} />
@@ -225,9 +225,9 @@ const ChatBot = () => {
             initial={{ opacity: 0, y: 20, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 20, scale: 0.95 }}
-            className="fixed bottom-24 right-6 w-96 h-[500px] bg-white rounded-2xl shadow-2xl z-40 flex flex-col overflow-hidden"
+            className="fixed bottom-24 right-6 w-96 h-[500px] bg-white rounded-2xl shadow-soft-lg border border-stone-100 z-40 flex flex-col overflow-hidden"
           >
-            <div className="bg-gradient-to-r from-green-500 to-blue-500 text-white p-4 flex items-center gap-3">
+            <div className="bg-gradient-to-r from-eco-600 to-teal-600 text-white p-4 flex items-center gap-3">
               <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center">
                 <Bot size={24} />
               </div>
@@ -297,12 +297,12 @@ const ChatBot = () => {
                   onChange={(e) => setInputText(e.target.value)}
                   onKeyPress={handleKeyPress}
                   placeholder="Digite sua mensagem..."
-                  className="flex-1 px-3 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent text-sm"
+                  className="flex-1 px-3 py-2 border border-stone-200 rounded-xl focus:ring-2 focus:ring-eco-500/30 focus:border-eco-500 text-sm outline-none transition-all"
                 />
                 <button
                   onClick={sendMessage}
                   disabled={!inputText.trim()}
-                  className="px-4 py-2 bg-gradient-to-r from-green-500 to-blue-500 text-white rounded-xl hover:from-green-600 hover:to-blue-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="px-4 py-2 bg-gradient-to-r from-eco-600 to-teal-600 text-white rounded-xl hover:from-eco-700 hover:to-teal-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                 >
                   <i className="bi bi-send text-sm"></i>
                 </button>

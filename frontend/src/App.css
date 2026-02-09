@@ -1,3 +1,87 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply font-sans text-stone-800 antialiased;
+    background: linear-gradient(180deg, #fafaf9 0%, #f5f5f4 100%);
+  }
+
+  /* Selection */
+  ::selection {
+    @apply bg-eco-500/30 text-eco-900;
+  }
+}
+
+@layer components {
+  /* Card base */
+  .card {
+    @apply bg-white rounded-2xl shadow-soft border border-stone-100/80;
+  }
+
+  .card-hover {
+    @apply card transition-all duration-300 hover:shadow-soft-lg hover:border-eco-100;
+  }
+
+  /* Button primary */
+  .btn-primary {
+    @apply inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-semibold
+           bg-gradient-to-br from-eco-600 to-teal-600 text-white shadow-soft
+           hover:shadow-glow hover:scale-[1.02] active:scale-[0.98]
+           transition-all duration-200;
+  }
+
+  /* Button secondary */
+  .btn-secondary {
+    @apply inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-semibold
+           bg-white/90 border-2 border-eco-200 text-eco-700
+           hover:bg-eco-50 hover:border-eco-300
+           transition-all duration-200;
+  }
+
+  /* Input base */
+  .input-base {
+    @apply w-full px-4 py-3 rounded-xl border border-stone-200
+           focus:ring-2 focus:ring-eco-500/30 focus:border-eco-500
+           transition-all duration-200 outline-none;
+  }
+
+  /* Page section */
+  .page-section {
+    @apply py-12 md:py-16 lg:py-20;
+  }
+
+  /* Container */
+  .section-container {
+    @apply container mx-auto px-4 max-w-7xl;
+  }
+
+  /* Gradient text */
+  .gradient-text {
+    @apply bg-gradient-to-r from-eco-600 via-teal-600 to-eco-600 bg-clip-text text-transparent;
+  }
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-stone-100 rounded-full;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-stone-300 rounded-full hover:bg-stone-400;
+}
+
+/* Smooth focus for accessibility */
+*:focus-visible {
+  @apply outline-2 outline-offset-2 outline-eco-500;
+}

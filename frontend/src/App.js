@@ -5,7 +5,9 @@ import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import ChatBot from './components/ChatBot';
 import ProtectedRoute from './components/ProtectedRoute';
+import AdminProtectedRoute from './components/AdminProtectedRoute';
 import Login from './pages/Login';
+import AdminDashboard from './pages/AdminDashboard';
 import Home from './pages/Home';
 import Dashboard from './pages/Dashboard';
 import WasteClassifier from './pages/WasteClassifier';
@@ -23,15 +25,20 @@ import './App.css';
 function App() {
   return (
     <UserProvider>
-      <Router>
+      <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
         <div className="App">
           <Routes>
             <Route path="/login" element={<Login />} />
+            <Route path="/admin" element={
+              <AdminProtectedRoute>
+                <AdminDashboard />
+              </AdminProtectedRoute>
+            } />
             <Route path="/*" element={
               <ProtectedRoute>
                 <div className="flex flex-col min-h-screen">
                   <Navbar />
-                  <main className="flex-1 bg-gray-50">
+                  <main className="flex-1 bg-surface-50 min-h-screen">
                     <Routes>
                       <Route path="/" element={<Home />} />
                       <Route path="/dashboard" element={<Dashboard />} />

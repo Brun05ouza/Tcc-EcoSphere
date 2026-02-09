@@ -1,0 +1,26 @@
+import React from 'react';
+import WorldWindGlobeBase from './WorldWindGlobeBase';
+
+/**
+ * Globo 3D solto para Dashboard/Home.
+ * Exibido sem card, apenas o globo na área nobre.
+ */
+function DashboardGlobeCard() {
+  return (
+    <div className="relative w-full aspect-square max-w-[720px] mx-auto rounded-xl overflow-hidden select-none pointer-events-none">
+      <WorldWindGlobeBase
+        canvasId="wwd-canvas-dashboard"
+        initialLat={0}
+        initialLon={-47}
+        initialRange={20e6}
+        rotationSpeed={0.08}
+        withAtmosphere={true}
+        withCompass={false}
+        maxDpr={2}
+        disableZoom={true}
+      />
+    </div>
+  );
+}
+
+export default DashboardGlobeCard;

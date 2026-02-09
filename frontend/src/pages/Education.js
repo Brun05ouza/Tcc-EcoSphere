@@ -310,7 +310,7 @@ const Education = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50 py-8">
+    <div className="min-h-screen bg-surface-50 py-8 md:py-12">
       <div className="container mx-auto px-4">
         {/* Header */}
         <motion.div
@@ -318,7 +318,7 @@ const Education = () => {
           animate={{ opacity: 1, y: 0 }}
           className="text-center mb-8"
         >
-          <h1 className="text-5xl font-bold bg-gradient-to-r from-green-600 to-blue-600 bg-clip-text text-transparent mb-4 flex items-center justify-center gap-3">
+          <h1 className="text-5xl font-bold bg-gradient-to-r from-eco-700 via-teal-600 to-eco-700 bg-clip-text text-transparent mb-4 flex items-center justify-center gap-3">
             <BookOpen size={48} className="text-green-600" />
             Educação Ambiental
           </h1>
@@ -327,7 +327,7 @@ const Education = () => {
 
         {/* Navigation Tabs */}
         <div className="flex justify-center mb-8">
-          <div className="bg-white rounded-2xl p-2 shadow-lg">
+          <div className="inline-flex flex-row gap-1 bg-white rounded-2xl p-2 shadow-lg">
             {[
               { id: 'courses', label: 'Cursos', iconName: 'book' },
               { id: 'challenges', label: 'Desafios', iconName: 'trophy' },
@@ -336,13 +336,13 @@ const Education = () => {
               <button
                 key={tab.id}
                 onClick={() => setSelectedCategory(tab.id)}
-                className={`px-6 py-3 rounded-xl transition-all flex items-center ${
+                className={`px-6 py-3 rounded-xl transition-all inline-flex items-center gap-2 whitespace-nowrap ${
                   selectedCategory === tab.id
-                    ? 'bg-gradient-to-r from-green-500 to-blue-500 text-white shadow-md'
-                    : 'text-gray-600 hover:text-gray-800'
+                    ? 'bg-gradient-to-r from-eco-600 to-teal-600 text-white shadow-soft'
+                    : 'text-stone-600 hover:text-stone-800 hover:bg-stone-50'
                 }`}
               >
-                <AppIcon name={tab.iconName} size={20} className="mr-2" />
+                <AppIcon name={tab.iconName} size={20} />
                 {tab.label}
               </button>
             ))}

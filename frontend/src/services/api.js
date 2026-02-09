@@ -9,6 +9,7 @@ import {
   getProfile,
   updateProfile,
   addPointsToProfile,
+  subtractPointsFromProfile,
   getGamificationProfile,
   getRanking,
   registerAction,
@@ -22,8 +23,8 @@ const getUserId = async () => {
   return user?.id;
 };
 
-/** Timeout em ms para auth (evita carregamento infinito se Supabase não responder) */
-const AUTH_TIMEOUT_MS = 20000;
+/** Timeout em ms para auth (evita travamento se Supabase não responder) */
+const AUTH_TIMEOUT_MS = 15000;
 
 function withTimeout(promise, ms, message = 'Tempo esgotado. Verifique sua conexão e as variáveis REACT_APP_SUPABASE_URL e REACT_APP_SUPABASE_ANON_KEY no .env') {
   return Promise.race([
@@ -120,6 +121,7 @@ export const userAPI = {
           level: 'Iniciante',
           badges: [],
           streak: { current: 0, longest: 0 },
+          isAdmin: false,
         };
       }
       return {
@@ -148,6 +150,7 @@ export const userAPI = {
         level: 'Iniciante',
         badges: [],
         streak: { current: 0, longest: 0 },
+        isAdmin: false,
       };
       try {
         await new Promise((r) => setTimeout(r, 800));
@@ -187,6 +190,12 @@ export const userAPI = {
     const userId = await getUserId();
     if (!userId) throw new Error('Não autenticado');
     const updated = await addPointsToProfile(userId, data.points || 0);
+    return { data: { user: updated } };
+  },
+  spendPoints: async (data) => {
+    const userId = await getUserId();
+    if (!userId) throw new Error('Não autenticado');
+    const updated = await subtractPointsFromProfile(userId, data.points || 0);
     return { data: { user: updated } };
   },
 };

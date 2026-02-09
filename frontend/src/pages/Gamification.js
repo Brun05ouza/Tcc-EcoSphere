@@ -236,7 +236,7 @@ const Gamification = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50 flex items-center justify-center">
+      <div className="min-h-screen bg-surface-50 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-500 mx-auto mb-4"></div>
           <p className="text-gray-600">Carregando dados...</p>
@@ -273,7 +273,7 @@ const Gamification = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50 py-8">
+    <div className="min-h-screen bg-surface-50 py-8 md:py-12">
       {/* Modal de Confirmação */}
       {showConfirmation && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
@@ -340,7 +340,7 @@ const Gamification = () => {
           animate={{ opacity: 1, y: 0 }}
           className="text-center mb-8"
         >
-          <h1 className="text-5xl font-bold bg-gradient-to-r from-green-600 to-blue-600 bg-clip-text text-transparent mb-4 flex items-center justify-center gap-3">
+          <h1 className="text-5xl font-bold bg-gradient-to-r from-eco-700 via-teal-600 to-eco-700 bg-clip-text text-transparent mb-4 flex items-center justify-center gap-3">
             <Icon name="ecopoints" className="w-14 h-14" />
             EcoPoints & Conquistas
           </h1>
@@ -351,7 +351,7 @@ const Gamification = () => {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="bg-gradient-to-r from-green-600 to-blue-600 rounded-3xl p-8 text-white mb-8"
+          className="bg-gradient-to-br from-eco-600 via-teal-600 to-eco-700 rounded-3xl p-8 text-white mb-8 shadow-soft-lg"
         >
           <div className="grid md:grid-cols-4 gap-6 text-center">
             <div>
@@ -375,7 +375,7 @@ const Gamification = () => {
 
         {/* Tabs */}
         <div className="flex justify-center mb-8">
-          <div className="bg-white rounded-2xl p-2 shadow-lg">
+          <div className="inline-flex flex-row flex-wrap gap-1 bg-white rounded-2xl p-2 shadow-lg">
             {[
               { id: 'overview', label: 'Visão Geral', icon: 'bi-house' },
               { id: 'quiz', label: 'Eco Quiz', icon: 'bi-question-circle' },
@@ -387,10 +387,10 @@ const Gamification = () => {
               <button
                 key={tab.id}
                 onClick={() => setSelectedTab(tab.id)}
-                className={`px-6 py-3 rounded-xl transition-all ${
+                className={`px-6 py-3 rounded-xl transition-all inline-flex items-center gap-2 whitespace-nowrap ${
                   selectedTab === tab.id
-                    ? 'bg-gradient-to-r from-green-500 to-blue-500 text-white shadow-md'
-                    : 'text-gray-600 hover:text-gray-800'
+                    ? 'bg-gradient-to-r from-eco-600 to-teal-600 text-white shadow-soft'
+                    : 'text-stone-600 hover:text-stone-800 hover:bg-stone-50'
                 }`}
               >
                 <i className={`${tab.icon} mr-2`}></i>

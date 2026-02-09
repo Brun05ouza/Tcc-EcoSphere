@@ -13,6 +13,7 @@ const profileToApp = (row) => {
     level: row.level || 'Iniciante',
     badges: row.badges || [],
     streak: row.streak || { current: 0, longest: 0 },
+    isAdmin: !!row.is_admin,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   };
@@ -90,7 +91,22 @@ export async function getCurrentProfile() {
     error: userError,
   } = await supabase.auth.getUser();
   if (userError || !user) throw new Error(userError?.message || 'Não autenticado');
-  return getProfile(user.id);
+  const profile = await getProfile(user.id);
+  if (profile) return profile;
+  return {
+    id: user.id,
+    name: user.user_metadata?.name || user.user_metadata?.full_name || user.email?.split('@')[0] || 'Usuário',
+    email: user.email,
+    picture: user.user_metadata?.avatar_url || null,
+    avatar_url: user.user_metadata?.avatar_url || null,
+    ecoPoints: 0,
+    level: 'Iniciante',
+    badges: [],
+    streak: { current: 0, longest: 0 },
+    isAdmin: false,
+    createdAt: user.created_at,
+    updatedAt: user.updated_at,
+  };
 }
 
 export async function getProfile(userId) {
@@ -98,9 +114,9 @@ export async function getProfile(userId) {
     .from('profiles')
     .select('*')
     .eq('id', userId)
-    .single();
+    .maybeSingle();
   if (error) throw error;
-  return profileToApp(data);
+  return data ? profileToApp(data) : null;
 }
 
 export async function updateProfile(userId, { name, email }) {
@@ -140,6 +156,32 @@ export async function addPointsToProfile(userId, pointsToAdd) {
     .select()
     .single();
   if (error) throw error;
+  return profileToApp(updated);
+}
+
+export async function subtractPointsFromProfile(userId, pointsToSubtract) {
+  const points = Number(pointsToSubtract) || 0;
+  if (points <= 0) return null;
+  const { data: profile, error: fetchError } = await supabase
+    .from('profiles')
+    .select('eco_points, level, badges')
+    .eq('id', userId)
+    .single();
+  if (fetchError || !profile) return null;
+  const current = profile.eco_points || 0;
+  const newPoints = Math.max(0, current - points);
+  const newLevel = getLevelForPoints(newPoints);
+  const { data: updated, error } = await supabase
+    .from('profiles')
+    .update({
+      eco_points: newPoints,
+      level: newLevel,
+      updated_at: new Date().toISOString(),
+    })
+    .eq('id', userId)
+    .select()
+    .single();
+  if (error) return null;
   return profileToApp(updated);
 }
 

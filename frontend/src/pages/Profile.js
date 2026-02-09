@@ -98,7 +98,7 @@ const Profile = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50 py-8">
+    <div className="min-h-screen bg-surface-50 py-8 md:py-12">
       <div className="container mx-auto px-4 max-w-4xl">
         {/* Header */}
         <motion.div
@@ -106,10 +106,10 @@ const Profile = () => {
           animate={{ opacity: 1, y: 0 }}
           className="text-center mb-8"
         >
-          <div className="w-24 h-24 bg-gradient-to-r from-green-500 to-blue-500 rounded-full flex items-center justify-center mx-auto mb-4">
+          <div className="w-24 h-24 bg-gradient-to-r from-eco-500 to-teal-500 rounded-full flex items-center justify-center mx-auto mb-4 shadow-soft">
             <AppIcon name="user" size={48} className="text-white" />
           </div>
-          <h1 className="text-4xl font-bold bg-gradient-to-r from-green-600 to-blue-600 bg-clip-text text-transparent mb-2">
+          <h1 className="text-4xl font-bold bg-gradient-to-r from-eco-700 via-teal-600 to-eco-700 bg-clip-text text-transparent mb-2">
             Meu Perfil
           </h1>
           <p className="text-gray-600">Gerencie suas informações e preferências</p>
@@ -141,7 +141,7 @@ const Profile = () => {
 
         {/* Tabs */}
         <div className="flex justify-center mb-8">
-          <div className="bg-white rounded-2xl p-2 shadow-lg">
+          <div className="inline-flex flex-row flex-wrap gap-1 bg-white rounded-2xl p-2 shadow-lg">
             {[
               { id: 'personal', label: 'Dados Pessoais', icon: 'bi-person' },
               { id: 'preferences', label: 'Preferências', icon: 'bi-gear' },
@@ -150,10 +150,10 @@ const Profile = () => {
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`px-6 py-3 rounded-xl transition-all ${
+                className={`px-6 py-3 rounded-xl transition-all inline-flex items-center gap-2 whitespace-nowrap ${
                   activeTab === tab.id
-                    ? 'bg-gradient-to-r from-green-500 to-blue-500 text-white shadow-md'
-                    : 'text-gray-600 hover:text-gray-800'
+                    ? 'bg-gradient-to-r from-eco-600 to-teal-600 text-white shadow-soft'
+                    : 'text-stone-600 hover:text-stone-800 hover:bg-stone-50'
                 }`}
               >
                 <i className={`${tab.icon} mr-2`}></i>

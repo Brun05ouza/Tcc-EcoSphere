@@ -104,7 +104,7 @@ const Guide = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50 py-8">
+    <div className="min-h-screen bg-surface-50 py-8 md:py-12">
       <div className="container mx-auto px-4 max-w-4xl">
         
         {/* Progress Bar */}

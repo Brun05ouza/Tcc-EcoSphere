@@ -4,7 +4,8 @@ import { useNavigate } from 'react-router-dom';
 import { userAPI } from '../services/api';
 import { useUser } from '../contexts/UserContext';
 import GoogleLogin from '../components/GoogleLogin';
-import { Brain, Recycle, BarChart3, Trophy, Globe } from 'lucide-react';
+import LoginGlobeBackground from '../components/globe/LoginGlobeBackground';
+import { Brain, Recycle, BarChart3, Trophy } from 'lucide-react';
 
 const Login = () => {
   const [isLogin, setIsLogin] = useState(true);
@@ -152,11 +153,14 @@ const Login = () => {
       }
       let message = 'Erro ao fazer login/registro';
       const errMsg = error?.message || error?.response?.data?.message || '';
+      const status = error?.status ?? error?.response?.status;
       if (/Tempo esgotado|timeout|Verifique sua conexão/i.test(errMsg)) {
         message = 'A requisição demorou demais. Verifique sua internet e se o Supabase está acessível (URL e chave no .env).';
-      } else if (error?.response?.status === 401) {
-        message = 'Email ou senha incorretos';
-      } else if (error?.response?.status === 409 || /already registered|already exists|duplicate/i.test(errMsg)) {
+      } else if (status === 400 || status === 401) {
+        message = /confirm|email not confirmed/i.test(errMsg)
+          ? 'Confirme seu email para entrar. Verifique a caixa de entrada.'
+          : 'Email ou senha incorretos';
+      } else if (status === 409 || /already registered|already exists|duplicate/i.test(errMsg)) {
         message = 'Este email já está cadastrado';
       } else if (errMsg) {
         if (/confirm your email|email not confirmed/i.test(errMsg)) message = 'Confirme seu email para entrar. Verifique a caixa de entrada.';
@@ -177,11 +181,11 @@ const Login = () => {
   };
 
   return (
-    <div className="h-screen bg-gradient-to-br from-green-500 via-blue-500 to-purple-600 flex items-center justify-center p-4 relative overflow-hidden">
-      {/* Círculos flutuantes - otimizados */}
+    <div className="min-h-screen bg-gradient-to-br from-eco-600 via-teal-600 to-eco-700 flex items-center justify-center p-4 relative overflow-hidden">
+      <LoginGlobeBackground opacity={0.35} blur="4px" zoom={35e6} />
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-20 left-10 w-72 h-72 bg-white/10 rounded-full blur-3xl" />
-        <div className="absolute bottom-20 right-20 w-96 h-96 bg-white/10 rounded-full blur-3xl" />
+        <div className="absolute bottom-20 right-20 w-96 h-96 bg-teal-400/20 rounded-full blur-3xl" />
         <div className="absolute top-1/2 left-1/3 w-64 h-64 bg-white/5 rounded-full blur-2xl" />
       </div>
 
@@ -227,7 +231,7 @@ const Login = () => {
           {/* Logo e Título */}
           <div>
             <div className="mb-6 inline-block">
-              <Globe size={72} className="text-white" strokeWidth={1.5} />
+              <img src={require('../assets/icons/globo-icon.png')} alt="EcoSphere" className="w-14 h-14 object-contain" style={{ filter: 'brightness(0) invert(1)' }} />
             </div>
             <h1 className="text-5xl font-bold mb-4">Bem-vindo ao EcoSphere</h1>
             <p className="text-xl text-white/90">
@@ -268,9 +272,9 @@ const Login = () => {
           transition={{ duration: 0.6 }}
           className="w-full max-w-md mx-auto relative"
         >
-          {/* Globo de fundo */}
-          <div className="absolute -right-32 top-1/2 -translate-y-1/2 opacity-10 pointer-events-none select-none">
-            <Globe size={320} className="text-white" strokeWidth={1} />
+          {/* Globo decorativo sutil */}
+          <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 opacity-5 pointer-events-none select-none">
+            <img src={require('../assets/icons/globo-icon.png')} alt="" className="w-48 h-48 object-contain" style={{ filter: 'brightness(0) invert(1)' }} />
           </div>
 
           <div className="bg-white/15 backdrop-blur-xl rounded-3xl p-6 border border-white/20 shadow-2xl relative z-10">
@@ -414,7 +418,7 @@ const Login = () => {
                 whileTap={{ scale: 0.98 }}
                 type="submit"
                 disabled={loading}
-                className="w-full bg-gradient-to-r from-green-500 to-blue-500 text-white py-2.5 px-4 rounded-xl font-semibold hover:from-green-600 hover:to-blue-600 transition-all disabled:opacity-50 shadow-lg text-sm"
+                className="w-full bg-gradient-to-r from-eco-600 to-teal-600 text-white py-2.5 px-4 rounded-xl font-semibold hover:from-eco-700 hover:to-teal-700 transition-all disabled:opacity-50 shadow-soft text-sm"
               >
                 {loading ? (
                   <span className="flex items-center justify-center">

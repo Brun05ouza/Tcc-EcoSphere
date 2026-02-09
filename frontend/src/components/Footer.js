@@ -1,33 +1,36 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
-import { Globe } from 'lucide-react';
+import { Mail, Phone, MapPin } from 'lucide-react';
 
 const Footer = () => {
   return (
-    <footer className="bg-gradient-to-r from-gray-900 via-green-900 to-blue-900 text-white">
-      <div className="container mx-auto px-4 py-12">
-        <div className="grid md:grid-cols-4 gap-8">
+    <footer className="bg-stone-900 text-stone-300">
+      <div className="container mx-auto px-4 py-16 max-w-7xl">
+        <div className="grid md:grid-cols-4 gap-12">
           {/* Logo e Descrição */}
           <div className="md:col-span-1">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
-              className="flex items-center space-x-2 mb-4"
+              viewport={{ once: true }}
+              className="flex items-center gap-2.5 mb-6"
             >
-              <Globe size={32} className="text-white" strokeWidth={1.5} />
-              <span className="text-2xl font-bold">EcoSphere</span>
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-eco-500 to-teal-500 flex items-center justify-center">
+                <img src={require('../assets/icons/globo-icon.png')} alt="" className="w-6 h-6 text-white" style={{ filter: 'brightness(0) invert(1)' }} />
+              </div>
+              <span className="text-xl font-bold text-white font-display">EcoSphere</span>
             </motion.div>
-            <p className="text-gray-300 text-sm leading-relaxed mb-4">
+            <p className="text-sm leading-relaxed mb-6 text-stone-400">
               Transformando dados em ação sustentável através de inteligência artificial e participação comunitária.
             </p>
-            <div className="flex space-x-4">
+            <div className="flex gap-3">
               {['facebook', 'twitter', 'instagram', 'linkedin'].map((social) => (
                 <motion.a
                   key={social}
                   href="#"
-                  whileHover={{ scale: 1.2, y: -2 }}
-                  className="w-8 h-8 bg-white/10 rounded-full flex items-center justify-center hover:bg-white/20 transition-colors"
+                  whileHover={{ scale: 1.1, y: -2 }}
+                  className="w-9 h-9 rounded-xl bg-stone-800 flex items-center justify-center hover:bg-eco-600 transition-colors text-stone-400 hover:text-white"
                 >
                   <i className={`bi bi-${social} text-sm`}></i>
                 </motion.a>
@@ -35,10 +38,9 @@ const Footer = () => {
             </div>
           </div>
 
-          {/* Links Rápidos */}
           <div>
-            <h3 className="font-semibold mb-4">Navegação</h3>
-            <ul className="space-y-2 text-sm">
+            <h3 className="font-semibold text-white mb-4">Navegação</h3>
+            <ul className="space-y-3 text-sm">
               {[
                 { to: '/dashboard', label: 'Dashboard' },
                 { to: '/monitoramento', label: 'Monitoramento' },
@@ -50,9 +52,9 @@ const Footer = () => {
                   <Link
                     to={link.to}
                     onClick={() => window.scrollTo(0, 0)}
-                    className="text-gray-300 hover:text-white transition-colors flex items-center gap-2"
+                    className="text-stone-400 hover:text-eco-400 transition-colors flex items-center gap-2"
                   >
-                    <i className="bi bi-chevron-right text-xs"></i>
+                    <span className="text-eco-500/60">→</span>
                     {link.label}
                   </Link>
                 </li>
@@ -60,19 +62,13 @@ const Footer = () => {
             </ul>
           </div>
 
-          {/* Recursos */}
           <div>
-            <h3 className="font-semibold mb-4">Recursos</h3>
-            <ul className="space-y-2 text-sm">
-              {[
-                'Educação Ambiental',
-                'Relatórios',
-                'API Pública',
-                'Suporte'
-              ].map((item) => (
+            <h3 className="font-semibold text-white mb-4">Recursos</h3>
+            <ul className="space-y-3 text-sm">
+              {['Educação Ambiental', 'Relatórios', 'API Pública', 'Suporte'].map((item) => (
                 <li key={item}>
-                  <a href="#" className="text-gray-300 hover:text-white transition-colors flex items-center gap-2">
-                    <i className="bi bi-chevron-right text-xs"></i>
+                  <a href="#" className="text-stone-400 hover:text-eco-400 transition-colors flex items-center gap-2">
+                    <span className="text-eco-500/60">→</span>
                     {item}
                   </a>
                 </li>
@@ -80,34 +76,32 @@ const Footer = () => {
             </ul>
           </div>
 
-          {/* Contato */}
           <div>
-            <h3 className="font-semibold mb-4">Contato</h3>
-            <div className="space-y-3 text-sm">
-              <div className="flex items-center gap-2 text-gray-300">
-                <i className="bi bi-envelope"></i>
+            <h3 className="font-semibold text-white mb-4">Contato</h3>
+            <div className="space-y-4 text-sm">
+              <div className="flex items-start gap-3 text-stone-400">
+                <Mail size={18} className="text-eco-500/70 shrink-0 mt-0.5" />
                 <span>brunosoaresecosphere@gmail.com</span>
               </div>
-              <div className="flex items-center gap-2 text-gray-300">
-                <i className="bi bi-telephone"></i>
+              <div className="flex items-center gap-3 text-stone-400">
+                <Phone size={18} className="text-eco-500/70 shrink-0" />
                 <span>(21) 96527-2231</span>
               </div>
-              <div className="flex items-center gap-2 text-gray-300">
-                <i className="bi bi-geo-alt"></i>
+              <div className="flex items-center gap-3 text-stone-400">
+                <MapPin size={18} className="text-eco-500/70 shrink-0" />
                 <span>Rio de Janeiro, Brasil</span>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Linha divisória */}
-        <div className="border-t border-white/10 mt-8 pt-8">
-          <div className="flex flex-col md:flex-row justify-between items-center text-sm text-gray-400">
-            <p>&copy; 2024 EcoSphere. Todos os direitos reservados.</p>
-            <div className="flex space-x-6 mt-4 md:mt-0">
-              <a href="#" className="hover:text-white transition-colors">Privacidade</a>
-              <a href="#" className="hover:text-white transition-colors">Termos</a>
-              <a href="#" className="hover:text-white transition-colors">Cookies</a>
+        <div className="border-t border-stone-800 mt-12 pt-8">
+          <div className="flex flex-col md:flex-row justify-between items-center gap-4 text-sm text-stone-500">
+            <p>© 2024 EcoSphere. Todos os direitos reservados.</p>
+            <div className="flex gap-6">
+              <a href="#" className="hover:text-eco-400 transition-colors">Privacidade</a>
+              <a href="#" className="hover:text-eco-400 transition-colors">Termos</a>
+              <a href="#" className="hover:text-eco-400 transition-colors">Cookies</a>
             </div>
           </div>
         </div>

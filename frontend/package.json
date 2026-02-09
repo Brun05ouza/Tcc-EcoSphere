@@ -3,6 +3,8 @@
   "version": "1.0.0",
   "private": true,
   "dependencies": {
+    "@craco/craco": "^7.1.0",
+    "@nasaworldwind/worldwind": "^0.11.1",
     "@supabase/supabase-js": "^2.95.3",
     "@tensorflow-models/mobilenet": "^2.1.1",
     "@tensorflow/tfjs": "^4.22.0",
@@ -18,14 +20,16 @@
     "react-icons": "^5.5.0",
     "react-leaflet": "^4.2.1",
     "react-router-dom": "^6.8.0",
-    "tailwindcss": "^3.2.0"
+    "tailwindcss": "^3.2.0",
+    "three": "^0.134.0",
+    "vanta": "^0.5.24"
   },
   "scripts": {
-    "start": "react-scripts start",
-    "start-local": "react-scripts start",
-    "start-network": "set HOST=172.16.42.65 && react-scripts start",
-    "build": "react-scripts build",
-    "test": "react-scripts test",
+    "start": "craco start",
+    "start-local": "craco start",
+    "start-network": "set HOST=172.16.42.65 && craco start",
+    "build": "craco build",
+    "test": "craco test",
     "eject": "react-scripts eject"
   },
   "devDependencies": {

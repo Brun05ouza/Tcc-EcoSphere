@@ -93,7 +93,7 @@ const Rewards = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50 py-8">
+    <div className="min-h-screen bg-surface-50 py-8 md:py-12">
       <div className="container mx-auto px-4">
         {/* Header */}
         <motion.div
@@ -101,7 +101,7 @@ const Rewards = () => {
           animate={{ opacity: 1, y: 0 }}
           className="text-center mb-8"
         >
-          <h1 className="text-5xl font-bold bg-gradient-to-r from-green-600 to-blue-600 bg-clip-text text-transparent mb-4 flex items-center justify-center gap-3">
+          <h1 className="text-5xl font-bold bg-gradient-to-r from-eco-700 via-teal-600 to-eco-700 bg-clip-text text-transparent mb-4 flex items-center justify-center gap-3">
             <Gift size={48} className="text-green-600" />
             Resgate de EcoPoints
           </h1>
@@ -112,7 +112,7 @@ const Rewards = () => {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="bg-gradient-to-r from-green-600 to-blue-600 rounded-3xl p-6 text-white mb-8 text-center"
+          className="bg-gradient-to-r from-eco-600 to-teal-600 rounded-3xl p-6 text-white mb-8 text-center shadow-soft-lg"
         >
           <div className="flex items-center justify-center gap-4">
             <Gift size={36} className="text-yellow-300 shrink-0" />
