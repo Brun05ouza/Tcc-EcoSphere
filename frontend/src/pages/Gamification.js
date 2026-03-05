@@ -5,6 +5,7 @@ import { useUser } from '../contexts/UserContext';
 import { getRandomQuestions } from '../data/quizQuestions';
 import { Sparkles, Trophy, Recycle, Leaf, TreePine, Globe, Flame, Brain, Gamepad2, Award, Target, Check, X, BarChart3, RotateCcw, Medal } from 'lucide-react';
 import { AppIcon } from '../components/ui/AppIcon';
+import LoadingScreen from '../components/ui/LoadingScreen';
 
 const Gamification = () => {
   const [user, setUser] = useState(null);
@@ -235,14 +236,7 @@ const Gamification = () => {
   };
 
   if (loading) {
-    return (
-      <div className="min-h-screen bg-surface-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-500 mx-auto mb-4"></div>
-          <p className="text-gray-600">Carregando dados...</p>
-        </div>
-      </div>
-    );
+    return <LoadingScreen message="Carregando dados..." />;
   }
 
   const missions = [

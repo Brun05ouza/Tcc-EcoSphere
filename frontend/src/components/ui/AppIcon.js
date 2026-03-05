@@ -141,7 +141,7 @@ const ICON_MAP = {
   eletronico: Smartphone,
 };
 
-const GLOBO_LOGO = require('../../assets/icons/globo-icon.png');
+import EcoGlobeLogo from './EcoGlobeLogo';
 
 /**
  * Ícone unificado do app. Use o nome em minúsculas (ex: "globe", "trophy").
@@ -152,7 +152,7 @@ const GLOBO_LOGO = require('../../assets/icons/globo-icon.png');
 export function AppIcon({ name, size = 24, className = '' }) {
   const key = (name || '').toLowerCase().replace(/\s+/g, '');
   if (key === 'globe' || key === 'earth') {
-    return <img src={GLOBO_LOGO} alt="" width={size} height={size} className={className} aria-hidden />;
+    return <EcoGlobeLogo size={size} className={className} />;
   }
   const IconComponent = ICON_MAP[key] || Globe;
   return <IconComponent size={size} className={className} aria-hidden />;

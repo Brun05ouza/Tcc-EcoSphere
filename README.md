@@ -56,6 +56,8 @@ cd frontend
 npm install
 cp .env.example .env
 # No .env: REACT_APP_SUPABASE_URL e REACT_APP_SUPABASE_ANON_KEY
+# Ícone animado: copie o logo Lottie para a pasta public (opcional)
+# copy ..\Globe.lottie public\   (Windows)  ou  cp ../Globe.lottie public/   (Linux/Mac)
 npm start
 ```
 

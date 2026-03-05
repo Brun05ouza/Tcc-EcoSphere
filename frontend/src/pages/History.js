@@ -4,6 +4,7 @@ import { Pie } from 'react-chartjs-2';
 import { wasteAPI } from '../services/api';
 import { BarChart3 } from 'lucide-react';
 import { AppIcon } from '../components/ui/AppIcon';
+import LoadingScreen from '../components/ui/LoadingScreen';
 
 const TYPE_ICON = { Plástico: 'plastic', Papel: 'paper', Vidro: 'glass', Metal: 'metal', Orgânico: 'organico', Eletrônico: 'eletronico' };
 
@@ -104,7 +105,12 @@ const History = () => {
             className="lg:col-span-2 bg-white rounded-2xl shadow-lg p-6"
           >
             <h2 className="text-xl font-bold mb-4">Classificações Recentes</h2>
-            {loading && <p className="text-gray-500">Carregando...</p>}
+            {loading && (
+              <div className="flex items-center justify-center gap-2 text-gray-500 py-4">
+                <LoadingScreen fullScreen={false} size={28} />
+                <p>Carregando...</p>
+              </div>
+            )}
             <div className="space-y-3 max-h-96 overflow-y-auto">
               {!loading && classifications.length === 0 && <p className="text-gray-500">Nenhuma classificação ainda.</p>}
               {classifications.map((item) => (

@@ -5,6 +5,8 @@ import { userAPI } from '../services/api';
 import { useUser } from '../contexts/UserContext';
 import GoogleLogin from '../components/GoogleLogin';
 import LoginGlobeBackground from '../components/globe/LoginGlobeBackground';
+import EcoGlobeLogo from '../components/ui/EcoGlobeLogo';
+import LoadingScreen from '../components/ui/LoadingScreen';
 import { Brain, Recycle, BarChart3, Trophy } from 'lucide-react';
 
 const Login = () => {
@@ -231,7 +233,7 @@ const Login = () => {
           {/* Logo e Título */}
           <div>
             <div className="mb-6 inline-block">
-              <img src={require('../assets/icons/globo-icon.png')} alt="EcoSphere" className="w-14 h-14 object-contain" style={{ filter: 'brightness(0) invert(1)' }} />
+              <EcoGlobeLogo size={56} style={{ filter: 'brightness(0) invert(1)' }} />
             </div>
             <h1 className="text-5xl font-bold mb-4">Bem-vindo ao EcoSphere</h1>
             <p className="text-xl text-white/90">
@@ -273,8 +275,8 @@ const Login = () => {
           className="w-full max-w-md mx-auto relative"
         >
           {/* Globo decorativo sutil */}
-          <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 opacity-5 pointer-events-none select-none">
-            <img src={require('../assets/icons/globo-icon.png')} alt="" className="w-48 h-48 object-contain" style={{ filter: 'brightness(0) invert(1)' }} />
+          <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 opacity-5 pointer-events-none select-none w-48 h-48">
+            <EcoGlobeLogo size={192} className="w-full h-full" style={{ filter: 'brightness(0) invert(1)' }} />
           </div>
 
           <div className="bg-white/15 backdrop-blur-xl rounded-3xl p-6 border border-white/20 shadow-2xl relative z-10">
@@ -421,14 +423,8 @@ const Login = () => {
                 className="w-full bg-gradient-to-r from-eco-600 to-teal-600 text-white py-2.5 px-4 rounded-xl font-semibold hover:from-eco-700 hover:to-teal-700 transition-all disabled:opacity-50 shadow-soft text-sm"
               >
                 {loading ? (
-                  <span className="flex items-center justify-center">
-                    <motion.span
-                      animate={{ rotate: 360 }}
-                      transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-                      className="mr-2"
-                    >
-                      ⟳
-                    </motion.span>
+                  <span className="flex items-center justify-center gap-2">
+                    <LoadingScreen fullScreen={false} size={20} />
                     {isLogin ? 'Entrando...' : 'Registrando...'}
                   </span>
                 ) : (

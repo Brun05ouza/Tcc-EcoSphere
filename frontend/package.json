@@ -4,6 +4,7 @@
   "private": true,
   "dependencies": {
     "@craco/craco": "^7.1.0",
+    "@lottiefiles/dotlottie-react": "^0.18.3",
     "@nasaworldwind/worldwind": "^0.11.1",
     "@supabase/supabase-js": "^2.95.3",
     "@tensorflow-models/mobilenet": "^2.1.1",
@@ -16,6 +17,7 @@
     "phaser": "^3.90.0",
     "react": "^18.2.0",
     "react-chartjs-2": "^5.2.0",
+    "react-countup": "^6.5.3",
     "react-dom": "^18.2.0",
     "react-icons": "^5.5.0",
     "react-leaflet": "^4.2.1",

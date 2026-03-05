@@ -1,17 +1,31 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Bell, Sparkles, User, ChevronDown, Menu, X, Shield } from 'lucide-react';
 import { useUser } from '../contexts/UserContext';
 import { AppIcon } from './ui/AppIcon';
+import EcoGlobeLogo from './ui/EcoGlobeLogo';
+
+const HERO_SCROLL_THRESHOLD = 420;
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [notifications] = useState(3);
   const [showNotifications, setShowNotifications] = useState(false);
+  const [isHeroVisible, setIsHeroVisible] = useState(false);
   const { user, isAdmin } = useUser();
   const location = useLocation();
   const navigate = useNavigate();
+
+  useEffect(() => {
+    const onScroll = () => {
+      const onHome = location.pathname === '/';
+      setIsHeroVisible(onHome && window.scrollY < HERO_SCROLL_THRESHOLD);
+    };
+    onScroll();
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, [location.pathname]);
 
   const ecoTips = [
     { iconName: 'leaf', text: 'Já plantou uma árvore hoje?', action: 'Plante uma muda!' },
@@ -61,9 +75,9 @@ const Navbar = () => {
   ];
 
   const Icon = ({ name, className = "w-5 h-5", active = false }) => {
-    const iconStyle = active 
-      ? { filter: 'invert(48%) sepia(79%) saturate(2476%) hue-rotate(86deg) brightness(118%) contrast(119%)' }
-      : { filter: 'invert(40%) sepia(5%) saturate(500%) hue-rotate(180deg)' };
+    const iconStyle = isHeroVisible
+      ? (active ? { filter: 'brightness(0) invert(1)' } : { filter: 'brightness(0) invert(0.8)' })
+      : (active ? { filter: 'invert(48%) sepia(79%) saturate(2476%) hue-rotate(86deg) brightness(118%) contrast(119%)' } : { filter: 'invert(40%) sepia(5%) saturate(500%) hue-rotate(180deg)' });
     return (
       <img 
         src={require(`../assets/icons/${name}.svg`)} 
@@ -74,24 +88,29 @@ const Navbar = () => {
     );
   };
 
+  const navBg = isHeroVisible
+    ? 'bg-transparent border-b border-transparent shadow-none'
+    : 'bg-white border-b border-stone-200/60 shadow-soft';
+
   return (
     <motion.nav 
       initial={{ y: -100 }}
       animate={{ y: 0 }}
-      className="sticky top-0 z-50 bg-white/80 backdrop-blur-xl border-b border-stone-200/60 shadow-soft"
+      className={`sticky top-0 z-50 transition-all duration-300 ${navBg}`}
     >
       <div className="container mx-auto px-4 max-w-7xl">
         <div className="flex justify-between items-center h-16 md:h-[72px] py-2">
           {/* Logo */}
           <Link to="/" className="flex items-center gap-2.5 group">
-            <motion.div
-              whileHover={{ rotate: 360, scale: 1.1 }}
-              transition={{ duration: 0.6 }}
-              className="w-10 h-10 rounded-xl bg-gradient-to-br from-eco-500 to-teal-500 flex items-center justify-center shadow-soft p-1.5"
-            >
-              <img src={require('../assets/icons/globo-icon.png')} alt="EcoSphere" className="w-full h-full object-contain" style={{ filter: 'brightness(0) invert(1)' }} />
-            </motion.div>
-            <span className="text-xl font-bold bg-gradient-to-r from-eco-700 via-teal-600 to-eco-700 bg-clip-text text-transparent font-display">
+            <EcoGlobeLogo
+              size={48}
+              style={{ filter: 'invert(40%) sepia(93%) saturate(500%) hue-rotate(100deg)' }}
+            />
+            <span className={`text-xl font-bold font-display transition-colors duration-300 ${
+              isHeroVisible 
+                ? 'bg-gradient-to-r from-emerald-300 via-teal-300 to-eco-400 bg-clip-text text-transparent' 
+                : 'bg-gradient-to-r from-eco-700 via-teal-600 to-eco-700 bg-clip-text text-transparent'
+            }`}>
               EcoSphere
             </span>
           </Link>
@@ -103,9 +122,13 @@ const Navbar = () => {
                 key={item.path}
                 to={item.path}
                 className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 whitespace-nowrap ${
-                  location.pathname === item.path
-                    ? 'bg-eco-50 text-eco-700'
-                    : 'text-stone-600 hover:bg-stone-100 hover:text-stone-900'
+                  isHeroVisible
+                    ? location.pathname === item.path
+                      ? 'bg-white/15 text-white'
+                      : 'text-stone-300 hover:bg-white/10 hover:text-white'
+                    : location.pathname === item.path
+                      ? 'bg-eco-50 text-eco-700'
+                      : 'text-stone-600 hover:bg-stone-100 hover:text-stone-900'
                 }`}
               >
                 <Icon name={item.icon} className="w-4 h-4 shrink-0" active={location.pathname === item.path} />
@@ -120,9 +143,13 @@ const Navbar = () => {
               <Link
                 to="/admin"
                 className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 ${
-                  location.pathname === '/admin'
-                    ? 'bg-eco-50 text-eco-700'
-                    : 'text-stone-600 hover:bg-stone-100 hover:text-stone-900'
+                  isHeroVisible
+                    ? location.pathname === '/admin'
+                      ? 'bg-white/15 text-white'
+                      : 'text-stone-300 hover:bg-white/10 hover:text-white'
+                    : location.pathname === '/admin'
+                      ? 'bg-eco-50 text-eco-700'
+                      : 'text-stone-600 hover:bg-stone-100 hover:text-stone-900'
                 }`}
               >
                 <Shield size={18} />
@@ -134,7 +161,9 @@ const Navbar = () => {
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 onClick={() => setShowNotifications(!showNotifications)}
-                className="relative p-2.5 rounded-xl hover:bg-stone-100 transition-colors text-stone-600"
+                className={`relative p-2.5 rounded-xl transition-colors ${
+                  isHeroVisible ? 'text-stone-300 hover:bg-white/10' : 'hover:bg-stone-100 text-stone-600'
+                }`}
               >
                 <Bell size={20} />
                 {notifications > 0 && (
@@ -191,17 +220,23 @@ const Navbar = () => {
               )}
             </div>
             
-            <div className="flex items-center gap-2 bg-gradient-to-r from-eco-50 to-teal-50 px-4 py-2 rounded-xl border border-eco-100">
+            <div className={`flex items-center gap-2 px-4 py-2 rounded-xl border transition-all duration-300 ${
+                isHeroVisible 
+                  ? 'bg-white/10 border-white/20' 
+                  : 'bg-gradient-to-r from-eco-50 to-teal-50 border-eco-100'
+              }`}>
               <Sparkles size={18} className="text-amber-500" />
-              <span className="font-bold text-stone-800">{user?.ecoPoints || 0}</span>
+              <span className={`font-bold transition-colors duration-300 ${isHeroVisible ? 'text-white' : 'text-stone-800'}`}>{user?.ecoPoints || 0}</span>
             </div>
             
             <div className="relative group">
-              <button className="flex items-center gap-2 p-2.5 rounded-xl hover:bg-stone-100 transition-colors">
+              <button className={`flex items-center gap-2 p-2.5 rounded-xl transition-colors ${
+                isHeroVisible ? 'hover:bg-white/10' : 'hover:bg-stone-100'
+              }`}>
                 <div className="w-8 h-8 rounded-full bg-gradient-to-br from-eco-400 to-teal-500 flex items-center justify-center">
                   <User size={16} className="text-white" />
                 </div>
-                <ChevronDown size={14} className="text-stone-500" />
+                <ChevronDown size={14} className={isHeroVisible ? 'text-stone-400' : 'text-stone-500'} />
               </button>
               
               <div className="absolute right-0 mt-2 w-52 bg-white rounded-2xl shadow-soft-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50 border border-stone-100 overflow-hidden">
@@ -230,7 +265,9 @@ const Navbar = () => {
 
           <button
             onClick={() => setIsOpen(!isOpen)}
-            className="lg:hidden p-2.5 rounded-xl hover:bg-stone-100 text-stone-600"
+            className={`lg:hidden p-2.5 rounded-xl transition-colors ${
+              isHeroVisible ? 'hover:bg-white/10 text-stone-300' : 'hover:bg-stone-100 text-stone-600'
+            }`}
           >
             {isOpen ? <X size={24} /> : <Menu size={24} />}
           </button>
@@ -241,7 +278,9 @@ const Navbar = () => {
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: 'auto' }}
             exit={{ opacity: 0, height: 0 }}
-            className="lg:hidden py-4 border-t border-stone-200"
+            className={`lg:hidden py-4 border-t transition-colors duration-300 ${
+              isHeroVisible ? 'border-white/10' : 'border-stone-200'
+            }`}
           >
             <div className="space-y-1">
               {navItems.map((item) => (

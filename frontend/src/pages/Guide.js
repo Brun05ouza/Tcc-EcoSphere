@@ -140,7 +140,7 @@ const Guide = () => {
             <p className="text-gray-700 leading-relaxed">{steps[currentStep].content}</p>
           </div>
 
-          <div className="flex justify-between items-center">
+          <div className="flex flex-wrap justify-between items-center gap-4">
             <button
               onClick={handlePrevious}
               disabled={currentStep === 0}
@@ -153,12 +153,22 @@ const Guide = () => {
               ← Anterior
             </button>
 
-            <button
-              onClick={handleAction}
-              className="bg-gradient-to-r from-green-500 to-blue-500 text-white px-8 py-3 rounded-xl font-bold hover:shadow-lg transition-all"
-            >
-              {steps[currentStep].action}
-            </button>
+            <div className="flex flex-wrap items-center gap-3">
+              {steps[currentStep].route && currentStep < steps.length - 1 && (
+                <button
+                  onClick={handleNext}
+                  className="px-6 py-3 rounded-xl font-medium border-2 border-gray-300 text-gray-700 hover:bg-gray-100 hover:border-gray-400 transition-all"
+                >
+                  Fazer depois
+                </button>
+              )}
+              <button
+                onClick={handleAction}
+                className="bg-gradient-to-r from-green-500 to-blue-500 text-white px-8 py-3 rounded-xl font-bold hover:shadow-lg transition-all"
+              >
+                {steps[currentStep].action}
+              </button>
+            </div>
           </div>
         </motion.div>
 

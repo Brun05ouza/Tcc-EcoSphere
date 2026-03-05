@@ -6,6 +6,8 @@ import { useEcoPoints } from '../hooks/useEcoPoints';
 import { gamificationAPI } from '../services/api';
 import DailyQuiz from '../components/DailyQuiz';
 import { Brain, Flame, Target, BarChart3, Leaf } from 'lucide-react';
+import EcoGlobeLogo from '../components/ui/EcoGlobeLogo';
+import LoadingScreen from '../components/ui/LoadingScreen';
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend, ArcElement, BarElement);
 
@@ -96,14 +98,7 @@ const Dashboard = () => {
   };
 
   if (loading) {
-    return (
-      <div className="min-h-screen bg-surface-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-2 border-eco-200 border-t-eco-600 rounded-full mx-auto mb-4"></div>
-          <p className="text-stone-600 font-medium">Carregando dashboard...</p>
-        </div>
-      </div>
-    );
+    return <LoadingScreen message="Carregando dashboard..." />;
   }
 
   return (
@@ -178,7 +173,7 @@ const Dashboard = () => {
           >
             <div className="flex items-center justify-between">
               <div>
-                <h3 className="text-2xl font-bold mb-2 flex items-center gap-2"><img src={require('../assets/icons/globo-icon.png')} alt="" width={28} height={28} style={{ filter: 'brightness(0) invert(1)' }} /> Pegada de Carbono</h3>
+                <h3 className="text-2xl font-bold mb-2 flex items-center gap-2"><EcoGlobeLogo size={28} style={{ filter: 'brightness(0) invert(1)' }} /> Pegada de Carbono</h3>
                 <p className="text-green-100 mb-4">Calcule seu impacto ambiental!</p>
                 <div className="flex items-center gap-2">
                   <BarChart3 size={28} />
@@ -195,7 +190,7 @@ const Dashboard = () => {
           animate={{ opacity: 1, y: 0 }}
           className="bg-gradient-to-r from-amber-500 to-orange-600 p-6 rounded-2xl shadow-soft-lg text-white mb-8"
         >
-          <h3 className="text-2xl font-bold mb-4 flex items-center gap-2"><img src={require('../assets/icons/globo-icon.png')} alt="" width={28} height={28} style={{ filter: 'brightness(0) invert(1)' }} /> Impacto Coletivo da Plataforma</h3>
+          <h3 className="text-2xl font-bold mb-4 flex items-center gap-2"><EcoGlobeLogo size={28} style={{ filter: 'brightness(0) invert(1)' }} /> Impacto Coletivo da Plataforma</h3>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <div>
               <div className="text-3xl font-bold">12.547</div>

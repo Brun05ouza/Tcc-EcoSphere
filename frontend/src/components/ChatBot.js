@@ -208,13 +208,15 @@ const ChatBot = () => {
               className="bi bi-x-lg text-xl"
             />
           ) : (
-            <motion.i
+            <motion.span
               key="chat"
               initial={{ scale: 0 }}
               animate={{ scale: 1 }}
               exit={{ scale: 0 }}
-              className="bi bi-chat-dots text-xl"
-            />
+              className="flex items-center justify-center"
+            >
+              <Bot size={28} strokeWidth={1.5} />
+            </motion.span>
           )}
         </AnimatePresence>
       </motion.button>

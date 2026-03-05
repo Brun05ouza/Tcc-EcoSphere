@@ -1,22 +1,27 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import CountUp from 'react-countup';
 import { Users, TrendingUp, TreePine } from 'lucide-react';
 import { AppIcon } from '../components/ui/AppIcon';
+import EcoGlobeLogo from '../components/ui/EcoGlobeLogo';
 import DashboardGlobeCard from '../components/globe/DashboardGlobeCard';
+import NebulaBackground from '../components/background/NebulaBackground';
+import FeaturesBento from '../components/home/FeaturesBento';
 
 const Home = () => {
   const [stats, setStats] = useState({ users: 0, actions: 0, co2: 0 });
 
   const Icon = ({ name, className = "w-16 h-16", white = false }) => {
     const iconStyle = white ? { filter: 'brightness(0) invert(1)' } : { filter: 'invert(40%) sepia(93%) saturate(500%) hue-rotate(100deg)' };
-    const src = name === 'globo' 
-      ? require('../assets/icons/globo-icon.png') 
-      : require(`../assets/icons/${name}.svg`);
+    if (name === 'globo') {
+      const size = className.includes('w-12') ? 48 : 64;
+      return <EcoGlobeLogo size={size} className={className} style={iconStyle} />;
+    }
     return (
-      <img 
-        src={src} 
-        alt={name} 
+      <img
+        src={require(`../assets/icons/${name}.svg`)}
+        alt={name}
         className={className}
         style={iconStyle}
       />
@@ -35,135 +40,117 @@ const Home = () => {
     return () => clearInterval(timer);
   }, []);
 
+  // Fundo escuro atrás do nav transparente (evita borda branca no topo)
+  useEffect(() => {
+    const prev = document.body.style.background;
+    document.body.style.background = '#020617';
+    return () => {
+      document.body.style.background = prev || '';
+    };
+  }, []);
+
   return (
     <div className="min-h-screen bg-surface-50">
-      {/* Hero - Background mesh */}
-      <div className="relative overflow-hidden">
-        <div className="absolute inset-0 bg-mesh opacity-60" />
-        <div className="absolute top-20 left-10 w-72 h-72 bg-eco-200/30 rounded-full blur-3xl" />
-        <div className="absolute bottom-20 right-20 w-96 h-96 bg-teal-200/20 rounded-full blur-3xl" />
+      {/* Hero - Background galaxy (estende atrás do navbar até o topo) */}
+      <div className="relative overflow-hidden min-h-screen flex items-center -mt-20 md:-mt-[80px] pt-20 md:pt-[80px]">
+        <NebulaBackground />
+        
+        {/* Globo solto no hero (desktop) - fora do grid para poder ficar bem grande */}
+        <div className="absolute right-0 top-1/2 -translate-y-1/2 w-[min(75vw,960px)] h-[min(75vw,960px)] max-h-[85vh] pointer-events-none select-none hidden lg:block z-[1]">
+          <DashboardGlobeCard />
+        </div>
         
         <motion.div 
           initial={{ opacity: 0, y: 40 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.7 }}
-          className="relative section-container py-20 md:py-28"
+          className="relative w-full max-w-7xl mx-auto px-4 sm:px-6 py-12 md:py-20 z-10 flex items-center justify-start -mt-10"
         >
-          <div className="grid lg:grid-cols-12 gap-8 lg:gap-12 items-center">
-            <div className="lg:col-span-6 text-center lg:text-left">
+          <div className="w-fit max-w-xl text-center lg:text-left">
               <motion.div
-                initial={{ scale: 0.9 }}
-                animate={{ scale: 1 }}
+                initial={{ scale: 0.9, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
                 transition={{ delay: 0.2, duration: 0.5 }}
-                className="mb-8"
+                className="relative lg:pr-8 lg:border-l-4 lg:border-emerald-400/40 lg:pl-8 rounded-r-xl"
               >
-                <motion.div 
-                  animate={{ y: [0, -8, 0] }}
-                  transition={{ repeat: Infinity, duration: 4, ease: "easeInOut" }}
-                  className="inline-block mb-6"
-                >
-                  <div className="w-16 h-16 rounded-xl bg-gradient-to-br from-eco-500 to-teal-500 flex items-center justify-center shadow-soft p-2">
-                    <img 
-                      src={require('../assets/icons/globo-icon.png')} 
-                      alt="EcoSphere" 
-                      className="w-full h-full object-contain"
-                      style={{ filter: 'brightness(0) invert(1)' }}
+                <p className="text-sm font-medium tracking-widest uppercase text-emerald-300/90 mb-4">
+                  Sua jornada sustentável
+                </p>
+                <div className="flex items-center gap-4 mb-6 flex-wrap justify-center lg:justify-start">
+                  <motion.div 
+                    animate={{ y: [0, -6, 0] }}
+                    transition={{ repeat: Infinity, duration: 4, ease: "easeInOut" }}
+                    className="shrink-0"
+                  >
+                    <EcoGlobeLogo 
+                      size={96} 
+                      style={{ filter: 'invert(40%) sepia(93%) saturate(500%) hue-rotate(100deg)' }} 
                     />
-                  </div>
-                </motion.div>
-                <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold mb-6 font-display">
-                  <span className="bg-gradient-to-r from-eco-700 via-teal-600 to-eco-700 bg-clip-text text-transparent">
-                    EcoSphere
-                  </span>
-                </h1>
-                <p className="text-xl md:text-2xl text-stone-600 mb-10 max-w-2xl mx-auto lg:mx-0 leading-relaxed">
-                  Transforme o mundo com <span className="text-eco-600 font-semibold">inteligência artificial</span>, 
-                  dados em tempo real e <span className="text-teal-600 font-semibold">ação sustentável</span>
+                  </motion.div>
+                  <h1 className="text-5xl md:text-6xl lg:text-6xl xl:text-7xl font-bold font-display tracking-tight">
+                    <span className="bg-gradient-to-r from-emerald-200 via-teal-200 to-eco-300 bg-clip-text text-transparent drop-shadow-[0_0_30px_rgba(52,211,153,0.15)]">
+                      EcoSphere
+                    </span>
+                  </h1>
+                </div>
+                <div className="h-px w-16 bg-gradient-to-r from-emerald-400/60 to-transparent rounded-full mb-6 lg:mx-0 mx-auto" />
+                <p className="text-lg md:text-xl text-stone-200/95 mb-10 max-w-xl mx-auto lg:mx-0 leading-relaxed">
+                  Transforme o mundo com <span className="text-emerald-300 font-semibold">inteligência artificial</span>, 
+                  dados em tempo real e <span className="text-teal-300 font-semibold">ação sustentável</span>.
                 </p>
               </motion.div>
               
               <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: 0.5, duration: 0.5 }}
-                className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start"
+                className="flex flex-row flex-nowrap gap-3 justify-center lg:justify-start items-center"
               >
                 <Link 
                   to="/guia" 
-                  className="btn-primary px-8 py-4 text-lg"
+                  className="inline-flex items-center justify-center gap-2 px-6 py-3 text-base font-semibold rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 text-white shadow-lg shadow-emerald-500/25 hover:shadow-emerald-500/40 hover:scale-[1.02] active:scale-[0.98] transition-all whitespace-nowrap shrink-0"
                 >
-                  <Icon name="rocket" className="w-5 h-5" white />
-                  Começar Agora
+                  <Icon name="rocket" className="w-5 h-5 shrink-0" white />
+                  <span>Começar Agora</span>
                 </Link>
                 <Link 
                   to="/classificar-residuos" 
-                  className="btn-secondary px-8 py-4 text-lg"
+                  className="inline-flex items-center justify-center gap-2 px-6 py-3 text-base font-semibold rounded-xl border-2 border-emerald-400/50 text-emerald-200/95 bg-white/5 hover:bg-white/10 hover:border-emerald-400/70 transition-all backdrop-blur-sm whitespace-nowrap shrink-0"
                 >
-                  <AppIcon name="camera" size={22} />
-                  Testar IA
+                  <AppIcon name="camera" size={20} className="text-emerald-300 shrink-0" />
+                  <span>Testar IA</span>
                 </Link>
               </motion.div>
-            </div>
-            <div className="lg:col-span-6 hidden lg:flex lg:items-center lg:justify-end lg:min-w-0">
-              <DashboardGlobeCard />
-            </div>
           </div>
         </motion.div>
       </div>
 
       {/* Globe card mobile */}
-      <div className="section-container pb-8 lg:hidden">
+      <div className="section-container pb-8 lg:hidden max-w-sm mx-auto aspect-square">
         <DashboardGlobeCard />
       </div>
 
-      {/* Features Grid */}
-      <div className="section-container py-16 md:py-24">
-        <motion.h2 
-          initial={{ opacity: 0 }}
-          whileInView={{ opacity: 1 }}
-          viewport={{ once: true }}
-          className="text-3xl md:text-4xl font-bold text-center mb-16 text-stone-800 flex items-center justify-center gap-3"
-        >
-          <Icon name="rocket" className="w-10 h-10 text-eco-600" />
-          Funcionalidades Principais
-        </motion.h2>
-        
-        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-8">
-          {[
-            { icon: "monitoramento", iconName: "globe", title: "Monitoramento Ambiental", desc: "Dados em tempo real de temperatura, qualidade do ar e mais", color: "from-blue-500 to-cyan-500" },
-            { icon: "IA", iconName: "bot", title: "IA para Resíduos", desc: "Classifique resíduos automaticamente com visão computacional", color: "from-eco-500 to-emerald-500" },
-            { icon: "ecopoints", iconName: "trophy", title: "Gamificação", desc: "Ganhe EcoPoints e badges por ações sustentáveis", color: "from-amber-500 to-orange-500" },
-            { icon: "educacao", iconName: "graduation", title: "Educação", desc: "Cursos e desafios para aprender sobre sustentabilidade", color: "from-violet-500 to-purple-500" }
-          ].map((feature, index) => (
-            <motion.div
-              key={index}
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: index * 0.08 }}
-              whileHover={{ y: -8, scale: 1.02 }}
-              className="card-hover p-8 text-center group"
-            >
-              <div className={`w-16 h-16 mx-auto mb-6 rounded-2xl bg-gradient-to-br ${feature.color} flex items-center justify-center shadow-soft group-hover:shadow-soft-lg transition-shadow`}>
-                <Icon name={feature.icon} className="w-8 h-8" white />
-              </div>
-              <h3 className="text-xl font-bold mb-3 text-stone-800">{feature.title}</h3>
-              <p className="text-stone-600 leading-relaxed text-sm">{feature.desc}</p>
-            </motion.div>
-          ))}
-        </div>
-      </div>
+      <FeaturesBento />
 
-      {/* Stats Section */}
-      <motion.div 
-        initial={{ opacity: 0 }}
-        whileInView={{ opacity: 1 }}
+      {/* Stats Section - Impacto da Comunidade */}
+      <motion.div
+        initial={{ opacity: 0, y: 30 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6 }}
         viewport={{ once: true }}
         className="section-container py-16"
       >
         <div className="bg-gradient-to-br from-eco-600 via-teal-600 to-eco-700 p-12 md:p-16 rounded-3xl shadow-soft-lg text-white relative overflow-hidden">
-          <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxnIGZpbGw9IiNmZmYiIGZpbGwtb3BhY2l0eT0iMC4wNSI+PGNpcmNsZSBjeD0iMzAiIGN5PSIzMCIgcj0iMiIvPjwvZz48L2c+PC9zdmc+')] opacity-50" />
-          <motion.h2 
+          <div
+            className="absolute inset-0 pointer-events-none rounded-3xl"
+            style={{
+              backgroundImage: 'radial-gradient(rgba(255,255,255,0.15) 1px, transparent 1px)',
+              backgroundSize: '40px 40px',
+            }}
+            aria-hidden
+          />
+          <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxnIGZpbGw9IiNmZmYiIGZpbGwtb3BhY2l0eT0iMC4wNSI+PGNpcmNsZSBjeD0iMzAiIGN5PSIzMCIgcj0iMiIvPjwvZz48L2c+PC9zdmc+')] opacity-50 rounded-3xl" aria-hidden />
+          <motion.h2
             initial={{ y: 20 }}
             whileInView={{ y: 0 }}
             viewport={{ once: true }}
@@ -171,12 +158,12 @@ const Home = () => {
           >
             Impacto da Comunidade
           </motion.h2>
-          
+
           <div className="grid md:grid-cols-3 gap-8 text-center relative">
             {[
-              { IconComp: Users, value: stats.users.toLocaleString(), label: "Usuários Ativos" },
-              { IconComp: TrendingUp, value: stats.actions.toLocaleString(), label: "Ações Sustentáveis" },
-              { IconComp: TreePine, value: stats.co2, label: "CO₂ Evitado", suffix: " ton" }
+              { IconComp: Users, label: 'Usuários Ativos', countUp: { end: 2847, separator: ',' } },
+              { IconComp: TrendingUp, label: 'Ações Sustentáveis', countUp: { end: 15392, separator: ',' } },
+              { IconComp: TreePine, label: 'CO₂ Evitado', suffix: ' ton', countUp: { end: 8.2, decimals: 1 } },
             ].map((stat, index) => (
               <motion.div
                 key={index}
@@ -184,12 +171,22 @@ const Home = () => {
                 whileInView={{ scale: 1, opacity: 1 }}
                 viewport={{ once: true }}
                 transition={{ delay: index * 0.15 }}
-                whileHover={{ scale: 1.05 }}
-                className="bg-white/10 backdrop-blur-sm p-8 rounded-2xl border border-white/20 hover:bg-white/15 transition-colors"
+                className="bg-white/10 backdrop-blur-sm p-8 rounded-2xl border border-white/20 hover:bg-white/15 transition-all duration-300 hover:-translate-y-2 hover:shadow-2xl"
               >
-                <stat.IconComp size={48} className="mx-auto mb-4 text-white/90" />
+                <div className="w-14 h-14 rounded-xl bg-white/10 backdrop-blur flex items-center justify-center mx-auto mb-4">
+                  <stat.IconComp size={28} className="text-white/90" aria-hidden />
+                </div>
                 <div className="text-4xl font-bold mb-2">
-                  {stat.value}{stat.suffix || ''}
+                  <CountUp
+                    start={0}
+                    end={stat.countUp.end}
+                    duration={2.5}
+                    separator={stat.countUp.separator}
+                    decimals={stat.countUp.decimals}
+                    enableScrollSpy
+                    scrollSpyOnce
+                  />
+                  {stat.suffix || ''}
                 </div>
                 <div className="text-white/80 text-lg">{stat.label}</div>
               </motion.div>
@@ -207,7 +204,7 @@ const Home = () => {
       >
         <div className="card p-12 md:p-16 text-center">
           <h2 className="text-3xl md:text-4xl font-bold mb-6 text-stone-800 flex items-center justify-center gap-3">
-            <img src={require('../assets/icons/globo-icon.png')} alt="" className="w-12 h-12 object-contain" style={{ filter: 'invert(40%) sepia(93%) saturate(500%) hue-rotate(100deg)' }} />
+            <EcoGlobeLogo size={48} style={{ filter: 'invert(40%) sepia(93%) saturate(500%) hue-rotate(100deg)' }} />
             Pronto para fazer a diferença?
           </h2>
           <p className="text-xl text-stone-600 mb-10 max-w-2xl mx-auto">

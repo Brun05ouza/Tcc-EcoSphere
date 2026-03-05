@@ -7,6 +7,7 @@ import { wasteAPI } from '../services/api';
 import { useWasteClassifier } from '../hooks/useWasteClassifier';
 import { Check, Camera } from 'lucide-react';
 import { AppIcon } from '../components/ui/AppIcon';
+import LoadingScreen from '../components/ui/LoadingScreen';
 
 const WasteClassifier = () => {
   const [selectedFile, setSelectedFile] = useState(null);
@@ -202,11 +203,7 @@ const WasteClassifier = () => {
               animate={{ opacity: 1 }}
               className="mt-4 flex items-center justify-center gap-2 text-blue-600"
             >
-              <motion.div
-                animate={{ rotate: 360 }}
-                transition={{ repeat: Infinity, duration: 1, ease: "linear" }}
-                className="w-5 h-5 border-2 border-blue-600 border-t-transparent rounded-full"
-              />
+              <LoadingScreen fullScreen={false} size={24} />
               <span className="text-sm">Carregando modelo de IA...</span>
             </motion.div>
           )}
@@ -338,11 +335,7 @@ const WasteClassifier = () => {
                   >
                     {loading ? (
                       <>
-                        <motion.div
-                          animate={{ rotate: 360 }}
-                          transition={{ repeat: Infinity, duration: 1 }}
-                          className="w-5 h-5 border-2 border-white border-t-transparent rounded-full"
-                        />
+                        <LoadingScreen fullScreen={false} size={22} />
                         Analisando com IA...
                       </>
                     ) : (

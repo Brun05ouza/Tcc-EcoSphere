@@ -3,6 +3,29 @@ import Phaser from 'phaser';
 import { motion } from 'framer-motion';
 import { Trophy, Play, RotateCcw, Gamepad2 } from 'lucide-react';
 
+const PUBLIC_URL = process.env.PUBLIC_URL || '';
+
+// Preload Scene (sons)
+class Preload extends Phaser.Scene {
+  constructor() {
+    super({ key: 'Preload' });
+  }
+
+  preload() {
+    try {
+      this.load.audio('collect', `${PUBLIC_URL}/sounds/collect.wav`);
+      this.load.audio('error', `${PUBLIC_URL}/sounds/error.wav`);
+      this.load.audio('bgMusic', `${PUBLIC_URL}/sounds/background-music.mp3`);
+    } catch (e) {
+      // arquivos opcionais
+    }
+  }
+
+  create() {
+    this.scene.start('MainMenu');
+  }
+}
+
 // MainMenu Scene
 class MainMenu extends Phaser.Scene {
   constructor() {
@@ -78,6 +101,9 @@ class GameScene extends Phaser.Scene {
     this.timeLeft = 60;
     this.combo = 0;
     this.multiplier = 1;
+    this.magnetActive = false;
+    this.lastFrameMoving = false;
+    this._gameOverTriggered = false;
   }
 
   create() {
@@ -85,6 +111,21 @@ class GameScene extends Phaser.Scene {
 
     // Background
     this.add.rectangle(0, 0, width, height, 0x87CEEB).setOrigin(0);
+
+    // Nuvens (background animado)
+    this.clouds = this.add.group();
+    for (let i = 0; i < 5; i++) {
+      const cloud = this.add.ellipse(
+        Phaser.Math.Between(0, width),
+        Phaser.Math.Between(60, height - 100),
+        Phaser.Math.Between(40, 80),
+        Phaser.Math.Between(20, 40),
+        0xffffff,
+        0.6
+      );
+      cloud.setData('speed', 0.3 + Math.random() * 0.4);
+      this.clouds.add(cloud);
+    }
 
     // Ground
     this.add.rectangle(0, height - 50, width, 50, 0x8B4513).setOrigin(0);
@@ -98,34 +139,60 @@ class GameScene extends Phaser.Scene {
     // Items group
     this.items = this.physics.add.group();
 
-    // HUD
-    this.scoreText = this.add.text(20, 20, 'Score: 0', {
-      fontSize: '28px',
+    // Partículas ao coletar (textura gerada)
+    const g = this.make.graphics({ x: 0, y: 0, add: false });
+    g.fillStyle(0x22c55e);
+    g.fillCircle(4, 4, 4);
+    g.generateTexture('particleGreen', 8, 8);
+    g.destroy();
+    this.collectParticles = this.add.particles(0, 0, 'particleGreen', {
+      speed: { min: 50, max: 120 },
+      scale: { start: 1, end: 0 },
+      lifespan: 400,
+      quantity: 10,
+      emitting: false
+    });
+
+    // HUD com ícones
+    this.scoreText = this.add.text(20, 20, '⭐ 0', {
+      fontSize: '26px',
       color: '#fff',
       fontStyle: 'bold',
       stroke: '#000',
       strokeThickness: 4
     });
 
-    this.timeText = this.add.text(width / 2, 20, 'Tempo: 60s', {
-      fontSize: '28px',
+    this.timeText = this.add.text(width / 2, 20, '⏱ 60s', {
+      fontSize: '26px',
       color: '#fff',
       fontStyle: 'bold',
       stroke: '#000',
       strokeThickness: 4
     }).setOrigin(0.5, 0);
 
-    this.livesText = this.add.text(width - 20, 20, 'Vidas: ' + this.lives, {
-      fontSize: '28px'
+    this.livesText = this.add.text(width - 20, 20, '❤️ ' + this.lives, {
+      fontSize: '26px',
+      color: '#fff',
+      fontStyle: 'bold',
+      stroke: '#000',
+      strokeThickness: 4
     }).setOrigin(1, 0);
 
-    this.comboText = this.add.text(width / 2, 60, '', {
-      fontSize: '24px',
+    this.comboText = this.add.text(width / 2, 58, '', {
+      fontSize: '22px',
       color: '#FFD700',
       fontStyle: 'bold',
       stroke: '#000',
       strokeThickness: 3
     }).setOrigin(0.5, 0);
+
+    // Sons (música de fundo se carregou no Preload)
+    try {
+      if (this.cache.audio.exists('bgMusic')) {
+        const bg = this.sound.add('bgMusic', { loop: true, volume: 0.3 });
+        bg.play();
+      }
+    } catch (e) {}
 
     // Controls
     this.cursors = this.input.keyboard.createCursorKeys();
@@ -138,32 +205,63 @@ class GameScene extends Phaser.Scene {
       loop: true
     });
 
-    // Game timer
-    this.gameTimer = this.time.addEvent({
-      delay: 1000,
-      callback: this.updateTimer,
-      callbackScope: this,
-      loop: true
-    });
+    // Game timer: usa tempo real para não pausar ao mover o personagem
+    this.gameStartRealTime = Date.now();
 
     // Collision
     this.physics.add.overlap(this.player, this.items, this.collectItem, null, this);
   }
 
   update() {
-    // Player movement
+    const moving = this.cursors.left.isDown || this.cursors.right.isDown;
+
+    // Player movement + tween ao mover (cesta)
     if (this.cursors.left.isDown) {
       this.player.x -= 8;
     } else if (this.cursors.right.isDown) {
       this.player.x += 8;
     }
+    if (moving && !this.lastFrameMoving) {
+      this.tweens.add({
+        targets: this.player,
+        scaleX: 1.1,
+        duration: 100,
+        yoyo: true
+      });
+    }
+    this.lastFrameMoving = moving;
 
     // Keep player in bounds
     this.player.x = Phaser.Math.Clamp(this.player.x, 40, this.cameras.main.width - 40);
 
+    // Magnet: atrai recicláveis para a cesta
+    if (this.magnetActive) {
+      this.items.children.entries.forEach(item => {
+        if (!item.body) return;
+        const type = item.getData('type');
+        if (type === 'organic' || type === 'magnet') return;
+        const dx = this.player.x - item.x;
+        const dy = this.player.y - item.y;
+        const dist = Math.sqrt(dx * dx + dy * dy) || 1;
+        const force = 2.5;
+        item.body.setVelocity(
+          (dx / dist) * 200 + item.body.velocity.x * 0.5,
+          (dy / dist) * force * 80 + item.body.velocity.y * 0.3
+        );
+      });
+    }
+
+    // Nuvens se movendo
+    this.clouds.getChildren().forEach(cloud => {
+      cloud.x -= cloud.getData('speed');
+      if (cloud.x < -60) cloud.x = this.cameras.main.width + 40;
+    });
+
     // Remove items that fell off screen
     this.items.children.entries.forEach(item => {
       if (item.y > this.cameras.main.height) {
+        const label = item.getData('label');
+        if (label) label.destroy();
         item.destroy();
       }
     });
@@ -172,87 +270,116 @@ class GameScene extends Phaser.Scene {
   spawnItem() {
     const { width } = this.cameras.main;
     const x = Phaser.Math.Between(50, width - 50);
-    
-    const types = [
-      { color: 0x2196F3, points: 10, type: 'plastic', label: 'PLÁSTICO' },
-      { color: 0x4CAF50, points: 15, type: 'glass', label: 'VIDRO' },
-      { color: 0xFFC107, points: 20, type: 'metal', label: 'METAL' },
-      { color: 0x795548, points: -10, type: 'organic', label: 'ORGÂNICO' }
-    ];
 
-    const itemType = Phaser.Math.RND.pick(types);
+    // Raridade: plástico 40%, vidro 25%, metal 20%, orgânico 15%, magnet 5%
+    const roll = Phaser.Math.Between(1, 100);
+    let itemType;
+    if (roll <= 5) {
+      itemType = { color: 0x9c27b0, points: 0, type: 'magnet', label: 'ÍMÃ' };
+    } else if (roll <= 45) {
+      itemType = { color: 0x2196F3, points: 10, type: 'plastic', label: 'PLÁSTICO' };
+    } else if (roll <= 70) {
+      itemType = { color: 0x4CAF50, points: 15, type: 'glass', label: 'VIDRO' };
+    } else if (roll <= 90) {
+      itemType = { color: 0xFFC107, points: 20, type: 'metal', label: 'METAL' };
+    } else {
+      itemType = { color: 0x795548, points: -10, type: 'organic', label: 'ORGÂNICO' };
+    }
+
     const item = this.add.rectangle(x, -30, 50, 50, itemType.color);
-    
-    // Add label
+
     const label = this.add.text(x, -30, itemType.label, {
       fontSize: '10px',
       color: '#fff',
       fontStyle: 'bold'
     }).setOrigin(0.5);
-    
+
     this.physics.add.existing(item);
-    item.body.setVelocityY(Phaser.Math.Between(150, 250));
+    const velY = this.timeLeft < 20 ? Phaser.Math.Between(200, 300) : Phaser.Math.Between(150, 250);
+    item.body.setVelocityY(velY);
     item.setData('points', itemType.points);
     item.setData('type', itemType.type);
     item.setData('label', label);
-    
+
     this.items.add(item);
 
-    // Increase difficulty over time
-    if (this.timeLeft < 40) {
-      this.spawnTimer.delay = 1200;
-    }
-    if (this.timeLeft < 20) {
-      this.spawnTimer.delay = 900;
-      item.body.setVelocityY(Phaser.Math.Between(200, 300));
-    }
+    if (this.timeLeft < 40) this.spawnTimer.delay = 1200;
+    if (this.timeLeft < 20) this.spawnTimer.delay = 900;
   }
 
   collectItem(player, item) {
     const points = item.getData('points');
+    const type = item.getData('type');
     const label = item.getData('label');
+    const ix = item.x;
+    const iy = item.y;
 
     if (label) label.destroy();
 
+    // Power-up: Ímã (magnet) — 5s atraindo recicláveis
+    if (type === 'magnet') {
+      this.magnetActive = true;
+      this.time.delayedCall(5000, () => { this.magnetActive = false; });
+      try { this.sound.play('collect', { volume: 0.5 }); } catch (e) {}
+      item.destroy();
+      return;
+    }
+
     if (points > 0) {
+      // Partículas ao coletar
+      this.collectParticles.emitParticleAt(ix, iy, 10);
+
+      // Texto flutuante de pontos
+      const displayPoints = points * this.multiplier;
+      const text = this.add.text(ix, iy, `+${displayPoints}`, {
+        fontSize: '20px',
+        color: '#22c55e',
+        fontStyle: 'bold',
+        stroke: '#000',
+        strokeThickness: 2
+      }).setOrigin(0.5);
+      this.tweens.add({
+        targets: text,
+        y: iy - 40,
+        alpha: 0,
+        duration: 800,
+        onComplete: () => text.destroy()
+      });
+
       this.combo++;
       if (this.combo >= 5) {
         this.multiplier = 2;
-        this.comboText.setText(`COMBO x${this.multiplier}!`);
+        this.comboText.setText('COMBO x2 🔥');
+        this.comboText.setScale(0.5);
+        this.tweens.add({
+          targets: this.comboText,
+          scale: 1.2,
+          duration: 150,
+          yoyo: true,
+          onComplete: () => this.comboText.setScale(1)
+        });
       }
       this.score += points * this.multiplier;
-      
-      // Flash effect
       this.cameras.main.flash(100, 0, 255, 0);
+      try { this.sound.play('collect', { volume: 0.6 }); } catch (e) {}
     } else {
       this.lives--;
       this.combo = 0;
       this.multiplier = 1;
       this.comboText.setText('');
-      this.livesText.setText('Vidas: ' + this.lives);
+      this.livesText.setText('❤️ ' + this.lives);
       this.cameras.main.shake(200, 0.01);
-      
-      if (this.lives <= 0) {
-        this.gameOver();
-      }
+      this.cameras.main.flash(200, 255, 0, 0);
+      try { this.sound.play('error', { volume: 0.6 }); } catch (e) {}
+      if (this.lives <= 0) this.gameOver();
     }
 
-    this.scoreText.setText(`Score: ${this.score}`);
+    this.scoreText.setText('⭐ ' + this.score);
     item.destroy();
-  }
-
-  updateTimer() {
-    this.timeLeft--;
-    this.timeText.setText(`Tempo: ${this.timeLeft}s`);
-
-    if (this.timeLeft <= 0) {
-      this.gameOver();
-    }
   }
 
   gameOver() {
     if (this.spawnTimer) this.spawnTimer.remove();
-    if (this.gameTimer) this.gameTimer.remove();
     this.scene.start('GameOver', { score: this.score });
   }
 }
@@ -351,7 +478,7 @@ export default function EcoCatcher() {
             debug: false
           }
         },
-        scene: [MainMenu, GameScene, GameOver]
+        scene: [Preload, MainMenu, GameScene, GameOver]
       };
 
       const game = new Phaser.Game(config);

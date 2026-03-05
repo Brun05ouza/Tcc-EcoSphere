@@ -7,7 +7,7 @@ import WorldWindGlobeBase from './WorldWindGlobeBase';
  */
 function DashboardGlobeCard() {
   return (
-    <div className="relative w-full aspect-square max-w-[720px] mx-auto rounded-xl overflow-hidden select-none pointer-events-none">
+    <div className="relative w-full h-full aspect-square max-w-full max-h-full rounded-xl overflow-hidden select-none pointer-events-none">
       <WorldWindGlobeBase
         canvasId="wwd-canvas-dashboard"
         initialLat={0}

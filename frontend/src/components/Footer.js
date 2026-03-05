@@ -2,23 +2,22 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import { Mail, Phone, MapPin } from 'lucide-react';
+import EcoGlobeLogo from './ui/EcoGlobeLogo';
 
 const Footer = () => {
   return (
     <footer className="bg-stone-900 text-stone-300">
       <div className="container mx-auto px-4 py-16 max-w-7xl">
-        <div className="grid md:grid-cols-4 gap-12">
+        <div className="grid md:grid-cols-3 gap-12">
           {/* Logo e Descrição */}
           <div className="md:col-span-1">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              className="flex items-center gap-2.5 mb-6"
+              className="flex items-center gap-3 mb-6"
             >
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-eco-500 to-teal-500 flex items-center justify-center">
-                <img src={require('../assets/icons/globo-icon.png')} alt="" className="w-6 h-6 text-white" style={{ filter: 'brightness(0) invert(1)' }} />
-              </div>
+              <EcoGlobeLogo size={48} style={{ filter: 'brightness(0) invert(1)' }} />
               <span className="text-xl font-bold text-white font-display">EcoSphere</span>
             </motion.div>
             <p className="text-sm leading-relaxed mb-6 text-stone-400">
@@ -57,20 +56,6 @@ const Footer = () => {
                     <span className="text-eco-500/60">→</span>
                     {link.label}
                   </Link>
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          <div>
-            <h3 className="font-semibold text-white mb-4">Recursos</h3>
-            <ul className="space-y-3 text-sm">
-              {['Educação Ambiental', 'Relatórios', 'API Pública', 'Suporte'].map((item) => (
-                <li key={item}>
-                  <a href="#" className="text-stone-400 hover:text-eco-400 transition-colors flex items-center gap-2">
-                    <span className="text-eco-500/60">→</span>
-                    {item}
-                  </a>
                 </li>
               ))}
             </ul>

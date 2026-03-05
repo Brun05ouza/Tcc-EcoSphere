@@ -67,18 +67,18 @@
   }
 }
 
-/* Custom scrollbar */
-::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+/* Scroll oculto (mantém a rolagem, só esconde a barra) */
+html {
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE / Edge */
 }
 
-::-webkit-scrollbar-track {
-  @apply bg-stone-100 rounded-full;
-}
-
-::-webkit-scrollbar-thumb {
-  @apply bg-stone-300 rounded-full hover:bg-stone-400;
+html::-webkit-scrollbar,
+body::-webkit-scrollbar,
+*::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, Opera */
+  width: 0;
+  height: 0;
 }
 
 /* Smooth focus for accessibility */
