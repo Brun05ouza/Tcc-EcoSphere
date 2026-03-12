@@ -5,7 +5,7 @@ import { useEnterKey } from '../hooks/useEnterKey';
 import { useUser } from '../contexts/UserContext';
 import { wasteAPI } from '../services/api';
 import { useWasteClassifier } from '../hooks/useWasteClassifier';
-import { Check, Camera } from 'lucide-react';
+import { Check, Camera, Sparkles } from 'lucide-react';
 import { AppIcon } from '../components/ui/AppIcon';
 import LoadingScreen from '../components/ui/LoadingScreen';
 
@@ -134,7 +134,7 @@ const WasteClassifier = () => {
       });
       
       // Classificar com IA
-      const result = await classifyImage(img);
+      const result = await classifyImage(img, selectedFile?.name);
       const points = calculatePoints(result.confidence);
       
       // Adicionar EcoPoints
