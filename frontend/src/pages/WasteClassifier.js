@@ -223,29 +223,68 @@ const WasteClassifier = () => {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8">
             {/* Upload Area */}
             <motion.div
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              className="card p-6 lg:p-8"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="bg-white rounded-3xl shadow-soft-lg border border-stone-100 p-5 sm:p-6 lg:p-8 relative overflow-hidden flex flex-col"
             >
+              <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-eco-500 to-teal-500" />
+              
+              <div className="mb-6">
+                <h2 className="text-xl font-bold text-stone-800">Enviar Imagem</h2>
+                <p className="text-sm text-stone-500 mt-1">Faça upload ou tire uma foto do resíduo para análise</p>
+              </div>
+
               <div 
-                className={`border-2 border-dashed rounded-2xl p-8 text-center transition-all duration-300 ${
-                  dragActive ? 'border-eco-500 bg-eco-50' : 'border-stone-300'
+                className={`flex-1 flex flex-col justify-center border-2 border-dashed rounded-2xl p-8 text-center transition-all duration-300 relative ${
+                  dragActive 
+                    ? 'border-eco-500 bg-eco-50/50' 
+                    : preview 
+                      ? 'border-stone-200 bg-white' 
+                      : 'border-stone-200 bg-stone-50/50 hover:bg-stone-50 hover:border-eco-300 cursor-pointer'
                 }`}
                 onDragEnter={handleDrag}
                 onDragLeave={handleDrag}
                 onDragOver={handleDrag}
                 onDrop={handleDrop}
+                onClick={(e) => {
+                  // Só abre o file picker se não tiver preview nem câmera aberta
+                  if (!useCamera && !preview && e.target === e.currentTarget) {
+                    fileInputRef.current?.click();
+                  }
+                }}
               >
                 <AnimatePresence mode="wait">
                   {preview ? (
                     <motion.div
                       key="preview"
-                      initial={{ opacity: 0, scale: 0.8 }}
+                      initial={{ opacity: 0, scale: 0.95 }}
                       animate={{ opacity: 1, scale: 1 }}
-                      exit={{ opacity: 0, scale: 0.8 }}
+                      exit={{ opacity: 0, scale: 0.95 }}
+                      className="w-full flex flex-col items-center"
                     >
-                      <img src={preview} alt="Preview" className="max-w-full h-64 mx-auto object-contain mb-4 rounded-xl" />
-                      <p className="text-gray-600 mb-4">Imagem carregada com sucesso!</p>
+                      <div className="relative group w-full max-w-sm mx-auto">
+                        <img 
+                          src={preview} 
+                          alt="Preview" 
+                          className="w-full h-56 sm:h-64 object-cover rounded-xl shadow-sm border border-stone-200" 
+                        />
+                        <button 
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setPreview(null);
+                            setSelectedFile(null);
+                            if (fileInputRef.current) fileInputRef.current.value = '';
+                          }}
+                          className="absolute top-3 right-3 bg-white/90 backdrop-blur-sm text-stone-700 p-2 rounded-lg shadow-sm hover:bg-red-50 hover:text-red-600 transition-colors opacity-0 group-hover:opacity-100"
+                          title="Remover imagem"
+                        >
+                          <i className="bi bi-trash-fill"></i>
+                        </button>
+                      </div>
+                      <div className="mt-4 flex items-center justify-center gap-2 text-sm text-eco-700 bg-eco-50 px-4 py-2 rounded-full font-medium">
+                        <Check size={16} />
+                        Imagem pronta para análise
+                      </div>
                     </motion.div>
                   ) : (
                     <motion.div
@@ -253,17 +292,18 @@ const WasteClassifier = () => {
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
                       exit={{ opacity: 0 }}
-                      className="text-gray-500 mb-4"
+                      className="text-stone-500 flex flex-col items-center pointer-events-none"
                     >
-                      <motion.div 
-                        animate={{ y: [0, -10, 0] }}
-                        transition={{ repeat: Infinity, duration: 2 }}
-                        className="text-6xl mb-4"
-                      >
-                        <Camera size={32} className="text-gray-600" />
-                      </motion.div>
-                      <p className="text-lg mb-2">Arraste uma imagem aqui ou</p>
-                      <p className="text-sm text-gray-400">Clique para selecionar</p>
+                      <div className="w-20 h-20 bg-white rounded-full shadow-sm border border-stone-100 flex items-center justify-center mb-5 text-eco-500">
+                        <motion.div 
+                          animate={{ y: [0, -6, 0] }}
+                          transition={{ repeat: Infinity, duration: 2, ease: "easeInOut" }}
+                        >
+                          <i className="bi bi-cloud-arrow-up-fill text-4xl"></i>
+                        </motion.div>
+                      </div>
+                      <p className="text-lg font-medium text-stone-700 mb-1">Arraste uma imagem aqui</p>
+                      <p className="text-sm text-stone-400 mb-6">PNG, JPG ou WEBP (Max. 5MB)</p>
                     </motion.div>
                   )}
                 </AnimatePresence>
@@ -277,46 +317,60 @@ const WasteClassifier = () => {
                   id="file-input"
                 />
                 
-                {!useCamera ? (
-                  <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+                {!useCamera && !preview && (
+                  <div className="flex flex-col sm:flex-row gap-3 justify-center mt-auto">
                     <label
                       htmlFor="file-input"
-                      className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-semibold bg-gradient-to-br from-eco-600 to-teal-600 text-white shadow-soft hover:shadow-glow cursor-pointer w-full sm:w-auto transition-all"
+                      className="inline-flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl font-medium bg-white border-2 border-stone-200 text-stone-700 hover:border-eco-500 hover:text-eco-600 hover:bg-eco-50 cursor-pointer w-full sm:w-auto transition-all shadow-sm"
                     >
-                      <i className="bi bi-cloud-upload text-lg"></i>
-                      Selecionar Imagem
+                      <i className="bi bi-folder2-open text-lg"></i>
+                      Procurar Arquivo
                     </label>
                     
                     <button
-                      onClick={startCamera}
-                      className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-semibold bg-white border-2 border-teal-200 text-teal-700 hover:bg-teal-50 w-full sm:w-auto transition-all"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        startCamera();
+                      }}
+                      className="inline-flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl font-medium bg-white border-2 border-stone-200 text-stone-700 hover:border-teal-500 hover:text-teal-600 hover:bg-teal-50 w-full sm:w-auto transition-all shadow-sm"
                     >
-                      <Icon name="camera" className="w-5 h-5" white />
+                      <Camera size={18} />
                       Abrir Câmera
                     </button>
                   </div>
-                ) : (
-                  <div className="space-y-4">
-                    <video 
-                      ref={videoRef} 
-                      autoPlay 
-                      playsInline
-                      className="w-full h-64 object-cover rounded-xl bg-black"
-                    />
+                )}
+                
+                {useCamera && !preview && (
+                  <div className="space-y-4 w-full mt-4" onClick={(e) => e.stopPropagation()}>
+                    <div className="relative rounded-xl overflow-hidden shadow-inner bg-black">
+                      <video 
+                        ref={videoRef} 
+                        autoPlay 
+                        playsInline
+                        className="w-full h-56 sm:h-64 object-cover"
+                      />
+                      {/* Borda de foco da câmera animada (UI) */}
+                      <div className="absolute inset-0 pointer-events-none border-2 border-white/20 m-4 rounded-lg flex items-center justify-center">
+                         <div className="w-16 h-16 border-2 border-white/50 rounded-full flex items-center justify-center">
+                            <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse" />
+                         </div>
+                      </div>
+                    </div>
                     <canvas ref={canvasRef} className="hidden" />
-                    <div className="flex gap-4 justify-center">
+                    
+                    <div className="flex flex-col sm:flex-row gap-3 justify-center">
                       <button
                         onClick={capturePhoto}
-                        className="bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white px-6 py-3 rounded-xl flex items-center gap-2 transform hover:scale-105 transition-all duration-200 shadow-lg"
+                        className="flex-1 sm:flex-none bg-eco-600 hover:bg-eco-700 text-white px-6 py-3 rounded-xl flex items-center justify-center gap-2 transform active:scale-95 transition-all shadow-md font-medium"
                       >
                         <i className="bi bi-camera-fill text-lg"></i>
-                        Capturar Foto
+                        Tirar Foto
                       </button>
                       <button
                         onClick={stopCamera}
-                        className="bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white px-6 py-3 rounded-xl flex items-center gap-2 transform hover:scale-105 transition-all duration-200 shadow-lg"
+                        className="flex-1 sm:flex-none bg-white border-2 border-stone-200 hover:bg-red-50 text-stone-600 hover:text-red-600 hover:border-red-200 px-6 py-3 rounded-xl flex items-center justify-center gap-2 transition-all font-medium"
                       >
-                        <i className="bi bi-x-circle text-lg"></i>
+                        <X size={18} />
                         Cancelar
                       </button>
                     </div>
@@ -325,35 +379,44 @@ const WasteClassifier = () => {
               </div>
 
               {selectedFile && (
-                <div className="mt-6">
+                <div className="mt-6 pt-6 border-t border-stone-100">
                   <motion.button
-                    initial={{ opacity: 0, y: 20 }}
+                    initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     onClick={classifyWaste}
                     disabled={loading}
-                    className="w-full bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-700 hover:to-purple-700 text-white py-4 rounded-xl font-semibold disabled:opacity-50 flex items-center justify-center gap-2 transition-all duration-200 shadow-soft"
+                    className="w-full relative overflow-hidden group bg-stone-900 text-white py-4 rounded-xl font-semibold disabled:opacity-70 flex items-center justify-center gap-3 transition-all duration-300 hover:shadow-lg hover:-translate-y-0.5"
                   >
-                    {loading ? (
-                      <>
-                        <LoadingScreen fullScreen={false} size={22} />
-                        Analisando com IA...
-                      </>
-                    ) : (
-                      <>
-                        <i className="bi bi-magic text-lg"></i>
-                        Classificar Resíduo
-                      </>
-                    )}
+                    {/* Efeito de brilho de fundo no botão */}
+                    <div className="absolute inset-0 bg-gradient-to-r from-eco-500 via-teal-500 to-eco-500 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                    
+                    <div className="relative flex items-center gap-2 z-10">
+                      {loading ? (
+                        <>
+                          <LoadingScreen fullScreen={false} size={20} color="white" />
+                          <span>Analisando com IA...</span>
+                        </>
+                      ) : (
+                        <>
+                          <Sparkles size={20} className="text-amber-300" />
+                          <span>Identificar Resíduo</span>
+                          <i className="bi bi-arrow-right ml-1 opacity-70 group-hover:translate-x-1 transition-transform"></i>
+                        </>
+                      )}
+                    </div>
                   </motion.button>
+                  
                   {!loading && (
-                    <motion.p 
+                    <motion.div 
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
                       transition={{ delay: 0.3 }}
-                      className="text-center text-sm text-gray-500 mt-2"
+                      className="text-center mt-3"
                     >
-                      Pressione <kbd className="px-2 py-1 bg-gray-200 rounded text-xs">Enter</kbd> para classificar
-                    </motion.p>
+                      <span className="text-xs text-stone-400 flex items-center justify-center gap-1.5">
+                        Pressione <kbd className="px-1.5 py-0.5 bg-stone-100 border border-stone-200 rounded-md text-[10px] font-sans text-stone-600 font-bold shadow-sm">Enter</kbd> para classificar
+                      </span>
+                    </motion.div>
                   )}
                 </div>
               )}
@@ -366,98 +429,113 @@ const WasteClassifier = () => {
                   initial={{ opacity: 0, x: 20 }}
                   animate={{ opacity: 1, x: 0 }}
                   exit={{ opacity: 0, x: 20 }}
-                  className="card p-8"
+                  className="bg-white rounded-3xl shadow-soft-lg border border-stone-100 p-5 sm:p-6 lg:p-8 relative overflow-hidden flex flex-col h-full"
                 >
+                  <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-violet-500 to-purple-500" />
+                  
                   <div className="flex items-center justify-between mb-6">
-                    <h2 className="text-2xl font-bold text-gray-800">Resultado da Análise</h2>
+                    <div>
+                      <h2 className="text-xl font-bold text-stone-800">Resultado da Análise</h2>
+                      <p className="text-sm text-stone-500 mt-1">Classificação feita por Inteligência Artificial</p>
+                    </div>
                     {showSuccess && (
                       <motion.div
-                        initial={{ scale: 0 }}
-                        animate={{ scale: 1 }}
-                        className="text-green-600"
+                        initial={{ scale: 0, rotate: -45 }}
+                        animate={{ scale: 1, rotate: 0 }}
+                        className="text-green-500 bg-green-50 w-10 h-10 rounded-full flex items-center justify-center shadow-sm"
                       >
-                        <i className="bi bi-check-circle-fill text-3xl"></i>
+                        <i className="bi bi-check-lg text-xl"></i>
                       </motion.div>
                     )}
                   </div>
                   
                   <motion.div
-                    initial={{ scale: 0.9 }}
+                    initial={{ scale: 0.95 }}
                     animate={{ scale: 1 }}
-                    className={`p-6 rounded-2xl ${classification.bgColor} mb-6 border-l-4`}
+                    className={`p-6 rounded-2xl ${classification.bgColor} mb-6 border border-black/5 relative overflow-hidden group`}
                   >
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center">
-                        <motion.span 
-                          animate={{ rotate: [0, 10, -10, 0] }}
-                          transition={{ repeat: 3, duration: 0.5 }}
-                          className="mr-4 flex items-center justify-center w-14 h-14 rounded-xl bg-green-100"
+                    {/* Efeito de brilho sutil no fundo */}
+                    <div className="absolute -right-10 -top-10 w-32 h-32 bg-white/20 rounded-full blur-2xl group-hover:scale-150 transition-transform duration-700" />
+                    
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between relative z-10 gap-4">
+                      <div className="flex items-center gap-4">
+                        <motion.div 
+                          animate={{ rotate: [0, 5, -5, 0] }}
+                          transition={{ repeat: 3, duration: 0.6, delay: 0.2 }}
+                          className="flex items-center justify-center w-14 h-14 shrink-0 rounded-2xl bg-white/40 shadow-sm backdrop-blur-md"
                         >
-                          <AppIcon name={classification.iconName} size={36} className="text-green-700" />
-                        </motion.span>
+                          <AppIcon name={classification.iconName} size={32} className={classification.textColor} />
+                        </motion.div>
                         <div>
-                          <div className={`text-2xl font-bold ${classification.textColor}`}>
+                          <div className={`text-2xl font-black ${classification.textColor} tracking-tight leading-tight`}>
                             {classification.type}
                           </div>
-                          <div className="text-sm text-gray-600">
-                            Confiança: {(classification.confidence * 100).toFixed(1)}%
+                          <div className="flex items-center mt-1">
+                            <span className="text-xs font-semibold bg-white/50 px-2 py-1 rounded-md text-stone-700 shadow-sm border border-white/40">
+                              Confiança: {(classification.confidence * 100).toFixed(1)}%
+                            </span>
                           </div>
                         </div>
                       </div>
-                      <div className="text-right">
-                        <div className={`font-bold text-lg ${classification.textColor}`}>
+                      
+                      <div className="text-left sm:text-right flex flex-row sm:flex-col items-center sm:items-end justify-between sm:justify-center">
+                        <div className={`text-sm font-bold uppercase tracking-wider opacity-80 ${classification.textColor} mb-0 sm:mb-1.5`}>
                           {classification.bin}
                         </div>
                         <motion.div 
-                          initial={{ scale: 0 }}
-                          animate={{ scale: 1 }}
-                          transition={{ delay: 0.5 }}
-                          className="text-green-600 font-bold text-xl flex items-center gap-1"
+                          initial={{ scale: 0, y: 10 }}
+                          animate={{ scale: 1, y: 0 }}
+                          transition={{ delay: 0.4, type: "spring" }}
+                          className="inline-flex items-center gap-1.5 bg-white shadow-sm px-3 py-1.5 rounded-xl border border-stone-100"
                         >
-                          <i className="bi bi-award text-lg"></i>
-                          +{classification.points} EcoPoints
+                          <Sparkles size={16} className="text-amber-500" />
+                          <span className="font-bold text-green-600 text-sm">+{classification.points} pts</span>
                         </motion.div>
                       </div>
                     </div>
                   </motion.div>
 
-                  <div className="grid md:grid-cols-1 gap-6">
-                    <div className="bg-gray-50 p-6 rounded-2xl">
-                      <h3 className="font-bold mb-3 flex items-center gap-2">
-                        <i className="bi bi-arrow-repeat text-green-600 text-lg"></i>
+                  <div className="grid grid-cols-1 gap-4 flex-1">
+                    <div className="bg-stone-50 border border-stone-100 p-5 rounded-2xl hover:border-eco-200 hover:bg-white transition-colors duration-300">
+                      <h3 className="font-semibold mb-2 flex items-center gap-2 text-stone-800">
+                        <div className="w-8 h-8 rounded-lg bg-eco-100 flex items-center justify-center">
+                          <i className="bi bi-recycle text-eco-600"></i>
+                        </div>
                         Dicas de Descarte
                       </h3>
-                      <p className="text-gray-700 leading-relaxed">{classification.tips}</p>
+                      <p className="text-stone-600 text-sm leading-relaxed sm:pl-10">{classification.tips}</p>
                     </div>
                     
-                    <div className="bg-gray-50 p-6 rounded-2xl">
-                      <h3 className="font-bold mb-3 flex items-center gap-2">
-                        <i className="bi bi-geo-alt-fill text-blue-600 text-lg"></i>
-                        Pontos de Coleta Próximos
+                    <div className="bg-stone-50 border border-stone-100 p-5 rounded-2xl hover:border-blue-200 hover:bg-white transition-colors duration-300">
+                      <h3 className="font-semibold mb-3 flex items-center gap-2 text-stone-800">
+                        <div className="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center">
+                          <i className="bi bi-geo-alt-fill text-blue-600"></i>
+                        </div>
+                        Pontos de Coleta
                       </h3>
-                      <div className="space-y-2">
+                      <div className="space-y-2.5 sm:pl-10">
                         {classification.locations?.map((location, index) => (
                           <motion.div
                             key={index}
                             initial={{ opacity: 0, x: -10 }}
                             animate={{ opacity: 1, x: 0 }}
-                            transition={{ delay: index * 0.1 }}
-                            className="text-sm text-gray-600 flex items-center gap-2"
+                            transition={{ delay: index * 0.1 + 0.3 }}
+                            className="flex items-center gap-3 text-sm text-stone-600 bg-white p-2.5 rounded-xl border border-stone-100 shadow-sm"
                           >
-                            <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                            <div className="w-1.5 h-1.5 rounded-full bg-blue-400" />
                             {location}
                           </motion.div>
                         ))}
                       </div>
                     </div>
                     
-                    <div className="mt-6 text-center">
+                    <div className="mt-2 text-center">
                       <motion.button
                         onClick={() => navigate('/guia')}
-                        className="btn-primary px-6 py-3"
+                        className="w-full sm:w-auto bg-white border-2 border-stone-200 text-stone-700 hover:border-eco-500 hover:text-eco-600 hover:bg-eco-50 px-6 py-3 rounded-xl font-medium flex items-center justify-center gap-2 transition-all shadow-sm mx-auto"
                       >
-                        <Check size={20} className="inline mr-2" />
-                        Continuar Guia Sustentável
+                        <i className="bi bi-book text-lg"></i>
+                        Ver Guia Sustentável
                       </motion.button>
                     </div>
                   </div>
@@ -472,29 +550,27 @@ const WasteClassifier = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.4 }}
-          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mt-8 sm:mt-12"
+          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-6 mt-8 sm:mt-12 max-w-5xl mx-auto"
         >
           {[
-            { iconName: "lightbulb", title: "Como Funciona", desc: "Nossa IA analisa a imagem e identifica o tipo de material usando visão computacional avançada.", color: "from-blue-500 to-cyan-500" },
-            { iconName: "trophy", title: "Ganhe Pontos", desc: "Cada classificação correta gera EcoPoints que podem ser trocados por recompensas!", color: "from-green-500 to-emerald-500" },
-            { iconName: "globe", title: "Impacto Real", desc: "Suas ações contribuem para um planeta mais sustentável e consciente.", color: "from-purple-500 to-pink-500" }
+            { iconName: "lightbulb", title: "Como Funciona", desc: "Nossa inteligência identifica o tipo de material instantaneamente usando visão computacional.", bg: "bg-blue-50", iconColor: "text-blue-500" },
+            { iconName: "trophy", title: "Ganhe Pontos", desc: "Cada classificação correta gera EcoPoints que podem ser trocados por recompensas exclusivas.", bg: "bg-amber-50", iconColor: "text-amber-500" },
+            { iconName: "globe", title: "Impacto Real", desc: "Suas ações do dia a dia contribuem para um planeta muito mais sustentável e consciente.", bg: "bg-eco-50", iconColor: "text-eco-600" }
           ].map((card, index) => (
             <motion.div
               key={index}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.5 + index * 0.1 }}
-              whileHover={{ y: -5, scale: 1.02 }}
-              className="card-hover p-6 relative overflow-hidden"
+              className="flex items-start gap-4 p-5 rounded-3xl bg-transparent hover:bg-white hover:shadow-soft-lg border border-transparent hover:border-stone-100 transition-all duration-300"
             >
-              <div className="absolute top-2 right-2 opacity-20">
-                <AppIcon name={card.iconName} size={28} className="text-gray-500" />
+              <div className={`w-12 h-12 shrink-0 rounded-2xl ${card.bg} flex items-center justify-center`}>
+                <AppIcon name={card.iconName} size={24} className={card.iconColor} />
               </div>
-              <div className={`w-12 h-12 rounded-xl bg-gradient-to-r ${card.color} flex items-center justify-center mb-4 shadow-lg`}>
-                <AppIcon name={card.iconName} size={28} className="text-white" />
+              <div>
+                <h3 className="text-base font-bold text-stone-800 mb-1">{card.title}</h3>
+                <p className="text-stone-500 text-sm leading-relaxed">{card.desc}</p>
               </div>
-              <h3 className="font-bold text-gray-800 mb-2">{card.title}</h3>
-              <p className="text-gray-600 text-sm leading-relaxed">{card.desc}</p>
             </motion.div>
           ))}
         </motion.div>

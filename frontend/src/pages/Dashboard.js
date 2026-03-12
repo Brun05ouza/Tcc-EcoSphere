@@ -5,7 +5,7 @@ import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement
 import { useEcoPoints } from '../hooks/useEcoPoints';
 import { gamificationAPI } from '../services/api';
 import DailyQuiz from '../components/DailyQuiz';
-import { Brain, Flame, Target, BarChart3, Leaf } from 'lucide-react';
+import { Brain, Flame, Target, BarChart3, Leaf, Sparkles, Users } from 'lucide-react';
 import EcoGlobeLogo from '../components/ui/EcoGlobeLogo';
 import LoadingScreen from '../components/ui/LoadingScreen';
 
@@ -107,36 +107,54 @@ const Dashboard = () => {
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="mb-10"
+          className="mb-10 flex flex-col md:flex-row md:items-end justify-between gap-4"
         >
-          <h1 className="text-4xl font-bold mb-2 flex items-center gap-3">
-            <Icon name="dashboard" className="w-10 h-10 text-eco-600" />
-            <span className="bg-gradient-to-r from-eco-700 via-teal-600 to-eco-700 bg-clip-text text-transparent">Dashboard EcoSphere</span>
-          </h1>
-          <p className="text-stone-600">Acompanhe seu progresso sustentável</p>
+          <div>
+            <div className="flex items-center gap-3 mb-2">
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-eco-500 to-teal-600 flex items-center justify-center shadow-lg shadow-eco-500/20">
+                <Icon name="dashboard" className="w-5 h-5" white />
+              </div>
+              <h1 className="text-3xl md:text-4xl font-black text-stone-800 tracking-tight">
+                Visão Geral
+              </h1>
+            </div>
+            <p className="text-stone-500 ml-13 flex items-center gap-2">
+              <Sparkles size={16} className="text-amber-500" />
+              <span>Seu impacto sustentável gerado pela IA EcoSphere</span>
+            </p>
+          </div>
+          
+          <div className="bg-white px-5 py-2.5 rounded-2xl shadow-sm border border-stone-100 flex items-center gap-3 w-fit">
+            <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
+            <span className="text-sm font-medium text-stone-600">Sistema Online</span>
+          </div>
         </motion.div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-8">
           {[
-            { icon: "ecopoints", title: "EcoPoints", value: userStats.ecoPoints.toLocaleString(), color: "from-eco-500 to-emerald-600", suffix: "" },
-            { icon: "rocket", title: "Ações Realizadas", value: userStats.actions, color: "from-blue-500 to-cyan-600", suffix: "" },
-            { icon: "recompensas", title: "Badges Conquistadas", value: userStats.badges, color: "from-violet-500 to-purple-600", suffix: "" },
-            { icon: "ecopoints", title: "Nível Atual", value: userStats.level, color: "from-amber-500 to-orange-600", suffix: "" }
+            { icon: "ecopoints", title: "EcoPoints Acumulados", value: userStats.ecoPoints.toLocaleString(), color: "text-eco-600", bg: "bg-eco-50", border: "hover:border-eco-200" },
+            { icon: "rocket", title: "Ações Validadas", value: userStats.actions, color: "text-blue-600", bg: "bg-blue-50", border: "hover:border-blue-200" },
+            { icon: "recompensas", title: "Conquistas", value: userStats.badges, color: "text-violet-600", bg: "bg-violet-50", border: "hover:border-violet-200" },
+            { icon: "ecopoints", title: "Nível de Perfil", value: userStats.level, color: "text-amber-600", bg: "bg-amber-50", border: "hover:border-amber-200" }
           ].map((stat, index) => (
             <motion.div
               key={index}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: index * 0.1 }}
-              whileHover={{ y: -5, scale: 1.02 }}
-              className="card-hover p-6"
+              className={`bg-white p-6 rounded-3xl shadow-soft border border-stone-100 transition-all duration-300 ${stat.border} hover:shadow-lg group`}
             >
-              <div className={`w-12 h-12 rounded-xl bg-gradient-to-r ${stat.color} flex items-center justify-center mb-4 shadow-soft p-2`}>
-                <Icon name={stat.icon} className="w-full h-full" white />
+              <div className="flex items-start justify-between mb-4">
+                <div className={`w-12 h-12 rounded-2xl ${stat.bg} flex items-center justify-center transition-transform group-hover:scale-110 duration-300`}>
+                  <Icon name={stat.icon} className="w-6 h-6" />
+                </div>
+                <div className="w-8 h-8 rounded-full border border-stone-50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                  <i className="bi bi-arrow-up-right text-stone-400"></i>
+                </div>
               </div>
-              <h3 className="text-sm font-medium text-stone-600 mb-1">{stat.title}</h3>
-              <div className="text-2xl font-bold text-stone-800">
-                {stat.value}{stat.suffix}
+              <h3 className="text-sm font-semibold text-stone-500 mb-1">{stat.title}</h3>
+              <div className="text-3xl font-black text-stone-800 tracking-tight">
+                {stat.value}
               </div>
             </motion.div>
           ))}
@@ -147,40 +165,57 @@ const Dashboard = () => {
           <motion.div
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
-            className="bg-gradient-to-r from-violet-500 to-purple-600 p-6 rounded-2xl shadow-soft-lg text-white cursor-pointer hover:shadow-glow transition-shadow"
+            className="group bg-white p-6 rounded-3xl shadow-soft border border-stone-100 cursor-pointer transition-all duration-300 hover:shadow-xl hover:border-violet-200 relative overflow-hidden"
             onClick={() => setShowDailyQuiz(true)}
-            whileHover={{ scale: 1.02 }}
           >
-            <div className="flex items-center justify-between">
+            {/* Gradiente de fundo sutil */}
+            <div className="absolute inset-0 bg-gradient-to-br from-violet-50/50 to-purple-50/50 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+            
+            <div className="relative z-10 flex items-center justify-between">
               <div>
-                <h3 className="text-2xl font-bold mb-2 flex items-center gap-2"><Brain size={28} /> Quiz Diário</h3>
-                <p className="text-purple-100 mb-4">Teste seus conhecimentos e ganhe pontos!</p>
-                <div className="flex items-center gap-2">
-                  <Flame size={28} />
-                  <span className="font-bold">7 dias de sequência</span>
+                <div className="flex items-center gap-3 mb-2">
+                  <div className="w-10 h-10 rounded-xl bg-violet-100 flex items-center justify-center text-violet-600">
+                    <Brain size={20} />
+                  </div>
+                  <h3 className="text-xl font-bold text-stone-800">Quiz Diário</h3>
+                </div>
+                <p className="text-stone-500 text-sm mb-4">Teste seus conhecimentos e ganhe pontos!</p>
+                <div className="flex items-center gap-2 bg-orange-50 text-orange-600 px-3 py-1.5 rounded-lg w-fit">
+                  <Flame size={16} className="text-orange-500" />
+                  <span className="text-xs font-bold">7 dias de sequência</span>
                 </div>
               </div>
-              <Target size={56} className="text-white/90" />
+              <div className="w-16 h-16 rounded-full bg-violet-50 flex items-center justify-center group-hover:scale-110 transition-transform duration-500">
+                <Target size={32} className="text-violet-400" />
+              </div>
             </div>
           </motion.div>
 
           <motion.div
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
-            className="bg-gradient-to-r from-eco-500 to-teal-600 p-6 rounded-2xl shadow-soft-lg text-white cursor-pointer hover:shadow-glow transition-shadow"
+            className="group bg-white p-6 rounded-3xl shadow-soft border border-stone-100 cursor-pointer transition-all duration-300 hover:shadow-xl hover:border-eco-200 relative overflow-hidden"
             onClick={() => window.location.href = '/calculadora-carbono'}
-            whileHover={{ scale: 1.02 }}
           >
-            <div className="flex items-center justify-between">
+            <div className="absolute inset-0 bg-gradient-to-br from-eco-50/50 to-teal-50/50 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+            
+            <div className="relative z-10 flex items-center justify-between">
               <div>
-                <h3 className="text-2xl font-bold mb-2 flex items-center gap-2"><EcoGlobeLogo size={28} style={{ filter: 'brightness(0) invert(1)' }} /> Pegada de Carbono</h3>
-                <p className="text-green-100 mb-4">Calcule seu impacto ambiental!</p>
-                <div className="flex items-center gap-2">
-                  <BarChart3 size={28} />
-                  <span className="font-bold">Descubra agora</span>
+                <div className="flex items-center gap-3 mb-2">
+                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-eco-500 to-teal-600 flex items-center justify-center shadow-lg shadow-eco-500/20">
+                    <Leaf size={24} className="text-white" />
+                  </div>
+                  <h3 className="text-xl font-bold text-stone-800">Pegada de Carbono</h3>
+                </div>
+                <p className="text-stone-500 text-sm mb-4">Calcule seu impacto ambiental!</p>
+                <div className="flex items-center gap-2 bg-stone-100 text-stone-600 px-3 py-1.5 rounded-lg w-fit group-hover:bg-eco-100 group-hover:text-eco-700 transition-colors">
+                  <BarChart3 size={16} />
+                  <span className="text-xs font-bold">Descubra agora</span>
                 </div>
               </div>
-              <Leaf size={56} className="text-white/90" />
+              <div className="w-16 h-16 rounded-full bg-eco-50 flex items-center justify-center group-hover:scale-110 transition-transform duration-500">
+                <Leaf size={32} className="text-eco-400" />
+              </div>
             </div>
           </motion.div>
         </div>
@@ -188,25 +223,40 @@ const Dashboard = () => {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="bg-gradient-to-r from-amber-500 to-orange-600 p-6 rounded-2xl shadow-soft-lg text-white mb-8"
+                    className="bg-white p-6 md:p-8 rounded-3xl shadow-soft border border-stone-100 mb-10 relative overflow-hidden"
         >
-          <h3 className="text-2xl font-bold mb-4 flex items-center gap-2"><EcoGlobeLogo size={28} style={{ filter: 'brightness(0) invert(1)' }} /> Impacto Coletivo da Plataforma</h3>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div>
-              <div className="text-3xl font-bold">12.547</div>
-              <div className="text-orange-100 text-sm">Classificações Totais</div>
+          {/* Brilho decorativo no fundo escuro */}
+          <div className="absolute -top-24 -right-24 w-64 h-64 bg-amber-100/50 rounded-full blur-3xl pointer-events-none" />
+          <div className="absolute -bottom-24 -left-24 w-64 h-64 bg-eco-100/50 rounded-full blur-3xl pointer-events-none" />
+
+          <div className="relative z-10">
+            <div className="flex items-center gap-3 mb-8 pb-6 border-b border-stone-100">
+              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-eco-500 to-teal-600 flex items-center justify-center shadow-lg shadow-eco-500/20">
+                <Users className="w-6 h-6 text-white" />
+              </div>
+              <div>
+                <h3 className="text-2xl font-bold tracking-tight text-stone-800">Impacto Coletivo da Plataforma</h3>
+                <p className="text-stone-500 text-sm">O que já construímos juntos com a comunidade</p>
+              </div>
             </div>
-            <div>
-              <div className="text-3xl font-bold">31.4 ton</div>
-              <div className="text-orange-100 text-sm">CO2 Economizado</div>
-            </div>
-            <div>
-              <div className="text-3xl font-bold">1.427</div>
-              <div className="text-orange-100 text-sm">Árvores Equivalentes</div>
-            </div>
-            <div>
-              <div className="text-3xl font-bold">3.892</div>
-              <div className="text-orange-100 text-sm">Usuários Ativos</div>
+            
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-8 divide-x-0 md:divide-x divide-stone-100">
+              <div className="md:px-4 first:px-0">
+                <div className="text-4xl font-black text-amber-500 tracking-tighter mb-1">12.5k+</div>
+                <div className="text-stone-500 text-sm font-medium">Classificações Feitas</div>
+              </div>
+              <div className="md:px-4">
+                <div className="text-4xl font-black text-eco-500 tracking-tighter mb-1">31.4<span className="text-2xl">t</span></div>
+                <div className="text-stone-500 text-sm font-medium">CO2 Economizado</div>
+              </div>
+              <div className="md:px-4">
+                <div className="text-4xl font-black text-blue-500 tracking-tighter mb-1">1.4k</div>
+                <div className="text-stone-500 text-sm font-medium">Árvores Equivalentes</div>
+              </div>
+              <div className="md:px-4">
+                <div className="text-4xl font-black text-purple-500 tracking-tighter mb-1">3.8k</div>
+                <div className="text-stone-500 text-sm font-medium">Usuários Ativos</div>
+              </div>
             </div>
           </div>
         </motion.div>
@@ -218,13 +268,20 @@ const Dashboard = () => {
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.4 }}
-            className="card p-6"
+            className="bg-white p-6 rounded-3xl shadow-soft border border-stone-100"
           >
-            <h3 className="text-xl font-semibold mb-4 flex items-center">
-              <i className="bi bi-graph-up text-eco-600 mr-2 text-xl"></i>
-              Evolução EcoPoints
-            </h3>
-            <Line data={ecoPointsData} options={{ responsive: true, plugins: { legend: { display: false } } }} />
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-lg font-bold text-stone-800 flex items-center gap-2">
+                <div className="w-8 h-8 rounded-lg bg-eco-50 flex items-center justify-center">
+                  <i className="bi bi-graph-up text-eco-600 text-lg"></i>
+                </div>
+                Evolução EcoPoints
+              </h3>
+              <span className="text-xs font-medium text-eco-600 bg-eco-50 px-2 py-1 rounded-md border border-eco-100">+15% essa semana</span>
+            </div>
+            <div className="h-64">
+              <Line data={ecoPointsData} options={{ responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { border: { dash: [4, 4] }, grid: { color: '#f5f5f4' } }, x: { grid: { display: false } } } }} />
+            </div>
           </motion.div>
 
           {/* Actions Distribution */}
@@ -232,52 +289,70 @@ const Dashboard = () => {
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.5 }}
-            className="card p-6"
+            className="bg-white p-6 rounded-3xl shadow-soft border border-stone-100"
           >
-            <h3 className="text-xl font-semibold mb-4 flex items-center">
-              <i className="bi bi-pie-chart text-eco-600 mr-2 text-xl"></i>
+            <h3 className="text-lg font-bold text-stone-800 mb-6 flex items-center gap-2">
+              <div className="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center">
+                <i className="bi bi-pie-chart text-blue-600 text-lg"></i>
+              </div>
               Distribuição de Ações
             </h3>
-            <Doughnut data={actionsData} options={{ responsive: true, plugins: { legend: { position: 'bottom' } } }} />
+            <div className="h-64 flex items-center justify-center relative">
+              <Doughnut data={actionsData} options={{ responsive: true, maintainAspectRatio: false, cutout: '75%', plugins: { legend: { position: 'bottom', labels: { usePointStyle: true, padding: 20 } } } }} />
+              <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none pb-8">
+                <span className="text-3xl font-black text-stone-800">{userStats.actions}</span>
+                <span className="text-xs font-medium text-stone-500 uppercase tracking-widest">Ações</span>
+              </div>
+            </div>
           </motion.div>
         </div>
 
-        {/* Weekly Activity */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.6 }}
-          className="bg-white p-4 sm:p-6 rounded-2xl shadow-lg mb-6 sm:mb-8"
-        >
-          <h3 className="text-xl font-semibold mb-4 flex items-center">
-            <i className="bi bi-calendar-week text-eco-600 mr-2 text-xl"></i>
-            Atividade Semanal
-          </h3>
-          <Bar data={weeklyData} options={{ responsive: true, plugins: { legend: { display: false } } }} />
-        </motion.div>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8">
+          {/* Weekly Activity */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.6 }}
+            className="bg-white p-6 rounded-3xl shadow-soft border border-stone-100 lg:col-span-2"
+          >
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-lg font-bold text-stone-800 flex items-center gap-2">
+                <div className="w-8 h-8 rounded-lg bg-amber-50 flex items-center justify-center">
+                  <i className="bi bi-calendar-week text-amber-600 text-lg"></i>
+                </div>
+                Atividade Semanal
+              </h3>
+            </div>
+            <div className="h-64">
+              <Bar data={weeklyData} options={{ responsive: true, maintainAspectRatio: false, borderRadius: 6, plugins: { legend: { display: false } }, scales: { y: { grid: { color: '#f5f5f4' } }, x: { grid: { display: false } } } }} />
+            </div>
+          </motion.div>
 
-        {/* Recent Activities */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.7 }}
-          className="bg-white p-4 sm:p-6 rounded-2xl shadow-lg"
-        >
-          <h3 className="text-xl font-semibold mb-6">Atividades Recentes</h3>
-          <div className="space-y-4">
+          {/* Recent Activities */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.7 }}
+            className="bg-white p-6 rounded-3xl shadow-soft border border-stone-100 flex flex-col"
+          >
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-lg font-bold text-stone-800">Atividades Recentes</h3>
+              <button className="text-sm font-medium text-eco-600 hover:text-eco-700 transition-colors">Ver todas</button>
+            </div>
+            <div className="space-y-4 flex-1">
             {userStats.actions > 0 ? [
-              { action: "Classificou resíduos com IA", points: "+25", time: "Recente", icon: "camera" },
-              { action: "Completou Eco Quiz", points: "+50", time: "Hoje", icon: "educacao" },
-              { action: "Jogou Eco Catcher", points: "+30", time: "Ontem", icon: "rocket" }
+              { action: "Classificou resíduos com IA", points: "+25", time: "Há 2 horas", icon: "camera", bg: "bg-blue-50", color: "text-blue-600" },
+              { action: "Completou Eco Quiz", points: "+50", time: "Ontem", icon: "educacao", bg: "bg-violet-50", color: "text-violet-600" },
+              { action: "Jogou Eco Catcher", points: "+30", time: "Há 2 dias", icon: "rocket", bg: "bg-amber-50", color: "text-amber-600" }
             ].slice(0, Math.min(3, userStats.actions)).map((activity, index) => (
               <motion.div
                 key={index}
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: 0.8 + index * 0.1 }}
-                className="flex items-center justify-between p-4 bg-stone-50 rounded-xl hover:bg-stone-100 transition-colors"
+                className="flex items-center justify-between p-4 rounded-2xl border border-stone-50 hover:bg-stone-50 transition-colors group cursor-pointer"
               >
-                <div className="flex items-center">
+                <div className="flex items-center gap-4">
                   {typeof activity.icon === 'string' && !activity.icon.includes('�') ? (
                     <div className="w-8 h-8 mr-3 flex items-center justify-center">
                       <Icon name={activity.icon} className="w-full h-full" />
@@ -286,21 +361,26 @@ const Dashboard = () => {
                     <span className="text-2xl mr-3">{activity.icon}</span>
                   )}
                   <div>
-                    <p className="font-medium text-gray-800">{activity.action}</p>
-                    <p className="text-sm text-gray-500">{activity.time}</p>
+                    <p className="font-semibold text-stone-800 text-sm">{activity.action}</p>
+                    <p className="text-xs text-stone-500 font-medium mt-0.5">{activity.time}</p>
                   </div>
                 </div>
-                <span className="text-eco-600 font-semibold">{activity.points}</span>
+                <div className="flex items-center gap-1 bg-green-50 text-green-700 px-2 py-1 rounded-lg">
+                  <span className="font-bold text-sm">{activity.points}</span>
+                </div>
               </motion.div>
             )) : (
-              <div className="text-center py-8">
-                <Leaf size={64} className="mx-auto mb-4 text-eco-400" />
-                <p className="text-stone-500 mb-2">Nenhuma atividade ainda</p>
-                <p className="text-sm text-stone-400">Comece classificando resíduos ou jogando!</p>
+              <div className="flex flex-col items-center justify-center h-full text-center py-8">
+                <div className="w-16 h-16 rounded-2xl bg-stone-50 flex items-center justify-center mb-4">
+                  <Leaf size={32} className="text-stone-300" />
+                </div>
+                <p className="text-stone-800 font-medium mb-1">Nenhuma atividade ainda</p>
+                <p className="text-sm text-stone-500">Classifique resíduos para começar!</p>
               </div>
             )}
-          </div>
-        </motion.div>
+            </div>
+          </motion.div>
+        </div>
 
         {/* Daily Quiz Modal */}
         <AnimatePresence>

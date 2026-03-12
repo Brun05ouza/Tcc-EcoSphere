@@ -222,45 +222,57 @@ const Login = () => {
       </AnimatePresence>
 
       {/* Container Principal */}
-      <div className="w-full max-w-7xl mx-auto grid md:grid-cols-2 gap-8 items-center relative z-10">
+      <div className="w-full max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between relative z-10 gap-12 lg:gap-24 px-4 sm:px-6 lg:px-8">
         {/* Coluna Esquerda - Boas-vindas */}
         <motion.div
           initial={{ opacity: 0, x: -50 }}
           animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.6 }}
-          className="text-white space-y-8 hidden md:block"
+          transition={{ duration: 0.8, ease: "easeOut" }}
+          className="text-white space-y-10 flex-1 hidden md:flex flex-col justify-center"
         >
           {/* Logo e Título */}
           <div>
-            <div className="mb-6 inline-block">
-              <EcoGlobeLogo size={56} style={{ filter: 'brightness(0) invert(1)' }} />
-            </div>
-            <h1 className="text-5xl font-bold mb-4">Bem-vindo ao EcoSphere</h1>
-            <p className="text-xl text-white/90">
-              Junte-se a nós na missão de tornar o mundo mais sustentável
+            <motion.div 
+              initial={{ scale: 0.8, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ delay: 0.2, duration: 0.5 }}
+              className="mb-8 inline-block drop-shadow-xl"
+            >
+              <EcoGlobeLogo size={72} style={{ filter: 'brightness(0) invert(1)' }} />
+            </motion.div>
+            <h1 className="text-5xl lg:text-6xl xl:text-7xl font-black mb-6 tracking-tighter leading-tight">
+              EcoSphere
+            </h1>
+            <p className="text-xl lg:text-2xl text-white/90 font-medium max-w-xl leading-relaxed">
+              Junte-se a nós na missão de construir um futuro sustentável através da tecnologia.
             </p>
           </div>
 
           {/* Features Cards */}
-          <div className="space-y-4">
+          <div className="grid sm:grid-cols-2 gap-4 max-w-2xl">
             {[
-              { icon: Brain, text: 'Classificação de resíduos com IA' },
-              { icon: Trophy, text: 'Gamificação e recompensas' },
-              { icon: BarChart3, text: 'Monitoramento em tempo real' },
-              { icon: Recycle, text: 'Ranking e conquistas' }
+              { icon: Brain, title: 'IA Inteligente', desc: 'Classificação automática' },
+              { icon: Trophy, title: 'Gamificação', desc: 'Ganhe prêmios reais' },
+              { icon: BarChart3, title: 'Dashboard', desc: 'Métricas em tempo real' },
+              { icon: Recycle, title: 'Comunidade', desc: 'Impacto coletivo' }
             ].map((feature, index) => {
               const IconComponent = feature.icon;
               return (
                 <motion.div
                   key={index}
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: 0.2 + index * 0.1 }}
-                  whileHover={{ scale: 1.05, x: 10 }}
-                  className="flex items-center gap-4 p-4 rounded-2xl bg-white/10 backdrop-blur-md border border-white/20 cursor-pointer transition-all"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.4 + index * 0.1 }}
+                  whileHover={{ scale: 1.03, backgroundColor: 'rgba(255, 255, 255, 0.15)' }}
+                  className="flex items-start gap-4 p-5 rounded-3xl bg-white/10 backdrop-blur-md border border-white/20 shadow-xl transition-all"
                 >
-                  <IconComponent size={32} strokeWidth={1.5} className="text-white" />
-                  <span className="text-lg font-medium">{feature.text}</span>
+                  <div className="p-3 bg-white/20 rounded-2xl shrink-0">
+                    <IconComponent size={24} className="text-white" />
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-white mb-1">{feature.title}</h3>
+                    <p className="text-white/70 text-sm font-medium">{feature.desc}</p>
+                  </div>
                 </motion.div>
               );
             })}
@@ -269,63 +281,72 @@ const Login = () => {
 
         {/* Coluna Direita - Formulário Glassmorphism */}
         <motion.div
-          initial={{ opacity: 0, x: 50 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.6 }}
-          className="w-full max-w-md mx-auto relative"
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.2 }}
+          className="w-full max-w-[440px] shrink-0"
         >
-          {/* Globo decorativo sutil */}
-          <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 opacity-5 pointer-events-none select-none w-48 h-48">
-            <EcoGlobeLogo size={192} className="w-full h-full" style={{ filter: 'brightness(0) invert(1)' }} />
-          </div>
+          <div className="bg-white/10 backdrop-blur-2xl rounded-[2.5rem] p-8 sm:p-10 border border-white/20 shadow-[0_8px_32px_0_rgba(0,0,0,0.3)] relative z-10 overflow-hidden">
+            {/* Efeito de brilho interno do card */}
+            <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-white/50 to-transparent" />
+            <div className="absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-black/20 to-transparent pointer-events-none" />
 
-          <div className="bg-white/15 backdrop-blur-xl rounded-3xl p-6 border border-white/20 shadow-2xl relative z-10">
             {/* Toggle Login/Register */}
-            <div className="relative flex bg-white/20 rounded-2xl p-1 mb-3">
+            <div className="relative flex bg-black/20 rounded-2xl p-1 mb-8">
               <motion.div
-                className="absolute top-1 bottom-1 bg-white rounded-xl shadow-md"
+                className="absolute top-1 bottom-1 bg-white rounded-xl shadow-lg"
                 animate={{
                   left: isLogin ? '4px' : '50%',
                   right: isLogin ? '50%' : '4px'
                 }}
-                transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                transition={{ type: "spring", stiffness: 400, damping: 30 }}
               />
               <button
                 onClick={() => setIsLogin(true)}
-                className={`relative z-10 flex-1 py-2 px-4 rounded-xl transition-all text-sm font-semibold ${
-                  isLogin ? 'text-gray-800' : 'text-white'
+                className={`relative z-10 flex-1 py-3 px-4 rounded-xl transition-all text-sm font-bold tracking-wide ${
+                  isLogin ? 'text-stone-900' : 'text-white hover:text-white/80'
                 }`}
               >
                 Entrar
               </button>
               <button
                 onClick={() => setIsLogin(false)}
-                className={`relative z-10 flex-1 py-2 px-4 rounded-xl transition-all text-sm font-semibold ${
-                  !isLogin ? 'text-gray-800' : 'text-white'
+                className={`relative z-10 flex-1 py-3 px-4 rounded-xl transition-all text-sm font-bold tracking-wide ${
+                  !isLogin ? 'text-stone-900' : 'text-white hover:text-white/80'
                 }`}
               >
                 Registrar
               </button>
             </div>
 
+            <div className="mb-8 text-center relative z-10">
+              <h2 className="text-2xl font-bold text-white mb-2">
+                {isLogin ? 'Bem-vindo de volta!' : 'Crie sua conta'}
+              </h2>
+              <p className="text-white/70 text-sm">
+                {isLogin ? 'Insira seus dados para acessar sua conta' : 'Junte-se à comunidade sustentável'}
+              </p>
+            </div>
+
             {/* Form */}
             <motion.form
               onSubmit={handleSubmit}
-              className="space-y-2"
+              className="space-y-4 relative z-10"
               key={isLogin ? 'login' : 'register'}
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.3 }}
             >
               <AnimatePresence mode="wait">
                 {!isLogin && (
                   <motion.div
-                    initial={{ opacity: 0, height: 0 }}
-                    animate={{ opacity: 1, height: 'auto' }}
-                    exit={{ opacity: 0, height: 0 }}
+                    initial={{ opacity: 0, height: 0, marginBottom: 0 }}
+                    animate={{ opacity: 1, height: 'auto', marginBottom: 16 }}
+                    exit={{ opacity: 0, height: 0, marginBottom: 0 }}
                     transition={{ duration: 0.3 }}
+                    className="overflow-hidden"
                   >
-                    <label className="block text-xs font-medium text-white mb-1">
+                    <label className="block text-xs font-bold text-white/90 uppercase tracking-wider mb-2 ml-1">
                       Nome Completo
                     </label>
                     <input
@@ -333,7 +354,7 @@ const Login = () => {
                       name="name"
                       value={formData.name}
                       onChange={handleChange}
-                      className="w-full px-3 py-2 bg-white/90 border border-white/30 rounded-xl focus:ring-2 focus:ring-white focus:border-transparent text-gray-800 placeholder-gray-400 transition-all text-sm"
+                      className="w-full px-5 py-4 bg-white/10 border border-white/20 rounded-2xl focus:bg-white/20 focus:ring-2 focus:ring-white/50 focus:border-transparent text-white placeholder-white/40 transition-all font-medium outline-none"
                       placeholder="Seu nome completo"
                     />
                   </motion.div>
@@ -341,7 +362,7 @@ const Login = () => {
               </AnimatePresence>
 
               <div>
-                <label className="block text-xs font-medium text-white mb-1">
+                <label className="block text-xs font-bold text-white/90 uppercase tracking-wider mb-2 ml-1">
                   Email
                 </label>
                 <input
@@ -349,21 +370,28 @@ const Login = () => {
                   name="email"
                   value={formData.email}
                   onChange={handleChange}
-                  className="w-full px-3 py-2 bg-white/90 border border-white/30 rounded-xl focus:ring-2 focus:ring-white focus:border-transparent text-gray-800 placeholder-gray-400 transition-all text-sm"
+                  className="w-full px-5 py-4 bg-white/10 border border-white/20 rounded-2xl focus:bg-white/20 focus:ring-2 focus:ring-white/50 focus:border-transparent text-white placeholder-white/40 transition-all font-medium outline-none"
                   placeholder="seu@email.com"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-medium text-white mb-1">
-                  Senha
-                </label>
+                <div className="flex justify-between items-center mb-2 ml-1">
+                  <label className="block text-xs font-bold text-white/90 uppercase tracking-wider">
+                    Senha
+                  </label>
+                  {isLogin && (
+                    <a href="#" className="text-xs font-bold text-teal-300 hover:text-white transition-colors">
+                      Esqueceu a senha?
+                    </a>
+                  )}
+                </div>
                 <input
                   type="password"
                   name="password"
                   value={formData.password}
                   onChange={handleChange}
-                  className="w-full px-3 py-2 bg-white/90 border border-white/30 rounded-xl focus:ring-2 focus:ring-white focus:border-transparent text-gray-800 placeholder-gray-400 transition-all text-sm"
+                  className="w-full px-5 py-4 bg-white/10 border border-white/20 rounded-2xl focus:bg-white/20 focus:ring-2 focus:ring-white/50 focus:border-transparent text-white placeholder-white/40 transition-all font-medium outline-none"
                   placeholder="••••••••"
                 />
 
@@ -374,16 +402,18 @@ const Login = () => {
                       initial={{ opacity: 0, height: 0 }}
                       animate={{ opacity: 1, height: 'auto' }}
                       exit={{ opacity: 0, height: 0 }}
-                      className="mt-1"
+                      className="mt-3 overflow-hidden"
                     >
-                      <div className="flex items-center gap-2">
-                        <div className="flex-1 bg-white/30 rounded-full h-1.5">
-                          <div
-                            className={`h-1.5 rounded-full ${getPasswordStrength(formData.password).color}`}
-                            style={{ width: `${getPasswordStrength(formData.password).strength}%` }}
+                      <div className="flex items-center gap-3 mb-1">
+                        <div className="flex-1 h-1.5 bg-black/20 rounded-full overflow-hidden">
+                          <motion.div 
+                            className={`h-full ${getPasswordStrength(formData.password).color}`}
+                            initial={{ width: 0 }}
+                            animate={{ width: `${getPasswordStrength(formData.password).strength}%` }}
+                            transition={{ duration: 0.3 }}
                           />
                         </div>
-                        <span className="text-xs font-medium text-white">
+                        <span className="text-[10px] font-bold text-white/80 uppercase w-20 text-right">
                           {getPasswordStrength(formData.password).label}
                         </span>
                       </div>
@@ -395,12 +425,13 @@ const Login = () => {
               <AnimatePresence mode="wait">
                 {!isLogin && (
                   <motion.div
-                    initial={{ opacity: 0, height: 0 }}
-                    animate={{ opacity: 1, height: 'auto' }}
-                    exit={{ opacity: 0, height: 0 }}
+                    initial={{ opacity: 0, height: 0, marginTop: 0 }}
+                    animate={{ opacity: 1, height: 'auto', marginTop: 16 }}
+                    exit={{ opacity: 0, height: 0, marginTop: 0 }}
                     transition={{ duration: 0.3 }}
+                    className="overflow-hidden"
                   >
-                    <label className="block text-xs font-medium text-white mb-1">
+                    <label className="block text-xs font-bold text-white/90 uppercase tracking-wider mb-2 ml-1">
                       Confirmar Senha
                     </label>
                     <input
@@ -408,45 +439,35 @@ const Login = () => {
                       name="confirmPassword"
                       value={formData.confirmPassword}
                       onChange={handleChange}
-                      className="w-full px-3 py-2 bg-white/90 border border-white/30 rounded-xl focus:ring-2 focus:ring-white focus:border-transparent text-gray-800 placeholder-gray-400 transition-all text-sm"
+                      className="w-full px-5 py-4 bg-white/10 border border-white/20 rounded-2xl focus:bg-white/20 focus:ring-2 focus:ring-white/50 focus:border-transparent text-white placeholder-white/40 transition-all font-medium outline-none"
                       placeholder="••••••••"
                     />
                   </motion.div>
                 )}
               </AnimatePresence>
 
-              <motion.button
-                whileHover={{ scale: 1.02, y: -2 }}
-                whileTap={{ scale: 0.98 }}
+              <button
                 type="submit"
                 disabled={loading}
-                className="w-full bg-gradient-to-r from-eco-600 to-teal-600 text-white py-2.5 px-4 rounded-xl font-semibold hover:from-eco-700 hover:to-teal-700 transition-all disabled:opacity-50 shadow-soft text-sm"
+                className="w-full py-4 px-6 bg-white text-stone-900 rounded-2xl font-bold text-lg hover:bg-stone-50 hover:shadow-xl transition-all disabled:opacity-70 flex items-center justify-center gap-2 mt-6 active:scale-[0.98]"
               >
                 {loading ? (
-                  <span className="flex items-center justify-center gap-2">
-                    <LoadingScreen fullScreen={false} size={20} />
-                    {isLogin ? 'Entrando...' : 'Registrando...'}
-                  </span>
+                  <div className="w-6 h-6 border-3 border-stone-300 border-t-stone-800 rounded-full animate-spin" />
                 ) : (
-                  <span>{isLogin ? 'Entrar' : 'Criar Conta'}</span>
+                  isLogin ? 'Entrar na Plataforma' : 'Criar Conta'
                 )}
-              </motion.button>
+              </button>
             </motion.form>
 
             {/* Google Login */}
-            <div className="mt-3">
-              <div className="relative">
-                <div className="absolute inset-0 flex items-center">
-                  <div className="w-full border-t border-white/30" />
-                </div>
-                <div className="relative flex justify-center text-sm">
-                  <span className="px-3 bg-transparent text-white/80 text-xs">
-                    {isLogin ? 'ou continue com' : 'ou registre-se com'}
-                  </span>
-                </div>
+            <div className="mt-8 relative z-10">
+              <div className="flex justify-center text-sm mb-4">
+                <span className="text-[11px] font-black text-white/60 uppercase tracking-widest">
+                  {isLogin ? 'Ou continue com' : 'Ou registre-se com'}
+                </span>
               </div>
 
-              <div className="mt-3">
+              <div>
                 <GoogleLogin
                   onGoogleClick={handleGoogleClick}
                   onSuccess={handleGoogleClick}
@@ -458,14 +479,12 @@ const Login = () => {
             </div>
 
             {/* Footer */}
-            <div className="mt-3 text-center text-xs text-white/70">
-              <p>Ao continuar, você concorda com nossos</p>
-              <p className="mt-1">
-                <span className="text-white hover:underline cursor-pointer">Termos de Uso</span>
-                {' e '}
-                <span className="text-white hover:underline cursor-pointer">Política de Privacidade</span>
+            {!isLogin && (
+              <p className="mt-8 text-center text-xs text-white/60 font-medium relative z-10">
+                Ao se registrar, você concorda com nossos <br/>
+                <a href="#" className="text-white hover:underline">Termos de Uso</a> e <a href="#" className="text-white hover:underline">Política de Privacidade</a>.
               </p>
-            </div>
+            )}
           </div>
         </motion.div>
       </div>

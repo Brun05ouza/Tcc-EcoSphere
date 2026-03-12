@@ -8,6 +8,7 @@ import {
   getCurrentProfile,
   getProfile,
   updateProfile,
+  uploadAvatar,
   addPointsToProfile,
   subtractPointsFromProfile,
   getGamificationProfile,
@@ -184,6 +185,12 @@ export const userAPI = {
     const userId = await getUserId();
     if (!userId) throw new Error('Não autenticado');
     const updated = await updateProfile(userId, data);
+    return { data: updated };
+  },
+  uploadAvatar: async (file) => {
+    const userId = await getUserId();
+    if (!userId) throw new Error('Não autenticado');
+    const updated = await uploadAvatar(userId, file);
     return { data: updated };
   },
   addPoints: async (data) => {

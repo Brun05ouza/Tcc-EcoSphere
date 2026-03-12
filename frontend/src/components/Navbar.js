@@ -12,7 +12,19 @@ const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [notifications] = useState(3);
   const [showNotifications, setShowNotifications] = useState(false);
+  const [showProfile, setShowProfile] = useState(false);
   const [isHeroVisible, setIsHeroVisible] = useState(false);
+  const profileRef = React.useRef(null);
+
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (profileRef.current && !profileRef.current.contains(e.target)) {
+        setShowProfile(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
   const { user, isAdmin } = useUser();
   const location = useLocation();
   const navigate = useNavigate();
@@ -75,9 +87,7 @@ const Navbar = () => {
   ];
 
   const Icon = ({ name, className = "w-5 h-5", active = false }) => {
-    const iconStyle = isHeroVisible
-      ? (active ? { filter: 'brightness(0) invert(1)' } : { filter: 'brightness(0) invert(0.8)' })
-      : (active ? { filter: 'invert(48%) sepia(79%) saturate(2476%) hue-rotate(86deg) brightness(118%) contrast(119%)' } : { filter: 'invert(40%) sepia(5%) saturate(500%) hue-rotate(180deg)' });
+    const iconStyle = active ? { filter: 'invert(48%) sepia(79%) saturate(2476%) hue-rotate(86deg) brightness(118%) contrast(119%)' } : { filter: 'invert(40%) sepia(5%) saturate(500%) hue-rotate(180deg)' };
     return (
       <img 
         src={require(`../assets/icons/${name}.svg`)} 
@@ -88,82 +98,65 @@ const Navbar = () => {
     );
   };
 
-  const navBg = isHeroVisible
-    ? 'bg-transparent border-b border-transparent shadow-none'
-    : 'bg-white border-b border-stone-200/60 shadow-soft';
+  const navBg = 'bg-white/90 backdrop-blur-lg border-b border-stone-200/60 shadow-sm';
 
   return (
-    <motion.nav 
+    <motion.header
       initial={{ y: -100 }}
       animate={{ y: 0 }}
       className={`sticky top-0 z-50 transition-all duration-300 ${navBg}`}
     >
-      <div className="container mx-auto px-4 max-w-7xl">
-        <div className="flex justify-between items-center h-16 md:h-[72px] py-2">
-          {/* Logo */}
-          <Link to="/" className="flex items-center gap-2.5 group">
-            <EcoGlobeLogo
-              size={48}
-              style={{ filter: 'invert(40%) sepia(93%) saturate(500%) hue-rotate(100deg)' }}
-            />
-            <span className={`text-xl font-bold font-display transition-colors duration-300 ${
-              isHeroVisible 
-                ? 'bg-gradient-to-r from-emerald-300 via-teal-300 to-eco-400 bg-clip-text text-transparent' 
-                : 'bg-gradient-to-r from-eco-700 via-teal-600 to-eco-700 bg-clip-text text-transparent'
-            }`}>
-              EcoSphere
-            </span>
-          </Link>
-          
-          {/* Desktop Menu */}
-          <div className="hidden lg:flex items-center gap-2">
+      <div className="relative flex items-center h-16 md:h-[72px] py-2 w-full px-6 md:px-10">
+        {/* Logo: esquerda */}
+        <Link to="/" className="flex items-center gap-2.5 group shrink-0">
+          <EcoGlobeLogo
+            size={48}
+            style={{ filter: 'invert(40%) sepia(93%) saturate(500%) hue-rotate(100deg)' }}
+          />
+          <span className={`text-xl font-bold font-display transition-colors duration-300 bg-gradient-to-r from-eco-700 via-teal-600 to-eco-700 bg-clip-text text-transparent`}>
+            EcoSphere
+          </span>
+        </Link>
+
+          {/* Nav: absolutamente centralizado no header */}
+          <nav className="hidden lg:flex absolute left-1/2 -translate-x-1/2 items-center gap-2" aria-label="Menu principal">
             {navItems.map((item) => (
               <Link
                 key={item.path}
                 to={item.path}
                 className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 whitespace-nowrap ${
-                  isHeroVisible
-                    ? location.pathname === item.path
-                      ? 'bg-white/15 text-white'
-                      : 'text-stone-300 hover:bg-white/10 hover:text-white'
-                    : location.pathname === item.path
-                      ? 'bg-eco-50 text-eco-700'
-                      : 'text-stone-600 hover:bg-stone-100 hover:text-stone-900'
+                  location.pathname === item.path
+                    ? 'bg-eco-50 text-eco-700'
+                    : 'text-stone-600 hover:bg-stone-100 hover:text-stone-900'
                 }`}
               >
                 <Icon name={item.icon} className="w-4 h-4 shrink-0" active={location.pathname === item.path} />
                 <span>{item.label}</span>
               </Link>
             ))}
-          </div>
-          
-          {/* User Section */}
-          <div className="hidden lg:flex items-center gap-3">
+          </nav>
+
+          {/* Área do usuário: notificações, EcoPoints, perfil e menu mobile */}
+          <div className="flex items-center gap-3 ml-auto">
             {isAdmin && (
               <Link
                 to="/admin"
-                className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 ${
-                  isHeroVisible
-                    ? location.pathname === '/admin'
-                      ? 'bg-white/15 text-white'
-                      : 'text-stone-300 hover:bg-white/10 hover:text-white'
-                    : location.pathname === '/admin'
-                      ? 'bg-eco-50 text-eco-700'
-                      : 'text-stone-600 hover:bg-stone-100 hover:text-stone-900'
+                className={`hidden lg:flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 ${
+                  location.pathname === '/admin'
+                    ? 'bg-eco-50 text-eco-700'
+                    : 'text-stone-600 hover:bg-stone-100 hover:text-stone-900'
                 }`}
               >
                 <Shield size={18} />
                 <span>Admin</span>
               </Link>
             )}
-            <div className="relative">
+            <div className="hidden lg:flex relative">
               <motion.button
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 onClick={() => setShowNotifications(!showNotifications)}
-                className={`relative p-2.5 rounded-xl transition-colors ${
-                  isHeroVisible ? 'text-stone-300 hover:bg-white/10' : 'hover:bg-stone-100 text-stone-600'
-                }`}
+                className={`relative p-2.5 rounded-xl transition-colors hover:bg-stone-100 text-stone-600`}
               >
                 <Bell size={20} />
                 {notifications > 0 && (
@@ -219,68 +212,107 @@ const Navbar = () => {
                 </motion.div>
               )}
             </div>
-            
-            <div className={`flex items-center gap-2 px-4 py-2 rounded-xl border transition-all duration-300 ${
-                isHeroVisible 
-                  ? 'bg-white/10 border-white/20' 
-                  : 'bg-gradient-to-r from-eco-50 to-teal-50 border-eco-100'
-              }`}>
+
+            <div className={`hidden lg:flex items-center gap-2 px-4 py-2 rounded-xl border transition-all duration-300 bg-gradient-to-r from-eco-50 to-teal-50 border-eco-100`}>
               <Sparkles size={18} className="text-amber-500" />
-              <span className={`font-bold transition-colors duration-300 ${isHeroVisible ? 'text-white' : 'text-stone-800'}`}>{user?.ecoPoints || 0}</span>
+              <span className={`font-bold transition-colors duration-300 text-stone-800`}>{user?.ecoPoints || 0}</span>
             </div>
-            
-            <div className="relative group">
-              <button className={`flex items-center gap-2 p-2.5 rounded-xl transition-colors ${
-                isHeroVisible ? 'hover:bg-white/10' : 'hover:bg-stone-100'
-              }`}>
-                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-eco-400 to-teal-500 flex items-center justify-center">
-                  <User size={16} className="text-white" />
+
+            <div className="hidden lg:flex relative" ref={profileRef}>
+              <button
+                onClick={() => setShowProfile(!showProfile)}
+                className={`flex items-center gap-2 p-2 rounded-xl transition-all duration-200 ${
+                  showProfile ? 'bg-stone-100' : 'hover:bg-stone-100'
+                }`}
+              >
+                <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-eco-400 to-teal-500 flex items-center justify-center shadow-sm overflow-hidden border border-white">
+                  {(user?.avatar_url || user?.picture || user?.avatar) ? (
+                    <img src={user.avatar_url || user.picture || user.avatar} alt="Profile" className="w-full h-full object-cover" />
+                  ) : (
+                    <User size={17} className="text-white" />
+                  )}
                 </div>
-                <ChevronDown size={14} className={isHeroVisible ? 'text-stone-400' : 'text-stone-500'} />
+                <motion.div
+                  animate={{ rotate: showProfile ? 180 : 0 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  <ChevronDown size={14} className="text-stone-500" />
+                </motion.div>
               </button>
-              
-              <div className="absolute right-0 mt-2 w-52 bg-white rounded-2xl shadow-soft-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50 border border-stone-100 overflow-hidden">
-                <div className="p-3 border-b border-stone-100">
-                  <div className="font-medium text-stone-800 truncate">{user?.name}</div>
-                  <div className="text-xs text-stone-500 truncate">{user?.email}</div>
-                </div>
-                <div className="p-2">
-                  <button 
-                    onClick={() => { navigate('/perfil'); }}
-                    className="w-full text-left px-3 py-2.5 text-sm text-stone-700 hover:bg-stone-50 rounded-xl flex items-center gap-2"
-                  >
-                    <User size={16} />
-                    Meu Perfil
-                  </button>
-                  <button 
-                    onClick={handleLogout}
-                    className="w-full text-left px-3 py-2.5 text-sm text-red-600 hover:bg-red-50 rounded-xl flex items-center gap-2"
-                  >
-                    Sair
-                  </button>
-                </div>
-              </div>
+
+              {showProfile && (
+                <motion.div
+                  initial={{ opacity: 0, y: 8, scale: 0.96 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: 8, scale: 0.96 }}
+                  transition={{ duration: 0.15 }}
+                  className="absolute right-0 top-full mt-2 w-64 bg-white rounded-2xl shadow-xl border border-stone-100 z-50 overflow-hidden"
+                >
+                  {/* Header do dropdown */}
+                  <div className="bg-gradient-to-br from-eco-500 to-teal-500 p-4">
+                    <div className="flex items-center gap-3">
+                      <div className="w-11 h-11 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center ring-2 ring-white/30 overflow-hidden">
+                        {(user?.avatar_url || user?.picture || user?.avatar) ? (
+                          <img src={user.avatar_url || user.picture || user.avatar} alt="Profile" className="w-full h-full object-cover" />
+                        ) : (
+                          <User size={20} className="text-white" />
+                        )}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="font-semibold text-white truncate leading-tight">{user?.name}</div>
+                        <div className="text-xs text-white/70 truncate mt-0.5">{user?.email}</div>
+                      </div>
+                    </div>
+                    <div className="mt-3 flex items-center gap-2 bg-white/15 rounded-lg px-3 py-1.5">
+                      <Sparkles size={13} className="text-amber-300 shrink-0" />
+                      <span className="text-white/80 text-xs">EcoPoints:</span>
+                      <span className="text-white font-bold text-sm ml-auto">{user?.ecoPoints || 0}</span>
+                    </div>
+                  </div>
+
+                  {/* Ações */}
+                  <div className="p-2">
+                    <button
+                      onClick={() => { navigate('/perfil'); setShowProfile(false); }}
+                      className="w-full text-left px-3 py-2.5 text-sm text-stone-700 hover:bg-eco-50 hover:text-eco-700 rounded-xl flex items-center gap-3 transition-colors group/item"
+                    >
+                      <div className="w-8 h-8 rounded-lg bg-stone-100 group-hover/item:bg-eco-100 flex items-center justify-center transition-colors">
+                        <User size={15} className="text-stone-500 group-hover/item:text-eco-600" />
+                      </div>
+                      <span className="font-medium">Meu Perfil</span>
+                    </button>
+
+                    <div className="my-1.5 border-t border-stone-100" />
+
+                    <button
+                      onClick={() => { handleLogout(); setShowProfile(false); }}
+                      className="w-full text-left px-3 py-2.5 text-sm text-red-600 hover:bg-red-50 rounded-xl flex items-center gap-3 transition-colors group/item"
+                    >
+                      <div className="w-8 h-8 rounded-lg bg-stone-100 group-hover/item:bg-red-100 flex items-center justify-center transition-colors">
+                        <X size={15} className="text-stone-500 group-hover/item:text-red-500" />
+                      </div>
+                      <span className="font-medium">Sair</span>
+                    </button>
+                  </div>
+                </motion.div>
+              )}
             </div>
-          </div>
 
           <button
             onClick={() => setIsOpen(!isOpen)}
-            className={`lg:hidden p-2.5 rounded-xl transition-colors ${
-              isHeroVisible ? 'hover:bg-white/10 text-stone-300' : 'hover:bg-stone-100 text-stone-600'
-            }`}
+            className={`lg:hidden p-2.5 rounded-xl transition-colors hover:bg-stone-100 text-stone-600`}
           >
             {isOpen ? <X size={24} /> : <Menu size={24} />}
           </button>
-        </div>
+          </div>
+      </div>
 
         {isOpen && (
           <motion.div
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: 'auto' }}
             exit={{ opacity: 0, height: 0 }}
-            className={`lg:hidden py-4 border-t transition-colors duration-300 ${
-              isHeroVisible ? 'border-white/10' : 'border-stone-200'
-            }`}
+            className={`lg:hidden py-4 border-t transition-colors duration-300 border-stone-200`}
           >
             <div className="space-y-1">
               {navItems.map((item) => (
@@ -297,23 +329,38 @@ const Navbar = () => {
                   {item.label}
                 </Link>
               ))}
-              <div className="border-t border-stone-200 pt-4 mt-4 px-4">
-                <div className="flex items-center justify-between mb-3">
-                  <span className="text-sm text-stone-600">EcoPoints</span>
-                  <span className="font-bold text-eco-600">{user?.ecoPoints || 0}</span>
+              <div className="border-t border-stone-200 pt-4 mt-4 px-4 space-y-2">
+                <Link
+                  to="/perfil"
+                  onClick={() => setIsOpen(false)}
+                  className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-stone-600 hover:bg-stone-50"
+                >
+                  <div className="w-6 h-6 rounded-md bg-stone-100 flex items-center justify-center">
+                    <User size={14} className="text-stone-500" />
+                  </div>
+                  Meu Perfil
+                </Link>
+                
+                <div className="flex items-center justify-between px-4 py-2">
+                  <span className="text-sm font-medium text-stone-600">Saldo:</span>
+                  <div className="flex items-center gap-1.5 bg-amber-50 text-amber-600 px-2.5 py-1 rounded-lg text-xs font-bold">
+                    <Sparkles size={12} />
+                    {user?.ecoPoints || 0} pts
+                  </div>
                 </div>
+                
                 <button 
                   onClick={handleLogout}
-                  className="w-full bg-red-50 text-red-600 px-4 py-3 rounded-xl text-sm font-medium hover:bg-red-100"
+                  className="w-full flex items-center justify-center gap-2 bg-red-50 text-red-600 px-4 py-3 mt-2 rounded-xl text-sm font-medium hover:bg-red-100"
                 >
-                  Sair
+                  <X size={16} />
+                  Sair da conta
                 </button>
               </div>
             </div>
           </motion.div>
         )}
-      </div>
-    </motion.nav>
+    </motion.header>
   );
 };
 

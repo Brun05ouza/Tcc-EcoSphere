@@ -6,7 +6,6 @@ import { Users, TrendingUp, TreePine } from 'lucide-react';
 import { AppIcon } from '../components/ui/AppIcon';
 import EcoGlobeLogo from '../components/ui/EcoGlobeLogo';
 import DashboardGlobeCard from '../components/globe/DashboardGlobeCard';
-import NebulaBackground from '../components/background/NebulaBackground';
 import FeaturesBento from '../components/home/FeaturesBento';
 
 const Home = () => {
@@ -40,24 +39,18 @@ const Home = () => {
     return () => clearInterval(timer);
   }, []);
 
-  // Fundo escuro atrás do nav transparente (evita borda branca no topo)
-  useEffect(() => {
-    const prev = document.body.style.background;
-    document.body.style.background = '#020617';
-    return () => {
-      document.body.style.background = prev || '';
-    };
-  }, []);
-
   return (
-    <div className="min-h-screen bg-surface-50">
-      {/* Hero - Background galaxy (estende atrás do navbar até o topo) */}
-      <div className="relative overflow-hidden min-h-screen flex items-center -mt-20 md:-mt-[80px] pt-20 md:pt-[80px]">
-        <NebulaBackground />
+    <div className="min-h-screen bg-surface-50 overflow-x-hidden">
+      {/* Hero - Clean AI Dashboard Background */}
+      <div className="relative overflow-hidden min-h-[80vh] md:min-h-screen flex items-center -mt-20 md:-mt-[80px] pt-20 md:pt-[80px] bg-gradient-to-b from-stone-50 to-surface-50">
+        {/* Decorative Light Blobs */}
+        <div className="absolute top-0 right-0 w-[800px] h-[800px] bg-gradient-to-bl from-teal-100/60 to-transparent rounded-full blur-[100px] pointer-events-none translate-x-1/3 -translate-y-1/3 opacity-80" />
+        <div className="absolute bottom-0 left-0 w-[600px] h-[600px] bg-gradient-to-tr from-green-100/60 to-transparent rounded-full blur-[80px] pointer-events-none -translate-x-1/3 translate-y-1/3 opacity-80" />
+        <div className="absolute top-1/2 left-1/4 w-[400px] h-[400px] bg-gradient-to-r from-blue-50/40 to-transparent rounded-full blur-[60px] pointer-events-none -translate-y-1/2 opacity-60" />
         
         {/* Globo solto no hero (desktop) - fora do grid para poder ficar bem grande */}
-        <div className="absolute right-0 top-1/2 -translate-y-1/2 w-[min(75vw,960px)] h-[min(75vw,960px)] max-h-[85vh] pointer-events-none select-none hidden lg:block z-[1]">
-          <DashboardGlobeCard />
+        <div className="absolute right-0 top-1/2 -translate-y-1/2 w-[min(75vw,960px)] h-[min(75vw,960px)] max-h-[85vh] pointer-events-none select-none hidden lg:block z-[1] opacity-90 drop-shadow-2xl">
+          <DashboardGlobeCard id="wwd-canvas-home-desktop" />
         </div>
         
         <motion.div 
@@ -71,32 +64,30 @@ const Home = () => {
                 initial={{ scale: 0.9, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
                 transition={{ delay: 0.2, duration: 0.5 }}
-                className="relative lg:pr-8 lg:border-l-4 lg:border-emerald-400/40 lg:pl-8 rounded-r-xl"
+                className="relative lg:pr-8 lg:border-l-4 lg:border-green-500 lg:pl-8 rounded-r-xl"
               >
-                <p className="text-sm font-medium tracking-widest uppercase text-emerald-300/90 mb-4">
+                <p className="text-sm font-black tracking-widest uppercase text-green-600 mb-4">
                   Sua jornada sustentável
                 </p>
                 <div className="flex items-center gap-4 mb-6 flex-wrap justify-center lg:justify-start">
                   <motion.div 
                     animate={{ y: [0, -6, 0] }}
                     transition={{ repeat: Infinity, duration: 4, ease: "easeInOut" }}
-                    className="shrink-0"
+                    className="shrink-0 drop-shadow-md"
                   >
                     <EcoGlobeLogo 
-                      size={96} 
-                      style={{ filter: 'invert(40%) sepia(93%) saturate(500%) hue-rotate(100deg)' }} 
+                      size={80} 
+                      className="text-green-600"
                     />
                   </motion.div>
-                  <h1 className="text-5xl md:text-6xl lg:text-6xl xl:text-7xl font-bold font-display tracking-tight">
-                    <span className="bg-gradient-to-r from-emerald-200 via-teal-200 to-eco-300 bg-clip-text text-transparent drop-shadow-[0_0_30px_rgba(52,211,153,0.15)]">
-                      EcoSphere
-                    </span>
+                  <h1 className="text-5xl md:text-6xl lg:text-6xl xl:text-7xl font-black font-display tracking-tighter text-stone-800">
+                    EcoSphere
                   </h1>
                 </div>
-                <div className="h-px w-16 bg-gradient-to-r from-emerald-400/60 to-transparent rounded-full mb-6 lg:mx-0 mx-auto" />
-                <p className="text-lg md:text-xl text-stone-200/95 mb-10 max-w-xl mx-auto lg:mx-0 leading-relaxed">
-                  Transforme o mundo com <span className="text-emerald-300 font-semibold">inteligência artificial</span>, 
-                  dados em tempo real e <span className="text-teal-300 font-semibold">ação sustentável</span>.
+                <div className="h-1.5 w-16 bg-gradient-to-r from-green-500 to-teal-400 rounded-full mb-6 lg:mx-0 mx-auto" />
+                <p className="text-lg md:text-xl text-stone-500 mb-10 max-w-xl mx-auto lg:mx-0 leading-relaxed font-medium">
+                  Transforme o mundo com <span className="text-green-600 font-bold">inteligência artificial</span>, 
+                  dados em tempo real e <span className="text-teal-600 font-bold">ação sustentável</span>.
                 </p>
               </motion.div>
               
@@ -104,30 +95,32 @@ const Home = () => {
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: 0.5, duration: 0.5 }}
-                className="flex flex-row flex-nowrap gap-3 justify-center lg:justify-start items-center"
+                className="flex flex-col sm:flex-row flex-nowrap gap-4 justify-center lg:justify-start items-center"
               >
                 <Link 
                   to="/guia" 
-                  className="inline-flex items-center justify-center gap-2 px-6 py-3 text-base font-semibold rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 text-white shadow-lg shadow-emerald-500/25 hover:shadow-emerald-500/40 hover:scale-[1.02] active:scale-[0.98] transition-all whitespace-nowrap shrink-0"
+                  className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-8 py-4 text-base font-bold rounded-2xl bg-green-500 text-white shadow-lg hover:shadow-xl hover:bg-green-600 active:scale-[0.98] transition-all whitespace-nowrap shrink-0"
                 >
                   <Icon name="rocket" className="w-5 h-5 shrink-0" white />
                   <span>Começar Agora</span>
                 </Link>
                 <Link 
                   to="/classificar-residuos" 
-                  className="inline-flex items-center justify-center gap-2 px-6 py-3 text-base font-semibold rounded-xl border-2 border-emerald-400/50 text-emerald-200/95 bg-white/5 hover:bg-white/10 hover:border-emerald-400/70 transition-all backdrop-blur-sm whitespace-nowrap shrink-0"
+                  className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-8 py-4 text-base font-bold rounded-2xl border-2 border-stone-200 text-stone-600 bg-white hover:bg-stone-50 hover:border-stone-300 transition-all shadow-sm whitespace-nowrap shrink-0"
                 >
-                  <AppIcon name="camera" size={20} className="text-emerald-300 shrink-0" />
-                  <span>Testar IA</span>
+                  <AppIcon name="camera" size={20} className="text-stone-500 shrink-0" />
+                  <span>Testar IA Grátis</span>
                 </Link>
               </motion.div>
           </div>
         </motion.div>
       </div>
 
-      {/* Globe card mobile */}
-      <div className="section-container pb-8 lg:hidden max-w-sm mx-auto aspect-square">
-        <DashboardGlobeCard />
+      {/* Globe card mobile - Massive Size */}
+      <div className="relative z-10 lg:hidden w-full flex justify-center items-center pb-8" style={{ marginTop: '-80px', height: '350px' }}>
+        <div className="w-[500px] h-[500px] sm:w-[600px] sm:h-[600px] shrink-0 pointer-events-none opacity-90 drop-shadow-2xl">
+          <DashboardGlobeCard id="wwd-canvas-home-mobile" />
+        </div>
       </div>
 
       <FeaturesBento />
@@ -140,7 +133,7 @@ const Home = () => {
         viewport={{ once: true }}
         className="section-container py-16"
       >
-        <div className="bg-gradient-to-br from-eco-600 via-teal-600 to-eco-700 p-12 md:p-16 rounded-3xl shadow-soft-lg text-white relative overflow-hidden">
+        <div className="bg-gradient-to-br from-eco-600 via-teal-600 to-eco-700 p-6 sm:p-8 md:p-16 rounded-3xl shadow-soft-lg text-white relative overflow-hidden">
           <div
             className="absolute inset-0 pointer-events-none rounded-3xl"
             style={{
@@ -202,7 +195,7 @@ const Home = () => {
         viewport={{ once: true }}
         className="section-container py-16 md:py-24"
       >
-        <div className="card p-12 md:p-16 text-center">
+        <div className="card p-8 sm:p-12 md:p-16 text-center">
           <h2 className="text-3xl md:text-4xl font-bold mb-6 text-stone-800 flex items-center justify-center gap-3">
             <EcoGlobeLogo size={48} style={{ filter: 'invert(40%) sepia(93%) saturate(500%) hue-rotate(100deg)' }} />
             Pronto para fazer a diferença?

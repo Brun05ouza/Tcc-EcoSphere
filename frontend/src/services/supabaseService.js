@@ -119,10 +119,12 @@ export async function getProfile(userId) {
   return data ? profileToApp(data) : null;
 }
 
-export async function updateProfile(userId, { name, email }) {
+export async function updateProfile(userId, { name, email, avatar_url }) {
   const updates = { updated_at: new Date().toISOString() };
   if (name !== undefined) updates.name = name;
   if (email !== undefined) updates.email = email;
+  if (avatar_url !== undefined) updates.avatar_url = avatar_url;
+  
   const { data, error } = await supabase
     .from('profiles')
     .update(updates)
@@ -130,7 +132,39 @@ export async function updateProfile(userId, { name, email }) {
     .select()
     .single();
   if (error) throw error;
+  
+  // Update the auth user metadata as well
+  const userMetadataUpdates = {};
+  if (name !== undefined) userMetadataUpdates.name = name;
+  if (avatar_url !== undefined) userMetadataUpdates.avatar_url = avatar_url;
+  
+  if (Object.keys(userMetadataUpdates).length > 0) {
+    await supabase.auth.updateUser({
+      data: userMetadataUpdates
+    });
+  }
+  
   return profileToApp(data);
+}
+
+export async function uploadAvatar(userId, file) {
+  const fileExt = file.name.split('.').pop();
+  const fileName = `${userId}-${Math.random()}.${fileExt}`;
+  const filePath = `${fileName}`;
+
+  const { error: uploadError } = await supabase.storage
+    .from('avatars')
+    .upload(filePath, file);
+
+  if (uploadError) {
+    throw uploadError;
+  }
+
+  const { data: { publicUrl } } = supabase.storage
+    .from('avatars')
+    .getPublicUrl(filePath);
+
+  return await updateProfile(userId, { avatar_url: publicUrl });
 }
 
 export async function addPointsToProfile(userId, pointsToAdd) {
