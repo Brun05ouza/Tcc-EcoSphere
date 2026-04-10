@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Line, Doughnut, Bar } from 'react-chartjs-2';
-import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend, ArcElement, BarElement } from 'chart.js';
+import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend, ArcElement, BarElement, Filler } from 'chart.js';
 import { useEcoPoints } from '../hooks/useEcoPoints';
 import { gamificationAPI } from '../services/api';
 import DailyQuiz from '../components/DailyQuiz';
@@ -9,7 +9,7 @@ import { Brain, Flame, Target, BarChart3, Leaf, Sparkles, Users } from 'lucide-r
 import EcoGlobeLogo from '../components/ui/EcoGlobeLogo';
 import LoadingScreen from '../components/ui/LoadingScreen';
 
-ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend, ArcElement, BarElement);
+ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend, ArcElement, BarElement, Filler);
 
 const Dashboard = () => {
   const [userStats, setUserStats] = useState({

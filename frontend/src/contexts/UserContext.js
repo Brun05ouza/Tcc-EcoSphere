@@ -6,8 +6,8 @@ import { userAPI } from '../services/api';
 const UserContext = createContext();
 
 /** Timeout em ms para evitar travamento se Supabase não responder */
-const SESSION_TIMEOUT_MS = 15000;
-const PROFILE_TIMEOUT_MS = 12000;
+const SESSION_TIMEOUT_MS = 20000;
+const PROFILE_TIMEOUT_MS = 18000;
 
 function withTimeout(promise, ms) {
   return Promise.race([
@@ -42,9 +42,36 @@ export const useUser = () => {
 };
 
 export const UserProvider = ({ children }) => {
-  const [user, setUser] = useState(null);
-  const [token, setToken] = useState(null);
-  const [loading, setLoading] = useState(true);
+  // Carrega cache instantaneamente para evitar flash de loading
+  const cachedUser = (() => {
+    try { return JSON.parse(localStorage.getItem('user') || 'null'); } catch { return null; }
+  })();
+  const cachedToken = (() => {
+    try { return sessionStorage.getItem('token') || null; } catch { return null; }
+  })();
+
+  const [user, setUser] = useState(cachedUser);
+  const [token, setToken] = useState(cachedToken);
+  // Se já tem cache, não mostra loading
+  const [loading, setLoading] = useState(!cachedUser);
+
+  const saveUser = (profile, accessToken) => {
+    setUser(profile);
+    setToken(accessToken);
+    if (accessToken) sessionStorage.setItem('token', accessToken);
+    if (profile) {
+      sessionStorage.setItem('user', JSON.stringify(profile));
+      localStorage.setItem('user', JSON.stringify(profile));
+    }
+  };
+
+  const clearUser = () => {
+    setUser(null);
+    setToken(null);
+    sessionStorage.removeItem('token');
+    sessionStorage.removeItem('user');
+    localStorage.removeItem('user');
+  };
 
   useEffect(() => {
     const hasSupabase = !!(process.env.REACT_APP_SUPABASE_URL && process.env.REACT_APP_SUPABASE_ANON_KEY);
@@ -66,34 +93,18 @@ export const UserProvider = ({ children }) => {
               getCurrentProfile(),
               PROFILE_TIMEOUT_MS
             );
-            setUser(profile);
-            setToken(session.access_token);
-            sessionStorage.setItem('token', session.access_token);
-            sessionStorage.setItem('user', JSON.stringify(profile));
-            localStorage.setItem('user', JSON.stringify(profile));
-          } catch (err) {
-            console.error('Erro ao carregar perfil:', err);
+            saveUser(profile, session.access_token);
+          } catch {
+            // Timeout ou erro de rede: usa fallback mas mantém token válido
             const fallback = sessionToFallbackUser(session);
-            setUser(fallback);
-            setToken(session.access_token);
-            sessionStorage.setItem('token', session.access_token);
-            sessionStorage.setItem('user', JSON.stringify(fallback));
-            localStorage.setItem('user', JSON.stringify(fallback));
+            saveUser(cachedUser || fallback, session.access_token);
           }
         } else {
-          sessionStorage.removeItem('token');
-          sessionStorage.removeItem('user');
-          localStorage.removeItem('user');
-          setUser(null);
-          setToken(null);
+          clearUser();
         }
-      } catch (err) {
-        console.error('Erro ao verificar sessão:', err);
-        setUser(null);
-        setToken(null);
-        sessionStorage.removeItem('token');
-        sessionStorage.removeItem('user');
-        localStorage.removeItem('user');
+      } catch {
+        // Não exibe erro para o usuário — usa cache se disponível
+        if (!cachedUser) clearUser();
       } finally {
         setLoading(false);
       }
@@ -102,55 +113,31 @@ export const UserProvider = ({ children }) => {
     initSession();
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (event === 'SIGNED_OUT') {
+        clearUser();
+        return;
+      }
       if (session?.user) {
         try {
-          const profile = await withTimeout(
-            getCurrentProfile(),
-            PROFILE_TIMEOUT_MS
-          );
-          setUser(profile);
-          setToken(session.access_token);
-          sessionStorage.setItem('token', session.access_token);
-          sessionStorage.setItem('user', JSON.stringify(profile));
-          localStorage.setItem('user', JSON.stringify(profile));
-        } catch (err) {
-          console.error('Erro ao carregar perfil:', err);
+          const profile = await withTimeout(getCurrentProfile(), PROFILE_TIMEOUT_MS);
+          saveUser(profile, session.access_token);
+        } catch {
           const fallback = sessionToFallbackUser(session);
-          setUser(fallback);
-          setToken(session.access_token);
-          sessionStorage.setItem('token', session.access_token);
-          sessionStorage.setItem('user', JSON.stringify(fallback));
-          localStorage.setItem('user', JSON.stringify(fallback));
+          saveUser(fallback, session.access_token);
         }
-      } else {
-        setUser(null);
-        setToken(null);
-        sessionStorage.removeItem('token');
-        sessionStorage.removeItem('user');
-        localStorage.removeItem('user');
       }
     });
 
     return () => subscription?.unsubscribe();
-  }, []);
+  }, []); // eslint-disable-line
 
   const updateUser = (newUserData, authToken) => {
-    setUser(newUserData);
-    setToken(authToken);
-    if (authToken) sessionStorage.setItem('token', authToken);
-    if (newUserData) {
-      sessionStorage.setItem('user', JSON.stringify(newUserData));
-      localStorage.setItem('user', JSON.stringify(newUserData));
-    }
+    saveUser(newUserData, authToken);
   };
 
   const logout = async () => {
     await supabase.auth.signOut();
-    setUser(null);
-    setToken(null);
-    sessionStorage.removeItem('token');
-    sessionStorage.removeItem('user');
-    localStorage.removeItem('user');
+    clearUser();
   };
 
   const addEcoPoints = (pointsToAdd, action = 'Ação') => {

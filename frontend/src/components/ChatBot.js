@@ -2,7 +2,8 @@ import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { useUser } from '../contexts/UserContext';
-import { MessageCircle, Bot } from 'lucide-react';
+import { MessageCircle, Bot, Sparkles } from 'lucide-react';
+import { askEcoBot, isGeminiConfigured } from '../services/geminiService';
 
 const ChatBot = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -54,6 +55,21 @@ const ChatBot = () => {
   ];
 
   const callAI = async (message) => {
+    // Tenta Gemini primeiro (se configurado)
+    if (isGeminiConfigured()) {
+      // Navegação imediata para comandos diretos
+      const lowerMessage = message.toLowerCase();
+      if (lowerMessage.includes('dashboard') || lowerMessage.includes('painel')) navigate('/dashboard');
+      else if (lowerMessage.includes('classificar') || lowerMessage.includes('resíduo') || lowerMessage.includes('residuo') || lowerMessage.includes('lixo')) navigate('/classificar-residuos');
+      else if (lowerMessage.includes('gamificação') || lowerMessage.includes('pontos') || lowerMessage.includes('ecopoints')) navigate('/gamificacao');
+      else if (lowerMessage.includes('recompensa') || lowerMessage.includes('resgatar')) navigate('/recompensas');
+      else if (lowerMessage.includes('monitoramento') || lowerMessage.includes('clima')) navigate('/monitoramento');
+      else if (lowerMessage.includes('educação') || lowerMessage.includes('educacao') || lowerMessage.includes('curso')) navigate('/educacao');
+
+      const geminiReply = await askEcoBot(message, messages);
+      if (geminiReply) return geminiReply;
+    }
+    // Fallback local
     return processLocalMessage(message);
   };
 
@@ -233,10 +249,16 @@ const ChatBot = () => {
               <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center">
                 <Bot size={24} />
               </div>
-              <div>
+              <div className="flex-1">
                 <h3 className="font-bold">EcoBot</h3>
                 <p className="text-xs opacity-90">Assistente Virtual</p>
               </div>
+              {isGeminiConfigured() && (
+                <div className="flex items-center gap-1 bg-white/15 backdrop-blur px-2 py-1 rounded-lg">
+                  <Sparkles size={11} className="text-amber-300" />
+                  <span className="text-[10px] font-bold text-white/90">Gemini AI</span>
+                </div>
+              )}
             </div>
 
             <div className="flex-1 overflow-y-auto p-4 space-y-4">

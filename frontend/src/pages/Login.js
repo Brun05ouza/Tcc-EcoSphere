@@ -7,7 +7,7 @@ import GoogleLogin from '../components/GoogleLogin';
 import LoginGlobeBackground from '../components/globe/LoginGlobeBackground';
 import EcoGlobeLogo from '../components/ui/EcoGlobeLogo';
 import LoadingScreen from '../components/ui/LoadingScreen';
-import { Brain, Recycle, BarChart3, Trophy } from 'lucide-react';
+import { Brain, Recycle, BarChart3, Trophy, Eye, EyeOff, Loader2, AlertTriangle, Check } from 'lucide-react';
 
 const Login = () => {
   const [isLogin, setIsLogin] = useState(true);
@@ -19,6 +19,8 @@ const Login = () => {
   });
   const [loading, setLoading] = useState(false);
   const [notification, setNotification] = useState(null);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const navigate = useNavigate();
   const { updateUser } = useUser();
   const useSupabase = !!(process.env.REACT_APP_SUPABASE_URL && process.env.REACT_APP_SUPABASE_ANON_KEY);
@@ -28,6 +30,7 @@ const Login = () => {
     setTimeout(() => setNotification(null), 5000);
   };
 
+  // Helper for password strength validation
   const getPasswordStrength = (password) => {
     if (!password) return { strength: 0, label: '', color: '' };
     
@@ -198,24 +201,27 @@ const Login = () => {
             initial={{ opacity: 0, y: -50, scale: 0.9 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -50, scale: 0.9 }}
-            className="fixed top-4 right-4 z-50 max-w-sm"
+            className="fixed top-6 left-1/2 -translate-x-1/2 z-50 w-full max-w-md px-4"
           >
-            <div className={`p-3 rounded-xl shadow-lg border-l-4 backdrop-blur-md ${
-              notification.type === 'success' ? 'bg-green-50/90 border-green-500 text-green-800' :
-              notification.type === 'warning' ? 'bg-yellow-50/90 border-yellow-500 text-yellow-800' :
-              'bg-red-50/90 border-red-500 text-red-800'
+            <div className={`p-4 rounded-2xl shadow-2xl border backdrop-blur-xl flex items-start gap-3 ${
+              notification.type === 'success' ? 'bg-green-500/20 border-green-500/30 text-white' :
+              notification.type === 'warning' ? 'bg-yellow-500/20 border-yellow-500/30 text-white' :
+              'bg-red-500/20 border-red-500/30 text-white'
             }`}>
-              <div className="flex items-center">
-                <div className="flex-1">
-                  <p className="text-sm font-medium">{notification.message}</p>
-                </div>
-                <button
-                  onClick={() => setNotification(null)}
-                  className="ml-3 text-gray-400 hover:text-gray-600"
-                >
-                  ✕
-                </button>
+              <div className="shrink-0 mt-0.5">
+                {notification.type === 'success' ? <Check size={20} className="text-green-400" /> :
+                 notification.type === 'warning' ? <AlertTriangle size={20} className="text-yellow-400" /> :
+                 <AlertTriangle size={20} className="text-red-400" />}
               </div>
+              <div className="flex-1">
+                <p className="text-sm font-semibold">{notification.message}</p>
+              </div>
+              <button
+                onClick={() => setNotification(null)}
+                className="shrink-0 text-white/50 hover:text-white transition-colors"
+              >
+                ✕
+              </button>
             </div>
           </motion.div>
         )}
@@ -376,24 +382,34 @@ const Login = () => {
               </div>
 
               <div>
-                <div className="flex justify-between items-center mb-2 ml-1">
-                  <label className="block text-xs font-bold text-white/90 uppercase tracking-wider">
-                    Senha
-                  </label>
-                  {isLogin && (
+                <label className="block text-xs font-bold text-white/90 uppercase tracking-wider mb-2 ml-1">
+                  Senha
+                </label>
+                <div className="relative">
+                  <input
+                    type={showPassword ? "text" : "password"}
+                    name="password"
+                    value={formData.password}
+                    onChange={handleChange}
+                    className="w-full pl-5 pr-12 py-4 bg-white/10 border border-white/20 rounded-2xl focus:bg-white/20 focus:ring-2 focus:ring-white/50 focus:border-transparent text-white placeholder-white/40 transition-all font-medium outline-none"
+                    placeholder="••••••••"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-4 top-1/2 -translate-y-1/2 text-white/50 hover:text-white transition-colors"
+                  >
+                    {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                  </button>
+                </div>
+
+                {isLogin && (
+                  <div className="mt-2 text-right">
                     <a href="#" className="text-xs font-bold text-teal-300 hover:text-white transition-colors">
                       Esqueceu a senha?
                     </a>
-                  )}
-                </div>
-                <input
-                  type="password"
-                  name="password"
-                  value={formData.password}
-                  onChange={handleChange}
-                  className="w-full px-5 py-4 bg-white/10 border border-white/20 rounded-2xl focus:bg-white/20 focus:ring-2 focus:ring-white/50 focus:border-transparent text-white placeholder-white/40 transition-all font-medium outline-none"
-                  placeholder="••••••••"
-                />
+                  </div>
+                )}
 
                 {/* Password Strength */}
                 <AnimatePresence>
@@ -434,14 +450,23 @@ const Login = () => {
                     <label className="block text-xs font-bold text-white/90 uppercase tracking-wider mb-2 ml-1">
                       Confirmar Senha
                     </label>
-                    <input
-                      type="password"
-                      name="confirmPassword"
-                      value={formData.confirmPassword}
-                      onChange={handleChange}
-                      className="w-full px-5 py-4 bg-white/10 border border-white/20 rounded-2xl focus:bg-white/20 focus:ring-2 focus:ring-white/50 focus:border-transparent text-white placeholder-white/40 transition-all font-medium outline-none"
-                      placeholder="••••••••"
-                    />
+                    <div className="relative">
+                      <input
+                        type={showConfirmPassword ? "text" : "password"}
+                        name="confirmPassword"
+                        value={formData.confirmPassword}
+                        onChange={handleChange}
+                        className="w-full pl-5 pr-12 py-4 bg-white/10 border border-white/20 rounded-2xl focus:bg-white/20 focus:ring-2 focus:ring-white/50 focus:border-transparent text-white placeholder-white/40 transition-all font-medium outline-none"
+                        placeholder="••••••••"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                        className="absolute right-4 top-1/2 -translate-y-1/2 text-white/50 hover:text-white transition-colors"
+                      >
+                        {showConfirmPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                      </button>
+                    </div>
                   </motion.div>
                 )}
               </AnimatePresence>
@@ -452,7 +477,10 @@ const Login = () => {
                 className="w-full py-4 px-6 bg-white text-stone-900 rounded-2xl font-bold text-lg hover:bg-stone-50 hover:shadow-xl transition-all disabled:opacity-70 flex items-center justify-center gap-2 mt-6 active:scale-[0.98]"
               >
                 {loading ? (
-                  <div className="w-6 h-6 border-3 border-stone-300 border-t-stone-800 rounded-full animate-spin" />
+                  <div className="flex items-center gap-2">
+                    <Loader2 size={24} className="animate-spin text-stone-900" />
+                    <span>Processando...</span>
+                  </div>
                 ) : (
                   isLogin ? 'Entrar na Plataforma' : 'Criar Conta'
                 )}

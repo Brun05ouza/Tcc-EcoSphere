@@ -4,6 +4,7 @@
   "private": true,
   "dependencies": {
     "@craco/craco": "^7.1.0",
+    "@google/generative-ai": "^0.24.1",
     "@lottiefiles/dotlottie-react": "^0.18.3",
     "@nasaworldwind/worldwind": "^0.11.1",
     "@supabase/supabase-js": "^2.95.3",

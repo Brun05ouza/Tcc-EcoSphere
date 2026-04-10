@@ -8,6 +8,7 @@ import { useWasteClassifier } from '../hooks/useWasteClassifier';
 import { Check, Camera, Sparkles } from 'lucide-react';
 import { AppIcon } from '../components/ui/AppIcon';
 import LoadingScreen from '../components/ui/LoadingScreen';
+import { classifyWasteWithGemini, isGeminiConfigured } from '../services/geminiService';
 
 const WasteClassifier = () => {
   const [selectedFile, setSelectedFile] = useState(null);
@@ -24,6 +25,7 @@ const WasteClassifier = () => {
   const { addEcoPoints } = useUser();
   const navigate = useNavigate();
   const { model, loading: modelLoading, classifyImage, calculatePoints, wasteInfo } = useWasteClassifier();
+  const [aiSource, setAiSource] = useState(null); // 'gemini' | 'tensorflow' | 'filename'
 
   const Icon = ({ name, className = "w-5 h-5", white = false }) => {
     const iconStyle = white ? { filter: 'brightness(0) invert(1)' } : { filter: 'invert(40%) sepia(93%) saturate(500%) hue-rotate(100deg)' };
@@ -119,28 +121,64 @@ const WasteClassifier = () => {
     }
   };
 
+  // Converte preview (dataURL) para base64 puro + mimeType
+  const getBase64FromPreview = (dataUrl) => {
+    const [header, data] = dataUrl.split(',');
+    const mimeType = header.match(/:(.*?);/)?.[1] || 'image/jpeg';
+    return { base64: data, mimeType };
+  };
+
   const classifyWaste = async () => {
     if (!selectedFile || !preview) return;
     
     setLoading(true);
     
     try {
-      // Criar elemento de imagem para classificação
-      const img = new Image();
-      img.src = preview;
-      
-      await new Promise((resolve) => {
-        img.onload = resolve;
-      });
-      
-      // Classificar com IA
-      const result = await classifyImage(img, selectedFile?.name);
+      let result = null;
+
+      // 1. Tenta Gemini (visão computacional real)
+      if (isGeminiConfigured()) {
+        const { base64, mimeType } = getBase64FromPreview(preview);
+        const geminiResult = await classifyWasteWithGemini(base64, mimeType);
+        if (geminiResult) {
+          const info = wasteInfo[geminiResult.class] || {};
+          result = {
+            class: geminiResult.class,
+            confidence: geminiResult.confidence,
+            tips: geminiResult.tips || info.tips,
+            bin: info.bin,
+            iconName: info.iconName,
+            color: info.color,
+            bgColor: info.bgColor,
+            textColor: info.textColor,
+            description: geminiResult.description,
+            source: 'gemini',
+          };
+        }
+      }
+
+      // 2. Fallback: nome do arquivo ou TensorFlow/simulado
+      if (!result) {
+        const img = new Image();
+        img.crossOrigin = 'anonymous';
+        await new Promise((resolve, reject) => {
+          img.onload = resolve;
+          img.onerror = reject;
+          img.src = preview;
+        });
+        // Garante que a imagem tem dimensões antes de classificar
+        if (!img.width || !img.height) {
+          img.width = 224;
+          img.height = 224;
+        }
+        result = await classifyImage(img, selectedFile?.name);
+      }
       const points = calculatePoints(result.confidence);
       
       // Adicionar EcoPoints
       const newTotal = addEcoPoints(points, `Classificação: ${result.class}`);
-      
-      console.log('IA Classificou:', result.class, 'Confiança:', (result.confidence * 100).toFixed(1) + '%');
+
+      setAiSource(result.source || 'tensorflow');
       
       setClassification({
         type: result.class,
@@ -152,6 +190,8 @@ const WasteClassifier = () => {
         color: result.color,
         bgColor: result.bgColor,
         textColor: result.textColor,
+        description: result.description || null,
+        source: result.source || 'tensorflow',
         locations: ['Supermercado Central - 0.5km', 'Ponto de Coleta Norte - 1.2km', 'Cooperativa Sul - 2.1km'],
         totalEcoPoints: newTotal
       });
@@ -467,9 +507,20 @@ const WasteClassifier = () => {
                           <AppIcon name={classification.iconName} size={32} className={classification.textColor} />
                         </motion.div>
                         <div>
-                          <div className={`text-2xl font-black ${classification.textColor} tracking-tight leading-tight`}>
-                            {classification.type}
+                          <div className="flex items-center gap-2 flex-wrap mb-1">
+                            <div className={`text-2xl font-black ${classification.textColor} tracking-tight leading-tight`}>
+                              {classification.type}
+                            </div>
+                            {classification.source === 'gemini' && (
+                              <span className="inline-flex items-center gap-1 bg-white/70 backdrop-blur px-2 py-0.5 rounded-lg text-[10px] font-bold text-purple-700 border border-purple-200/60 shadow-sm">
+                                <Sparkles size={10} className="text-purple-500" />
+                                Gemini AI
+                              </span>
+                            )}
                           </div>
+                          {classification.description && (
+                            <p className="text-xs text-stone-600 font-medium mb-1">{classification.description}</p>
+                          )}
                           <div className="flex items-center mt-1">
                             <span className="text-xs font-semibold bg-white/50 px-2 py-1 rounded-md text-stone-700 shadow-sm border border-white/40">
                               Confiança: {(classification.confidence * 100).toFixed(1)}%

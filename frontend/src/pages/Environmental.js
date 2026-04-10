@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Line, Doughnut } from 'react-chartjs-2';
+import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend, ArcElement, Filler } from 'chart.js';
+ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend, ArcElement, Filler);
 import { Cloud, CloudRain, Sun, Wind, Droplets, Eye, Gauge, ThermometerSun, MapPin, Calendar, Clock, Sunrise, Sunset, Zap, AlertTriangle, Check } from 'lucide-react';
 import { AppIcon } from '../components/ui/AppIcon';
 

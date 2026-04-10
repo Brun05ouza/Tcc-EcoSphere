@@ -320,6 +320,86 @@ export async function getBadges(userId) {
   }));
 }
 
+// --- Admin ---
+export async function adminGetAllUsers() {
+  const { data, error } = await supabase
+    .from('profiles')
+    .select('*')
+    .order('created_at', { ascending: false });
+  if (error) throw error;
+  return (data || []).map(profileToApp);
+}
+
+export async function adminSetEcoPoints(userId, points) {
+  const newPoints = Math.max(0, Number(points));
+  const newLevel = getLevelForPoints(newPoints);
+  const { data, error } = await supabase
+    .from('profiles')
+    .update({ eco_points: newPoints, level: newLevel, updated_at: new Date().toISOString() })
+    .eq('id', userId)
+    .select()
+    .single();
+  if (error) throw error;
+  return profileToApp(data);
+}
+
+export async function adminToggleAdmin(userId, isAdmin) {
+  const { data, error } = await supabase
+    .from('profiles')
+    .update({ is_admin: isAdmin, updated_at: new Date().toISOString() })
+    .eq('id', userId)
+    .select()
+    .single();
+  if (error) throw error;
+  return profileToApp(data);
+}
+
+export async function adminCreateUser(email, password, name) {
+  const { data, error } = await supabase.auth.signUp({
+    email,
+    password,
+    options: { data: { name } },
+  });
+  if (error) throw error;
+  return data;
+}
+
+export async function adminDeleteUser(userId) {
+  const { error } = await supabase
+    .from('profiles')
+    .delete()
+    .eq('id', userId);
+  if (error) throw error;
+  return true;
+}
+
+export async function adminGetStats() {
+  const { count: totalUsers } = await supabase
+    .from('profiles')
+    .select('*', { count: 'exact', head: true });
+
+  const { count: totalClassifications } = await supabase
+    .from('waste_classifications')
+    .select('*', { count: 'exact', head: true });
+
+  const { count: totalGameActions } = await supabase
+    .from('user_game_actions')
+    .select('*', { count: 'exact', head: true });
+
+  const { data: pointsData } = await supabase
+    .from('profiles')
+    .select('eco_points');
+
+  const totalPoints = (pointsData || []).reduce((sum, p) => sum + (p.eco_points || 0), 0);
+
+  return {
+    totalUsers: totalUsers || 0,
+    totalClassifications: totalClassifications || 0,
+    totalGameActions: totalGameActions || 0,
+    totalPoints,
+  };
+}
+
 // --- Waste (classificações) ---
 export async function saveClassification(userId, { category, confidence, points }) {
   const { error: insertError } = await supabase.from('waste_classifications').insert({

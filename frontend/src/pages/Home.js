@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import CountUp from 'react-countup';
@@ -8,8 +8,54 @@ import EcoGlobeLogo from '../components/ui/EcoGlobeLogo';
 import DashboardGlobeCard from '../components/globe/DashboardGlobeCard';
 import FeaturesBento from '../components/home/FeaturesBento';
 
+// Componente isolado para cada card de estatística — garante que o CountUp
+// só inicia depois do elemento estar montado no DOM
+const StatCard = ({ stat, index }) => {
+  const ref = useRef(null);
+  const [started, setStarted] = useState(false);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => { if (entry.isIntersecting) { setStarted(true); observer.disconnect(); } },
+      { threshold: 0.3 }
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+
+  const IconComp = stat.IconComp;
+  return (
+    <motion.div
+      ref={ref}
+      initial={{ scale: 0.9, opacity: 0 }}
+      whileInView={{ scale: 1, opacity: 1 }}
+      viewport={{ once: true }}
+      transition={{ delay: index * 0.15 }}
+      className="bg-white/10 backdrop-blur-sm p-8 rounded-2xl border border-white/20 hover:bg-white/15 transition-all duration-300 hover:-translate-y-2 hover:shadow-2xl"
+    >
+      <div className="w-14 h-14 rounded-xl bg-white/10 backdrop-blur flex items-center justify-center mx-auto mb-4">
+        <IconComp size={28} className="text-white/90" aria-hidden />
+      </div>
+      <div className="text-4xl font-bold mb-2">
+        {started ? (
+          <CountUp
+            start={0}
+            end={stat.end}
+            duration={2.5}
+            separator={stat.separator ?? ''}
+            decimals={stat.decimals ?? 0}
+          />
+        ) : '0'}
+        {stat.suffix || ''}
+      </div>
+      <div className="text-white/80 text-lg">{stat.label}</div>
+    </motion.div>
+  );
+};
+
 const Home = () => {
-  const [stats, setStats] = useState({ users: 0, actions: 0, co2: 0 });
 
   const Icon = ({ name, className = "w-16 h-16", white = false }) => {
     const iconStyle = white ? { filter: 'brightness(0) invert(1)' } : { filter: 'invert(40%) sepia(93%) saturate(500%) hue-rotate(100deg)' };
@@ -26,18 +72,6 @@ const Home = () => {
       />
     );
   };
-
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setStats(prev => ({
-        users: prev.users < 2847 ? prev.users + 47 : 2847,
-        actions: prev.actions < 15392 ? prev.actions + 253 : 15392,
-        co2: prev.co2 < 8.2 ? +(prev.co2 + 0.13).toFixed(1) : 8.2
-      }));
-    }, 50);
-    setTimeout(() => clearInterval(timer), 3000);
-    return () => clearInterval(timer);
-  }, []);
 
   return (
     <div className="min-h-screen bg-surface-50 overflow-x-hidden">
@@ -154,35 +188,11 @@ const Home = () => {
 
           <div className="grid md:grid-cols-3 gap-8 text-center relative">
             {[
-              { IconComp: Users, label: 'Usuários Ativos', countUp: { end: 2847, separator: ',' } },
-              { IconComp: TrendingUp, label: 'Ações Sustentáveis', countUp: { end: 15392, separator: ',' } },
-              { IconComp: TreePine, label: 'CO₂ Evitado', suffix: ' ton', countUp: { end: 8.2, decimals: 1 } },
+              { IconComp: Users, label: 'Usuários Ativos', end: 2847, separator: ',', decimals: 0 },
+              { IconComp: TrendingUp, label: 'Ações Sustentáveis', end: 15392, separator: ',', decimals: 0 },
+              { IconComp: TreePine, label: 'CO₂ Evitado', end: 8.2, suffix: ' ton', separator: '', decimals: 1 },
             ].map((stat, index) => (
-              <motion.div
-                key={index}
-                initial={{ scale: 0.9, opacity: 0 }}
-                whileInView={{ scale: 1, opacity: 1 }}
-                viewport={{ once: true }}
-                transition={{ delay: index * 0.15 }}
-                className="bg-white/10 backdrop-blur-sm p-8 rounded-2xl border border-white/20 hover:bg-white/15 transition-all duration-300 hover:-translate-y-2 hover:shadow-2xl"
-              >
-                <div className="w-14 h-14 rounded-xl bg-white/10 backdrop-blur flex items-center justify-center mx-auto mb-4">
-                  <stat.IconComp size={28} className="text-white/90" aria-hidden />
-                </div>
-                <div className="text-4xl font-bold mb-2">
-                  <CountUp
-                    start={0}
-                    end={stat.countUp.end}
-                    duration={2.5}
-                    separator={stat.countUp.separator}
-                    decimals={stat.countUp.decimals}
-                    enableScrollSpy
-                    scrollSpyOnce
-                  />
-                  {stat.suffix || ''}
-                </div>
-                <div className="text-white/80 text-lg">{stat.label}</div>
-              </motion.div>
+              <StatCard key={index} stat={stat} index={index} />
             ))}
           </div>
         </div>

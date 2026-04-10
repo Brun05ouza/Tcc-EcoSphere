@@ -6,6 +6,7 @@ import Footer from './components/Footer';
 import ChatBot from './components/ChatBot';
 import ProtectedRoute from './components/ProtectedRoute';
 import AdminProtectedRoute from './components/AdminProtectedRoute';
+import AdminLoginPanel from './components/AdminLoginPanel';
 import Login from './pages/Login';
 import AdminDashboard from './pages/AdminDashboard';
 import Home from './pages/Home';
@@ -27,6 +28,7 @@ function App() {
     <UserProvider>
       <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
         <div className="App">
+          <AdminLoginPanel />
           <Routes>
             <Route path="/login" element={<Login />} />
             <Route path="/admin" element={
