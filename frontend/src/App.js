@@ -7,6 +7,7 @@ import ChatBot from './components/ChatBot';
 import ProtectedRoute from './components/ProtectedRoute';
 import AdminProtectedRoute from './components/AdminProtectedRoute';
 import AdminLoginPanel from './components/AdminLoginPanel';
+import SmoothScrollProvider from './components/SmoothScrollProvider';
 import Login from './pages/Login';
 import AdminDashboard from './pages/AdminDashboard';
 import Home from './pages/Home';
@@ -27,42 +28,44 @@ function App() {
   return (
     <UserProvider>
       <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
-        <div className="App">
-          <AdminLoginPanel />
-          <Routes>
-            <Route path="/login" element={<Login />} />
-            <Route path="/admin" element={
-              <AdminProtectedRoute>
-                <AdminDashboard />
-              </AdminProtectedRoute>
-            } />
-            <Route path="/*" element={
-              <ProtectedRoute>
-                <div className="flex flex-col min-h-screen">
-                  <Navbar />
-                  <main className="flex-1 bg-surface-50 min-h-screen">
-                    <Routes>
-                      <Route path="/" element={<Home />} />
-                      <Route path="/dashboard" element={<Dashboard />} />
-                      <Route path="/classificar-residuos" element={<WasteClassifier />} />
-                      <Route path="/monitoramento" element={<Environmental />} />
-                      <Route path="/gamificacao" element={<Gamification />} />
-                      <Route path="/eco-catcher" element={<EcoCatcher />} />
-                      <Route path="/educacao" element={<Education />} />
-                      <Route path="/recompensas" element={<Rewards />} />
-                      <Route path="/historico" element={<History />} />
-                      <Route path="/calculadora-carbono" element={<CarbonCalculator />} />
-                      <Route path="/perfil" element={<Profile />} />
-                      <Route path="/guia" element={<Guide />} />
-                    </Routes>
-                  </main>
-                  <Footer />
-                  <ChatBot />
-                </div>
-              </ProtectedRoute>
-            } />
-          </Routes>
-        </div>
+        <SmoothScrollProvider>
+          <div className="App">
+            <AdminLoginPanel />
+            <Routes>
+              <Route path="/login" element={<Login />} />
+              <Route path="/admin" element={
+                <AdminProtectedRoute>
+                  <AdminDashboard />
+                </AdminProtectedRoute>
+              } />
+              <Route path="/*" element={
+                <ProtectedRoute>
+                  <div className="flex flex-col min-h-screen">
+                    <Navbar />
+                    <main className="flex-1 bg-surface-50 min-h-screen">
+                      <Routes>
+                        <Route path="/" element={<Home />} />
+                        <Route path="/dashboard" element={<Dashboard />} />
+                        <Route path="/classificar-residuos" element={<WasteClassifier />} />
+                        <Route path="/monitoramento" element={<Environmental />} />
+                        <Route path="/gamificacao" element={<Gamification />} />
+                        <Route path="/eco-catcher" element={<EcoCatcher />} />
+                        <Route path="/educacao" element={<Education />} />
+                        <Route path="/recompensas" element={<Rewards />} />
+                        <Route path="/historico" element={<History />} />
+                        <Route path="/calculadora-carbono" element={<CarbonCalculator />} />
+                        <Route path="/perfil" element={<Profile />} />
+                        <Route path="/guia" element={<Guide />} />
+                      </Routes>
+                    </main>
+                    <Footer />
+                    <ChatBot />
+                  </div>
+                </ProtectedRoute>
+              } />
+            </Routes>
+          </div>
+        </SmoothScrollProvider>
       </Router>
     </UserProvider>
   );

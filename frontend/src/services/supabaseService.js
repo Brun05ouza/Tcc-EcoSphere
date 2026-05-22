@@ -1,431 +1,96 @@
-import { supabase } from '../lib/supabase';
+import { adminAPI, userAPI, gamificationAPI, wasteAPI } from './api';
 
-// --- Helpers: mapear snake_case (DB) <-> camelCase (app) ---
-const profileToApp = (row) => {
-  if (!row) return null;
-  return {
-    id: row.id,
-    name: row.name,
-    email: row.email,
-    picture: row.avatar_url,
-    avatar_url: row.avatar_url,
-    ecoPoints: row.eco_points ?? 0,
-    level: row.level || 'Iniciante',
-    badges: row.badges || [],
-    streak: row.streak || { current: 0, longest: 0 },
-    isAdmin: !!row.is_admin,
-    createdAt: row.created_at,
-    updatedAt: row.updated_at,
-  };
-};
-
-const LEVELS = [
-  { min: 2000, level: 'Mestre Ambiental' },
-  { min: 1000, level: 'Guardião Verde' },
-  { min: 500, level: 'Eco Warrior' },
-  { min: 200, level: 'Reciclador' },
-  { min: 50, level: 'Iniciante Consciente' },
-  { min: 0, level: 'Iniciante' },
-];
-
-function getLevelForPoints(points) {
-  const p = Number(points) || 0;
-  for (const { min, level } of LEVELS) {
-    if (p >= min) return level;
-  }
-  return 'Iniciante';
-}
-
-const BADGES_DEF = [
-  { id: 1, name: 'Bem-vindo', description: 'Primeira ação na plataforma', points: 10 },
-  { id: 2, name: 'Primeiro Passo', description: 'Primeira classificação de resíduo', points: 25 },
-  { id: 3, name: 'Reciclador', description: '10 classificações corretas', points: 50 },
-  { id: 4, name: 'Eco Warrior', description: '50 classificações corretas', points: 100 },
-  { id: 5, name: 'Guardião Verde', description: '100 classificações corretas', points: 200 },
-  { id: 6, name: 'Mestre Ambiental', description: '500 classificações corretas', points: 500 },
-  { id: 7, name: 'Gamer Ecológico', description: '100 pontos em jogos', points: 50 },
-];
-
-// --- Auth ---
 export const auth = {
   async signUp({ email, password, name }) {
-    const { data, error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: { data: { name } },
-    });
-    if (error) throw error;
-    return data;
+    const response = await userAPI.register({ email, password, name });
+    sessionStorage.setItem('token', response.data.token);
+    return { user: response.data.user, session: { access_token: response.data.token } };
   },
-
   async signIn(email, password) {
-    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-    if (error) throw error;
-    return data;
+    const response = await userAPI.login({ email, password });
+    sessionStorage.setItem('token', response.data.token);
+    return { user: response.data.user, session: { access_token: response.data.token } };
   },
-
   async signInWithGoogle() {
-    const { data, error } = await supabase.auth.signInWithOAuth({ provider: 'google' });
-    if (error) throw error;
-    return data;
+    return userAPI.googleLogin();
   },
-
   async signOut() {
-    const { error } = await supabase.auth.signOut();
-    if (error) throw error;
+    sessionStorage.removeItem('token');
+    sessionStorage.removeItem('user');
+    localStorage.removeItem('user');
   },
-
-  getSession() {
-    return supabase.auth.getSession();
+  async getSession() {
+    const session = await userAPI.getSession();
+    return { data: { session } };
   },
-
-  onAuthStateChange(callback) {
-    return supabase.auth.onAuthStateChange(callback);
+  onAuthStateChange() {
+    return { data: { subscription: { unsubscribe() {} } } };
   },
 };
 
-// --- Profile ---
 export async function getCurrentProfile() {
-  const {
-    data: { user },
-    error: userError,
-  } = await supabase.auth.getUser();
-  if (userError || !user) throw new Error(userError?.message || 'Não autenticado');
-  const profile = await getProfile(user.id);
-  if (profile) return profile;
-  return {
-    id: user.id,
-    name: user.user_metadata?.name || user.user_metadata?.full_name || user.email?.split('@')[0] || 'Usuário',
-    email: user.email,
-    picture: user.user_metadata?.avatar_url || null,
-    avatar_url: user.user_metadata?.avatar_url || null,
-    ecoPoints: 0,
-    level: 'Iniciante',
-    badges: [],
-    streak: { current: 0, longest: 0 },
-    isAdmin: false,
-    createdAt: user.created_at,
-    updatedAt: user.updated_at,
-  };
+  const response = await userAPI.getProfile();
+  return response.data;
 }
 
-export async function getProfile(userId) {
-  const { data, error } = await supabase
-    .from('profiles')
-    .select('*')
-    .eq('id', userId)
-    .maybeSingle();
-  if (error) throw error;
-  return data ? profileToApp(data) : null;
+export async function getProfile() {
+  const response = await userAPI.getProfile();
+  return response.data;
 }
 
-export async function updateProfile(userId, { name, email, avatar_url }) {
-  const updates = { updated_at: new Date().toISOString() };
-  if (name !== undefined) updates.name = name;
-  if (email !== undefined) updates.email = email;
-  if (avatar_url !== undefined) updates.avatar_url = avatar_url;
-  
-  const { data, error } = await supabase
-    .from('profiles')
-    .update(updates)
-    .eq('id', userId)
-    .select()
-    .single();
-  if (error) throw error;
-  
-  // Update the auth user metadata as well
-  const userMetadataUpdates = {};
-  if (name !== undefined) userMetadataUpdates.name = name;
-  if (avatar_url !== undefined) userMetadataUpdates.avatar_url = avatar_url;
-  
-  if (Object.keys(userMetadataUpdates).length > 0) {
-    await supabase.auth.updateUser({
-      data: userMetadataUpdates
-    });
-  }
-  
-  return profileToApp(data);
+export async function updateProfile(_userId, data) {
+  const response = await userAPI.updateProfile(data);
+  return response.data;
 }
 
-export async function uploadAvatar(userId, file) {
-  const fileExt = file.name.split('.').pop();
-  const fileName = `${userId}-${Math.random()}.${fileExt}`;
-  const filePath = `${fileName}`;
-
-  const { error: uploadError } = await supabase.storage
-    .from('avatars')
-    .upload(filePath, file);
-
-  if (uploadError) {
-    throw uploadError;
-  }
-
-  const { data: { publicUrl } } = supabase.storage
-    .from('avatars')
-    .getPublicUrl(filePath);
-
-  return await updateProfile(userId, { avatar_url: publicUrl });
+export async function uploadAvatar(_userId, file) {
+  const response = await userAPI.uploadAvatar(file);
+  return response.data;
 }
 
-export async function addPointsToProfile(userId, pointsToAdd) {
-  const { data: profile, error: fetchError } = await supabase
-    .from('profiles')
-    .select('eco_points, level, badges')
-    .eq('id', userId)
-    .single();
-  if (fetchError) throw fetchError;
-
-  const newPoints = (profile.eco_points || 0) + Number(pointsToAdd);
-  const newLevel = getLevelForPoints(newPoints);
-  const badges = profile.badges || [];
-
-  const { data: updated, error } = await supabase
-    .from('profiles')
-    .update({
-      eco_points: newPoints,
-      level: newLevel,
-      updated_at: new Date().toISOString(),
-    })
-    .eq('id', userId)
-    .select()
-    .single();
-  if (error) throw error;
-  return profileToApp(updated);
+export async function addPointsToProfile(_userId, points) {
+  const response = await userAPI.addPoints({ points });
+  return response.data.user;
 }
 
-export async function subtractPointsFromProfile(userId, pointsToSubtract) {
-  const points = Number(pointsToSubtract) || 0;
-  if (points <= 0) return null;
-  const { data: profile, error: fetchError } = await supabase
-    .from('profiles')
-    .select('eco_points, level, badges')
-    .eq('id', userId)
-    .single();
-  if (fetchError || !profile) return null;
-  const current = profile.eco_points || 0;
-  const newPoints = Math.max(0, current - points);
-  const newLevel = getLevelForPoints(newPoints);
-  const { data: updated, error } = await supabase
-    .from('profiles')
-    .update({
-      eco_points: newPoints,
-      level: newLevel,
-      updated_at: new Date().toISOString(),
-    })
-    .eq('id', userId)
-    .select()
-    .single();
-  if (error) return null;
-  return profileToApp(updated);
+export async function subtractPointsFromProfile(_userId, points) {
+  const response = await userAPI.spendPoints({ points });
+  return response.data.user;
 }
 
-// --- Gamification ---
-export async function getGamificationProfile(userId) {
-  const { data: profile, error } = await supabase
-    .from('profiles')
-    .select('eco_points, level, badges, streak')
-    .eq('id', userId)
-    .single();
-  if (error) throw error;
-
-  const { count } = await supabase
-    .from('waste_classifications')
-    .select('*', { count: 'exact', head: true })
-    .eq('user_id', userId);
-
-  return {
-    ecoPoints: profile.eco_points ?? 0,
-    level: profile.level || 'Iniciante',
-    badges: profile.badges || [],
-    streak: profile.streak || { current: 0, longest: 0 },
-    totalClassifications: count ?? 0,
-    completedMissions: 0,
-  };
+export async function getGamificationProfile() {
+  const response = await gamificationAPI.getProfile();
+  return response.data;
 }
 
-export async function getRanking(currentUserId) {
-  const { data, error } = await supabase
-    .from('profiles')
-    .select('id, name, eco_points, level')
-    .order('eco_points', { ascending: false })
-    .limit(10);
-  if (error) throw error;
-
-  return (data || []).map((row, index) => ({
-    position: index + 1,
-    name: row.name || 'Anônimo',
-    points: row.eco_points ?? 0,
-    level: row.level || 'Iniciante',
-    isCurrentUser: row.id === currentUserId,
-  }));
+export async function getRanking() {
+  const response = await gamificationAPI.getRanking();
+  return response.data;
 }
 
-export async function registerAction(userId, { type, points, data }) {
-  const pointsNum = Number(points) || 0;
-  if (pointsNum <= 0) return await getGamificationProfile(userId);
-
-  if (type === 'waste_classification') {
-    // waste_classification já é salva em saveClassification e soma pontos lá
-    return addPointsToProfile(userId, pointsNum).then(profileToApp);
-  }
-
-  await supabase.from('user_game_actions').insert({
-    user_id: userId,
-    game_type: type,
-    points: pointsNum,
-    data: data || {},
-  });
-
-  const profile = await addPointsToProfile(userId, pointsNum);
-  const totalClassifications = (
-    await supabase.from('waste_classifications').select('*', { count: 'exact', head: true }).eq('user_id', userId)
-  ).count;
-  const { data: gameRows } = await supabase
-    .from('user_game_actions')
-    .select('points')
-    .eq('user_id', userId);
-  const gamePoints = (gameRows || []).reduce((s, r) => s + (r.points || 0), 0);
-
-  const badges = profile.badges || [];
-  const newBadges = [];
-  if (badges.length === 0) newBadges.push({ id: 1, name: 'Bem-vindo', earnedAt: new Date() });
-  if (totalClassifications >= 1 && !badges.some((b) => b.id === 2)) newBadges.push({ id: 2, name: 'Primeiro Passo', earnedAt: new Date() });
-  if (totalClassifications >= 10 && !badges.some((b) => b.id === 3)) newBadges.push({ id: 3, name: 'Reciclador', earnedAt: new Date() });
-  if (totalClassifications >= 50 && !badges.some((b) => b.id === 4)) newBadges.push({ id: 4, name: 'Eco Warrior', earnedAt: new Date() });
-  if (gamePoints >= 100 && !badges.some((b) => b.id === 7)) newBadges.push({ id: 7, name: 'Gamer Ecológico', earnedAt: new Date() });
-
-  if (newBadges.length > 0) {
-    const updatedBadges = [...badges, ...newBadges];
-    await supabase.from('profiles').update({ badges: updatedBadges }).eq('id', userId);
-  }
-
-  const updated = await getGamificationProfile(userId);
-  return {
-    ecoPoints: updated.ecoPoints,
-    level: updated.level,
-    newBadges,
-    totalPoints: pointsNum,
-    levelChanged: false,
-  };
+export async function registerAction(_userId, action) {
+  const response = await gamificationAPI.registrarAcao(action);
+  return response.data;
 }
 
-export async function getBadges(userId) {
-  const { data, error } = await supabase.from('profiles').select('badges').eq('id', userId).single();
-  if (error) throw error;
-  const userBadges = (data?.badges || []);
-  return BADGES_DEF.map((badge) => ({
-    ...badge,
-    earned: userBadges.some((b) => b.id === badge.id),
-    earnedAt: userBadges.find((b) => b.id === badge.id)?.earnedAt,
-  }));
+export async function getBadges() {
+  const response = await gamificationAPI.getBadges();
+  return response.data;
 }
 
-// --- Admin ---
-export async function adminGetAllUsers() {
-  const { data, error } = await supabase
-    .from('profiles')
-    .select('*')
-    .order('created_at', { ascending: false });
-  if (error) throw error;
-  return (data || []).map(profileToApp);
+export const adminGetAllUsers = () => adminAPI.getAllUsers();
+export const adminSetEcoPoints = (userId, points) => adminAPI.setEcoPoints(userId, points);
+export const adminToggleAdmin = (userId, isAdmin) => adminAPI.toggleAdmin(userId, isAdmin);
+export const adminCreateUser = (email, password, name) => adminAPI.createUser(email, password, name);
+export const adminDeleteUser = (userId) => adminAPI.deleteUser(userId);
+export const adminGetStats = () => adminAPI.getStats();
+
+export async function saveClassification(_userId, data) {
+  const response = await wasteAPI.saveClassification(data);
+  return response.data;
 }
 
-export async function adminSetEcoPoints(userId, points) {
-  const newPoints = Math.max(0, Number(points));
-  const newLevel = getLevelForPoints(newPoints);
-  const { data, error } = await supabase
-    .from('profiles')
-    .update({ eco_points: newPoints, level: newLevel, updated_at: new Date().toISOString() })
-    .eq('id', userId)
-    .select()
-    .single();
-  if (error) throw error;
-  return profileToApp(data);
-}
-
-export async function adminToggleAdmin(userId, isAdmin) {
-  const { data, error } = await supabase
-    .from('profiles')
-    .update({ is_admin: isAdmin, updated_at: new Date().toISOString() })
-    .eq('id', userId)
-    .select()
-    .single();
-  if (error) throw error;
-  return profileToApp(data);
-}
-
-export async function adminCreateUser(email, password, name) {
-  const { data, error } = await supabase.auth.signUp({
-    email,
-    password,
-    options: { data: { name } },
-  });
-  if (error) throw error;
-  return data;
-}
-
-export async function adminDeleteUser(userId) {
-  const { error } = await supabase
-    .from('profiles')
-    .delete()
-    .eq('id', userId);
-  if (error) throw error;
-  return true;
-}
-
-export async function adminGetStats() {
-  const { count: totalUsers } = await supabase
-    .from('profiles')
-    .select('*', { count: 'exact', head: true });
-
-  const { count: totalClassifications } = await supabase
-    .from('waste_classifications')
-    .select('*', { count: 'exact', head: true });
-
-  const { count: totalGameActions } = await supabase
-    .from('user_game_actions')
-    .select('*', { count: 'exact', head: true });
-
-  const { data: pointsData } = await supabase
-    .from('profiles')
-    .select('eco_points');
-
-  const totalPoints = (pointsData || []).reduce((sum, p) => sum + (p.eco_points || 0), 0);
-
-  return {
-    totalUsers: totalUsers || 0,
-    totalClassifications: totalClassifications || 0,
-    totalGameActions: totalGameActions || 0,
-    totalPoints,
-  };
-}
-
-// --- Waste (classificações) ---
-export async function saveClassification(userId, { category, confidence, points }) {
-  const { error: insertError } = await supabase.from('waste_classifications').insert({
-    user_id: userId,
-    category,
-    confidence: Number(confidence),
-    points: Number(points),
-  });
-  if (insertError) throw insertError;
-  await addPointsToProfile(userId, Number(points));
-  return { success: true, pointsEarned: Number(points), message: 'Classificação salva com sucesso' };
-}
-
-export async function getClassificationHistory(userId) {
-  const { data, error } = await supabase
-    .from('waste_classifications')
-    .select('id, category, confidence, points, created_at')
-    .eq('user_id', userId)
-    .order('created_at', { ascending: false })
-    .limit(50);
-  if (error) throw error;
-  return (data || []).map((row) => ({
-    id: row.id,
-    category: row.category,
-    confidence: row.confidence,
-    points: row.points,
-    timestamp: row.created_at,
-  }));
+export async function getClassificationHistory() {
+  const response = await wasteAPI.getHistorico();
+  return response.data;
 }

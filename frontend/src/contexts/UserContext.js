@@ -1,37 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { supabase } from '../lib/supabase';
-import { getCurrentProfile } from '../services/supabaseService';
 import { userAPI } from '../services/api';
 
 const UserContext = createContext();
-
-/** Timeout em ms para evitar travamento se Supabase não responder */
-const SESSION_TIMEOUT_MS = 20000;
-const PROFILE_TIMEOUT_MS = 18000;
-
-function withTimeout(promise, ms) {
-  return Promise.race([
-    promise,
-    new Promise((_, reject) =>
-      setTimeout(() => reject(new Error('Tempo esgotado')), ms)
-    ),
-  ]);
-}
-
-function sessionToFallbackUser(session) {
-  if (!session?.user) return null;
-  return {
-    id: session.user.id,
-    name: session.user.user_metadata?.name || session.user.email?.split('@')[0] || 'Usuário',
-    email: session.user.email,
-    picture: session.user.user_metadata?.avatar_url || null,
-    ecoPoints: 0,
-    level: 'Iniciante',
-    badges: [],
-    streak: { current: 0, longest: 0 },
-    isAdmin: false,
-  };
-}
 
 export const useUser = () => {
   const context = useContext(UserContext);
@@ -42,7 +12,6 @@ export const useUser = () => {
 };
 
 export const UserProvider = ({ children }) => {
-  // Carrega cache instantaneamente para evitar flash de loading
   const cachedUser = (() => {
     try { return JSON.parse(localStorage.getItem('user') || 'null'); } catch { return null; }
   })();
@@ -52,8 +21,7 @@ export const UserProvider = ({ children }) => {
 
   const [user, setUser] = useState(cachedUser);
   const [token, setToken] = useState(cachedToken);
-  // Se já tem cache, não mostra loading
-  const [loading, setLoading] = useState(!cachedUser);
+  const [loading, setLoading] = useState(!cachedUser && !!cachedToken);
 
   const saveUser = (profile, accessToken) => {
     setUser(profile);
@@ -74,36 +42,20 @@ export const UserProvider = ({ children }) => {
   };
 
   useEffect(() => {
-    const hasSupabase = !!(process.env.REACT_APP_SUPABASE_URL && process.env.REACT_APP_SUPABASE_ANON_KEY);
-    if (!hasSupabase) {
-      setLoading(false);
-      return;
-    }
-
     const initSession = async () => {
-      try {
-        const { data: { session } } = await withTimeout(
-          supabase.auth.getSession(),
-          SESSION_TIMEOUT_MS
-        );
+      if (!cachedToken) {
+        setLoading(false);
+        return;
+      }
 
-        if (session?.user) {
-          try {
-            const profile = await withTimeout(
-              getCurrentProfile(),
-              PROFILE_TIMEOUT_MS
-            );
-            saveUser(profile, session.access_token);
-          } catch {
-            // Timeout ou erro de rede: usa fallback mas mantém token válido
-            const fallback = sessionToFallbackUser(session);
-            saveUser(cachedUser || fallback, session.access_token);
-          }
+      try {
+        const session = await userAPI.getSession();
+        if (session?.user && session?.token) {
+          saveUser(session.user, session.token);
         } else {
           clearUser();
         }
       } catch {
-        // Não exibe erro para o usuário — usa cache se disponível
         if (!cachedUser) clearUser();
       } finally {
         setLoading(false);
@@ -111,24 +63,6 @@ export const UserProvider = ({ children }) => {
     };
 
     initSession();
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if (event === 'SIGNED_OUT') {
-        clearUser();
-        return;
-      }
-      if (session?.user) {
-        try {
-          const profile = await withTimeout(getCurrentProfile(), PROFILE_TIMEOUT_MS);
-          saveUser(profile, session.access_token);
-        } catch {
-          const fallback = sessionToFallbackUser(session);
-          saveUser(fallback, session.access_token);
-        }
-      }
-    });
-
-    return () => subscription?.unsubscribe();
   }, []); // eslint-disable-line
 
   const updateUser = (newUserData, authToken) => {
@@ -136,11 +70,10 @@ export const UserProvider = ({ children }) => {
   };
 
   const logout = async () => {
-    await supabase.auth.signOut();
     clearUser();
   };
 
-  const addEcoPoints = (pointsToAdd, action = 'Ação') => {
+  const addEcoPoints = (pointsToAdd, action = 'Acao') => {
     if (user && pointsToAdd > 0) {
       const updatedUser = {
         ...user,
@@ -150,7 +83,7 @@ export const UserProvider = ({ children }) => {
       sessionStorage.setItem('user', JSON.stringify(updatedUser));
       localStorage.setItem('user', JSON.stringify(updatedUser));
       userAPI.addPoints({ points: pointsToAdd, action }).catch((error) => {
-        console.error('Erro ao salvar pontos no Supabase:', error);
+        console.error('Erro ao salvar pontos:', error);
       });
       return updatedUser.ecoPoints;
     }
@@ -166,7 +99,7 @@ export const UserProvider = ({ children }) => {
       sessionStorage.setItem('user', JSON.stringify(updatedUser));
       localStorage.setItem('user', JSON.stringify(updatedUser));
       userAPI.spendPoints({ points: pointsToSpend, action }).catch((error) => {
-        console.error('Erro ao descontar pontos no Supabase:', error);
+        console.error('Erro ao descontar pontos:', error);
       });
       return newPoints;
     }

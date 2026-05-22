@@ -1,210 +1,150 @@
-/**
- * API do EcoSphere - implementação via Supabase (backend unificado no Supabase).
- * ai-service continua opcional para classificação por servidor.
- */
-import { supabase } from '../lib/supabase';
-import {
-  auth as supabaseAuth,
-  getCurrentProfile,
-  getProfile,
-  updateProfile,
-  uploadAvatar,
-  addPointsToProfile,
-  subtractPointsFromProfile,
-  getGamificationProfile,
-  getRanking,
-  registerAction,
-  getBadges,
-  saveClassification,
-  getClassificationHistory,
-} from './supabaseService';
-
-const getUserId = async () => {
-  const { data: { user } } = await supabase.auth.getUser();
-  return user?.id;
-};
-
-/** Timeout em ms para auth (evita travamento se Supabase não responder) */
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:4000';
 const AUTH_TIMEOUT_MS = 15000;
 
-function withTimeout(promise, ms, message = 'Tempo esgotado. Verifique sua conexão e as variáveis REACT_APP_SUPABASE_URL e REACT_APP_SUPABASE_ANON_KEY no .env') {
-  return Promise.race([
-    promise,
-    new Promise((_, reject) =>
-      setTimeout(() => reject(new Error(message)), ms)
-    ),
-  ]);
+function getToken() {
+  try {
+    return sessionStorage.getItem('token') || null;
+  } catch {
+    return null;
+  }
 }
 
-// --- Environmental: backend não tinha; mock para não quebrar a página
+async function request(path, options = {}) {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), AUTH_TIMEOUT_MS);
+  const token = getToken();
+
+  try {
+    const headers = {
+      ...(options.body instanceof FormData ? {} : { 'Content-Type': 'application/json' }),
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      ...(options.headers || {}),
+    };
+
+    const response = await fetch(`${API_BASE_URL}${path}`, {
+      ...options,
+      headers,
+      signal: controller.signal,
+    });
+
+    const contentType = response.headers.get('content-type') || '';
+    const data = contentType.includes('application/json') ? await response.json() : await response.text();
+
+    if (!response.ok) {
+      const error = new Error(data?.message || 'Erro na requisicao');
+      error.status = response.status;
+      error.response = { status: response.status, data };
+      throw error;
+    }
+
+    return data;
+  } catch (error) {
+    if (error.name === 'AbortError') {
+      throw new Error('Tempo esgotado. Verifique se a API local esta rodando em http://localhost:4000.');
+    }
+    throw error;
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
 export const environmentalAPI = {
   getDadosAmbientais: async (cidade) => ({ data: { cidade, temperatura: 25, qualidadeAr: 'Boa' } }),
-  getCidades: async () => ({ data: ['São Paulo', 'Rio de Janeiro', 'Belo Horizonte'] }),
-  getAlertas: async (cidade) => ({ data: [] }),
+  getCidades: async () => ({ data: ['Sao Paulo', 'Rio de Janeiro', 'Belo Horizonte'] }),
+  getAlertas: async () => ({ data: [] }),
 };
 
-// --- Waste: classificação no front (TensorFlow.js); persistência no Supabase
 export const wasteAPI = {
   classifyImage: async (formData) => {
-    // Opcional: chamar ai-service se REACT_APP_AI_SERVICE_URL estiver definido
     const url = process.env.REACT_APP_AI_SERVICE_URL;
     if (url) {
       const res = await fetch(`${url}/classify`, { method: 'POST', body: formData });
       const json = await res.json();
       return { data: json };
     }
-    return { data: { type: 'Plástico', confidence: 0.85, points: 50 } };
+    return { data: { type: 'Plastico', confidence: 0.85, points: 50 } };
   },
-  saveClassification: async (data) => {
-    const userId = await getUserId();
-    if (!userId) throw new Error('Não autenticado');
-    const result = await saveClassification(userId, data);
-    return { data: result };
-  },
-  getHistorico: async () => {
-    const userId = await getUserId();
-    if (!userId) return { data: [] };
-    const list = await getClassificationHistory(userId);
-    return { data: list };
-  },
+  saveClassification: async (data) => ({ data: await request('/waste/classifications', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  }) }),
+  getHistorico: async () => ({ data: await request('/waste/classifications') }),
   registrarDescarte: async (data) => {
-    const userId = await getUserId();
-    if (!userId) throw new Error('Não autenticado');
-    const points = data?.points || 50;
-    await addPointsToProfile(userId, points);
-    return { data: { message: 'Descarte registrado', points } };
+    const result = await request('/users/me/points', {
+      method: 'POST',
+      body: JSON.stringify({ points: data?.points || 50 }),
+    });
+    return { data: { message: 'Descarte registrado', user: result.user } };
   },
 };
 
-// --- Gamification
 export const gamificationAPI = {
-  getProfile: async () => {
-    const userId = await getUserId();
-    if (!userId) throw new Error('Não autenticado');
-    const profile = await getGamificationProfile(userId);
-    return { data: profile };
-  },
-  getRanking: async () => {
-    const userId = await getUserId();
-    const ranking = await getRanking(userId || null);
-    return { data: ranking };
-  },
-  registrarAcao: async (acao) => {
-    const userId = await getUserId();
-    if (!userId) throw new Error('Não autenticado');
-    const result = await registerAction(userId, acao);
-    return { data: result };
-  },
-  getBadges: async () => {
-    const userId = await getUserId();
-    if (!userId) throw new Error('Não autenticado');
-    const badges = await getBadges(userId);
-    return { data: badges };
-  },
+  getProfile: async () => ({ data: await request('/gamification/profile') }),
+  getRanking: async () => ({ data: await request('/gamification/ranking') }),
+  registrarAcao: async (acao) => ({ data: await request('/gamification/actions', {
+    method: 'POST',
+    body: JSON.stringify(acao),
+  }) }),
+  getBadges: async () => ({ data: await request('/gamification/badges') }),
 };
 
-// --- User / Auth (Supabase Auth)
 export const userAPI = {
-  login: async (credentials) => {
-    const run = async () => {
-      const signInResult = await supabaseAuth.signIn(credentials.email, credentials.password);
-      if (!signInResult?.user) throw new Error('Resposta inválida do servidor');
-      let user;
-      try {
-        user = await getProfile(signInResult.user.id);
-      } catch (profileErr) {
-        user = {
-          id: signInResult.user.id,
-          name: signInResult.user.user_metadata?.name || signInResult.user.email?.split('@')[0],
-          email: signInResult.user.email,
-          picture: signInResult.user.user_metadata?.avatar_url || null,
-          ecoPoints: 0,
-          level: 'Iniciante',
-          badges: [],
-          streak: { current: 0, longest: 0 },
-          isAdmin: false,
-        };
-      }
-      return {
-        data: {
-          token: signInResult.session?.access_token ?? null,
-          user: { ...user, id: signInResult.user.id },
-        },
-      };
-    };
-    return withTimeout(run(), AUTH_TIMEOUT_MS);
-  },
-  register: async (userData) => {
-    const run = async () => {
-      const signUpData = await supabaseAuth.signUp({
-        email: userData.email,
-        password: userData.password,
-        name: userData.name,
-      });
-      if (!signUpData.user) throw new Error('Erro no registro');
-      const fallbackUser = {
-        id: signUpData.user.id,
-        name: userData.name || signUpData.user.user_metadata?.name || signUpData.user.email?.split('@')[0],
-        email: signUpData.user.email,
-        picture: signUpData.user.user_metadata?.avatar_url || null,
-        ecoPoints: 0,
-        level: 'Iniciante',
-        badges: [],
-        streak: { current: 0, longest: 0 },
-        isAdmin: false,
-      };
-      try {
-        await new Promise((r) => setTimeout(r, 800));
-        const profile = await getProfile(signUpData.user.id);
-        return {
-          data: {
-            token: signUpData.session?.access_token ?? null,
-            user: { ...profile, id: signUpData.user.id },
-          },
-        };
-      } catch (profileErr) {
-        return {
-          data: {
-            token: signUpData.session?.access_token ?? null,
-            user: fallbackUser,
-          },
-        };
-      }
-    };
-    return withTimeout(run(), AUTH_TIMEOUT_MS);
-  },
+  login: async (credentials) => ({ data: await request('/auth/login', {
+    method: 'POST',
+    body: JSON.stringify(credentials),
+  }) }),
+  register: async (userData) => ({ data: await request('/auth/register', {
+    method: 'POST',
+    body: JSON.stringify(userData),
+  }) }),
   googleLogin: async () => {
-    await supabaseAuth.signInWithGoogle();
-    return { data: { redirect: true } };
+    throw new Error('Login com Google precisa ser reconfigurado fora do Supabase.');
   },
-  getProfile: async () => {
-    const user = await getCurrentProfile();
-    return { data: user };
+  getSession: async () => {
+    const token = getToken();
+    if (!token) return null;
+    const data = await request('/auth/me');
+    return { token, user: data.user };
   },
-  updateProfile: async (data) => {
-    const userId = await getUserId();
-    if (!userId) throw new Error('Não autenticado');
-    const updated = await updateProfile(userId, data);
-    return { data: updated };
-  },
+  getProfile: async () => ({ data: await request('/users/me') }),
+  updateProfile: async (data) => ({ data: await request('/users/me', {
+    method: 'PUT',
+    body: JSON.stringify(data),
+  }) }),
   uploadAvatar: async (file) => {
-    const userId = await getUserId();
-    if (!userId) throw new Error('Não autenticado');
-    const updated = await uploadAvatar(userId, file);
-    return { data: updated };
+    const formData = new FormData();
+    formData.append('avatar', file);
+    return { data: await request('/users/me/avatar', {
+      method: 'POST',
+      body: formData,
+    }) };
   },
-  addPoints: async (data) => {
-    const userId = await getUserId();
-    if (!userId) throw new Error('Não autenticado');
-    const updated = await addPointsToProfile(userId, data.points || 0);
-    return { data: { user: updated } };
-  },
-  spendPoints: async (data) => {
-    const userId = await getUserId();
-    if (!userId) throw new Error('Não autenticado');
-    const updated = await subtractPointsFromProfile(userId, data.points || 0);
-    return { data: { user: updated } };
-  },
+  addPoints: async (data) => ({ data: await request('/users/me/points', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  }) }),
+  spendPoints: async (data) => ({ data: await request('/users/me/spend-points', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  }) }),
 };
 
-export default { environmentalAPI, wasteAPI, gamificationAPI, userAPI };
+export const adminAPI = {
+  getAllUsers: async () => request('/admin/users'),
+  setEcoPoints: async (userId, points) => request(`/admin/users/${userId}/points`, {
+    method: 'PATCH',
+    body: JSON.stringify({ points }),
+  }),
+  toggleAdmin: async (userId, isAdmin) => request(`/admin/users/${userId}/admin`, {
+    method: 'PATCH',
+    body: JSON.stringify({ isAdmin }),
+  }),
+  createUser: async (email, password, name) => request('/admin/users', {
+    method: 'POST',
+    body: JSON.stringify({ email, password, name }),
+  }),
+  deleteUser: async (userId) => request(`/admin/users/${userId}`, { method: 'DELETE' }),
+  getStats: async () => request('/admin/stats'),
+};
+
+export default { environmentalAPI, wasteAPI, gamificationAPI, userAPI, adminAPI };

@@ -23,7 +23,9 @@ const Login = () => {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const navigate = useNavigate();
   const { updateUser } = useUser();
-  const useSupabase = !!(process.env.REACT_APP_SUPABASE_URL && process.env.REACT_APP_SUPABASE_ANON_KEY);
+  const useSupabase = false;
+  const inputClassName = "w-full px-5 py-4 bg-white/10 border border-white/20 rounded-2xl hover:bg-white/15 hover:border-white/30 focus:bg-white/15 focus:border-white/40 focus:ring-0 focus:shadow-[inset_0_0_0_1px_rgba(255,255,255,0.22)] text-white placeholder-white/40 transition-colors font-medium outline-none";
+  const passwordInputClassName = "w-full pl-5 pr-12 py-4 bg-white/10 border border-white/20 rounded-2xl hover:bg-white/15 hover:border-white/30 focus:bg-white/15 focus:border-white/40 focus:ring-0 focus:shadow-[inset_0_0_0_1px_rgba(255,255,255,0.22)] text-white placeholder-white/40 transition-colors font-medium outline-none";
 
   const showNotification = (message, type = 'error') => {
     setNotification({ message, type });
@@ -70,10 +72,6 @@ const Login = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!process.env.REACT_APP_SUPABASE_URL || !process.env.REACT_APP_SUPABASE_ANON_KEY) {
-      showNotification('Configure REACT_APP_SUPABASE_URL e REACT_APP_SUPABASE_ANON_KEY no arquivo .env do frontend.', 'error');
-      return;
-    }
     setLoading(true);
 
     try {
@@ -160,7 +158,7 @@ const Login = () => {
       const errMsg = error?.message || error?.response?.data?.message || '';
       const status = error?.status ?? error?.response?.status;
       if (/Tempo esgotado|timeout|Verifique sua conexão/i.test(errMsg)) {
-        message = 'A requisição demorou demais. Verifique sua internet e se o Supabase está acessível (URL e chave no .env).';
+        message = 'A requisicao demorou demais. Verifique se a API esta rodando em http://localhost:4000.';
       } else if (status === 400 || status === 401) {
         message = /confirm|email not confirmed/i.test(errMsg)
           ? 'Confirme seu email para entrar. Verifique a caixa de entrada.'
@@ -360,7 +358,7 @@ const Login = () => {
                       name="name"
                       value={formData.name}
                       onChange={handleChange}
-                      className="w-full px-5 py-4 bg-white/10 border border-white/20 rounded-2xl focus:bg-white/20 focus:ring-2 focus:ring-white/50 focus:border-transparent text-white placeholder-white/40 transition-all font-medium outline-none"
+                      className={inputClassName}
                       placeholder="Seu nome completo"
                     />
                   </motion.div>
@@ -376,7 +374,7 @@ const Login = () => {
                   name="email"
                   value={formData.email}
                   onChange={handleChange}
-                  className="w-full px-5 py-4 bg-white/10 border border-white/20 rounded-2xl focus:bg-white/20 focus:ring-2 focus:ring-white/50 focus:border-transparent text-white placeholder-white/40 transition-all font-medium outline-none"
+                  className={inputClassName}
                   placeholder="seu@email.com"
                 />
               </div>
@@ -391,7 +389,7 @@ const Login = () => {
                     name="password"
                     value={formData.password}
                     onChange={handleChange}
-                    className="w-full pl-5 pr-12 py-4 bg-white/10 border border-white/20 rounded-2xl focus:bg-white/20 focus:ring-2 focus:ring-white/50 focus:border-transparent text-white placeholder-white/40 transition-all font-medium outline-none"
+                    className={passwordInputClassName}
                     placeholder="••••••••"
                   />
                   <button
@@ -456,7 +454,7 @@ const Login = () => {
                         name="confirmPassword"
                         value={formData.confirmPassword}
                         onChange={handleChange}
-                        className="w-full pl-5 pr-12 py-4 bg-white/10 border border-white/20 rounded-2xl focus:bg-white/20 focus:ring-2 focus:ring-white/50 focus:border-transparent text-white placeholder-white/40 transition-all font-medium outline-none"
+                        className={passwordInputClassName}
                         placeholder="••••••••"
                       />
                       <button
@@ -474,7 +472,7 @@ const Login = () => {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full py-4 px-6 bg-white text-stone-900 rounded-2xl font-bold text-lg hover:bg-stone-50 hover:shadow-xl transition-all disabled:opacity-70 flex items-center justify-center gap-2 mt-6 active:scale-[0.98]"
+                className="w-full py-4 px-6 bg-white text-stone-900 rounded-2xl font-bold text-lg hover:bg-stone-50 hover:shadow-[inset_0_0_0_1px_rgba(0,0,0,0.08)] transition-colors disabled:opacity-70 flex items-center justify-center gap-2 mt-6 active:scale-[0.98]"
               >
                 {loading ? (
                   <div className="flex items-center gap-2">

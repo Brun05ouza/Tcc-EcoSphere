@@ -6,6 +6,42 @@ ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, T
 import { Cloud, CloudRain, Sun, Wind, Droplets, Eye, Gauge, ThermometerSun, MapPin, Calendar, Clock, Sunrise, Sunset, Zap, AlertTriangle, Check } from 'lucide-react';
 import { AppIcon } from '../components/ui/AppIcon';
 
+const weatherCodeDescription = {
+  0: 'Ceu limpo',
+  1: 'Principalmente limpo',
+  2: 'Parcialmente nublado',
+  3: 'Nublado',
+  45: 'Neblina',
+  48: 'Neblina com geada',
+  51: 'Garoa fraca',
+  53: 'Garoa moderada',
+  55: 'Garoa intensa',
+  61: 'Chuva fraca',
+  63: 'Chuva moderada',
+  65: 'Chuva forte',
+  80: 'Pancadas fracas',
+  81: 'Pancadas moderadas',
+  82: 'Pancadas fortes',
+  95: 'Trovoadas',
+  96: 'Trovoadas com granizo',
+  99: 'Trovoadas fortes',
+};
+
+const weatherCodeIcon = (code) => {
+  if ([61, 63, 65, 80, 81, 82, 95, 96, 99].includes(code)) return 'cloud-rain';
+  if ([2, 3, 45, 48, 51, 53, 55].includes(code)) return 'cloud';
+  return 'sun';
+};
+
+const getCurrentHourIndex = (times = []) => {
+  const now = Date.now();
+  return times.reduce((closest, time, index) => {
+    const currentDistance = Math.abs(new Date(time).getTime() - now);
+    const closestDistance = Math.abs(new Date(times[closest]).getTime() - now);
+    return currentDistance < closestDistance ? index : closest;
+  }, 0);
+};
+
 const Environmental = () => {
   const [selectedState, setSelectedState] = useState('RJ');
   const [selectedCity, setSelectedCity] = useState('Rio de Janeiro');
@@ -21,9 +57,14 @@ const Environmental = () => {
     descricao: 'Parcialmente nublado',
     uv: 7,
     nascerSol: '06:15',
-    porSol: '18:45'
+    porSol: '18:45',
+    pm25: null,
+    pm10: null
   });
   const [forecast, setForecast] = useState([]);
+  const [temperatureHours, setTemperatureHours] = useState([]);
+  const [lastUpdated, setLastUpdated] = useState(null);
+  const [dataError, setDataError] = useState('');
   const [loading, setLoading] = useState(false);
   const [showStateModal, setShowStateModal] = useState(false);
 
@@ -56,6 +97,92 @@ const Environmental = () => {
 
   const fetchWeatherData = async (city, bairro) => {
     setLoading(true);
+    setDataError('');
+
+    try {
+      const locationQuery = encodeURIComponent(city);
+      const geocodeResponse = await fetch(
+        `https://geocoding-api.open-meteo.com/v1/search?name=${locationQuery}&count=1&language=pt&format=json&country_code=BR`
+      );
+      if (!geocodeResponse.ok) throw new Error('Nao foi possivel localizar a cidade.');
+
+      const geocode = await geocodeResponse.json();
+      const place = geocode.results?.[0];
+      if (!place) throw new Error('Cidade nao encontrada na base meteorologica.');
+
+      const weatherParams = new URLSearchParams({
+        latitude: String(place.latitude),
+        longitude: String(place.longitude),
+        timezone: 'auto',
+        forecast_days: '7',
+        current: 'temperature_2m,relative_humidity_2m,apparent_temperature,weather_code,pressure_msl,wind_speed_10m,visibility',
+        hourly: 'temperature_2m',
+        daily: 'weather_code,temperature_2m_max,temperature_2m_min,sunrise,sunset,uv_index_max'
+      });
+      const airParams = new URLSearchParams({
+        latitude: String(place.latitude),
+        longitude: String(place.longitude),
+        timezone: 'auto',
+        current: 'european_aqi,pm10,pm2_5,uv_index'
+      });
+
+      const [weatherResponse, airResponse] = await Promise.all([
+        fetch(`https://api.open-meteo.com/v1/forecast?${weatherParams.toString()}`),
+        fetch(`https://air-quality-api.open-meteo.com/v1/air-quality?${airParams.toString()}`)
+      ]);
+      if (!weatherResponse.ok) throw new Error('Erro ao buscar dados climaticos.');
+
+      const weather = await weatherResponse.json();
+      const air = airResponse.ok ? await airResponse.json() : null;
+      const current = weather.current || {};
+      const daily = weather.daily || {};
+      const airCurrent = air?.current || {};
+      const days = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sab'];
+
+      setEnvironmentalData({
+        temperatura: Math.round(current.temperature_2m ?? 0),
+        umidade: Math.round(current.relative_humidity_2m ?? 0),
+        qualidadeAr: { aqi: Math.round(airCurrent.european_aqi ?? 0) },
+        visibilidade: Number(((current.visibility ?? 0) / 1000).toFixed(1)),
+        vento: Math.round(current.wind_speed_10m ?? 0),
+        pressao: Math.round(current.pressure_msl ?? 0),
+        sensacao: Math.round(current.apparent_temperature ?? current.temperature_2m ?? 0),
+        descricao: weatherCodeDescription[current.weather_code] || 'Condicao indisponivel',
+        uv: Math.round(airCurrent.uv_index ?? daily.uv_index_max?.[0] ?? 0),
+        nascerSol: daily.sunrise?.[0]
+          ? new Date(daily.sunrise[0]).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
+          : '--:--',
+        porSol: daily.sunset?.[0]
+          ? new Date(daily.sunset[0]).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
+          : '--:--',
+        pm25: airCurrent.pm2_5 ?? null,
+        pm10: airCurrent.pm10 ?? null
+      });
+
+      setForecast((daily.time || []).map((date, index) => ({
+        dia: days[new Date(`${date}T12:00:00`).getDay()],
+        tempMax: Math.round(daily.temperature_2m_max?.[index] ?? 0),
+        tempMin: Math.round(daily.temperature_2m_min?.[index] ?? 0),
+        condicao: weatherCodeIcon(daily.weather_code?.[index])
+      })));
+
+      const hourlyIndex = getCurrentHourIndex(weather.hourly?.time || []);
+      const start = Math.max(0, hourlyIndex - 3);
+      const samples = (weather.hourly?.time || [])
+        .slice(start, start + 6)
+        .map((time, index) => ({
+          label: new Date(time).toLocaleTimeString('pt-BR', { hour: '2-digit' }),
+          temp: Math.round(weather.hourly.temperature_2m[start + index] ?? 0)
+        }));
+
+      setTemperatureHours(samples);
+      setLastUpdated(new Date());
+    } catch (error) {
+      setDataError(error.message || 'Nao foi possivel carregar dados reais agora.');
+    } finally {
+      setLoading(false);
+    }
+    return;
     
     const API_KEY = process.env.REACT_APP_OPENWEATHER_API_KEY;
     
@@ -178,7 +305,7 @@ const Environmental = () => {
 
   useEffect(() => {
     fetchWeatherData(selectedCity, selectedBairro);
-  }, [selectedCity, selectedBairro]);
+  }, [selectedCity, selectedBairro, selectedState]);
 
   useEffect(() => {
     const bairros = bairrosPorCidade[selectedCity] || ['Centro'];
@@ -186,9 +313,11 @@ const Environmental = () => {
   }, [selectedCity]);
 
   const getAirQualityStatus = (aqi) => {
-    if (aqi <= 50) return { status: 'Bom', color: 'text-green-600', bgColor: 'bg-green-100', iconName: 'success' };
-    if (aqi <= 100) return { status: 'Moderado', color: 'text-yellow-600', bgColor: 'bg-yellow-100', iconName: 'warning' };
-    return { status: 'Ruim', color: 'text-red-600', bgColor: 'bg-red-100', iconName: 'error' };
+    if (aqi <= 20) return { status: 'Bom', color: 'text-green-600', bgColor: 'bg-green-100', iconName: 'success' };
+    if (aqi <= 40) return { status: 'Razoavel', color: 'text-lime-600', bgColor: 'bg-lime-100', iconName: 'success' };
+    if (aqi <= 60) return { status: 'Moderado', color: 'text-yellow-600', bgColor: 'bg-yellow-100', iconName: 'warning' };
+    if (aqi <= 80) return { status: 'Ruim', color: 'text-orange-600', bgColor: 'bg-orange-100', iconName: 'warning' };
+    return { status: 'Muito ruim', color: 'text-red-600', bgColor: 'bg-red-100', iconName: 'error' };
   };
 
   const getUVLevel = (uv) => {
@@ -202,10 +331,10 @@ const Environmental = () => {
   const uvLevel = getUVLevel(environmentalData.uv);
 
   const temperatureData = {
-    labels: ['00h', '04h', '08h', '12h', '16h', '20h'],
+    labels: temperatureHours.length ? temperatureHours.map((item) => item.label) : ['Agora'],
     datasets: [{
       label: 'Temperatura (°C)',
-      data: [22, 20, 25, environmentalData.temperatura, environmentalData.temperatura + 2, environmentalData.temperatura - 2],
+      data: temperatureHours.length ? temperatureHours.map((item) => item.temp) : [environmentalData.temperatura],
       borderColor: 'rgb(239, 68, 68)',
       backgroundColor: 'rgba(239, 68, 68, 0.1)',
       tension: 0.4,
@@ -233,18 +362,20 @@ const Environmental = () => {
             </div>
             <p className="text-stone-500 ml-13 flex items-center gap-2">
               <Zap size={16} className="text-blue-500" />
-              <span>Monitoramento climático em tempo real via IA</span>
+              <span>Dados meteorologicos reais via Open-Meteo</span>
             </p>
           </div>
 
           <div className="flex items-center gap-3">
             <div className="bg-white px-4 py-2 rounded-2xl shadow-sm border border-stone-100 flex items-center gap-2">
               <Clock className="w-4 h-4 text-stone-400" />
-              <span className="text-sm font-medium text-stone-600">Atualizado agora</span>
+              <span className="text-sm font-medium text-stone-600">
+                {lastUpdated ? `Atualizado ${lastUpdated.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}` : 'Carregando dados'}
+              </span>
             </div>
             <div className="bg-white px-5 py-2.5 rounded-2xl shadow-sm border border-stone-100 flex items-center gap-3">
               <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-              <span className="text-sm font-medium text-stone-600">Sensores Ativos</span>
+              <span className="text-sm font-medium text-stone-600">{loading ? 'Atualizando API' : 'Open-Meteo ativo'}</span>
             </div>
           </div>
         </motion.div>
