@@ -4,9 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { userAPI } from '../services/api';
 import { useUser } from '../contexts/UserContext';
 import GoogleLogin from '../components/GoogleLogin';
-import LoginGlobeBackground from '../components/globe/LoginGlobeBackground';
 import EcoGlobeLogo from '../components/ui/EcoGlobeLogo';
-import LoadingScreen from '../components/ui/LoadingScreen';
 import { Brain, Recycle, BarChart3, Trophy, Eye, EyeOff, Loader2, AlertTriangle, Check } from 'lucide-react';
 
 const Login = () => {
@@ -185,7 +183,6 @@ const Login = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-eco-600 via-teal-600 to-eco-700 flex items-center justify-center p-4 relative overflow-hidden">
-      <LoginGlobeBackground opacity={0.35} blur="4px" zoom={35e6} />
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-20 left-10 w-72 h-72 bg-white/10 rounded-full blur-3xl" />
         <div className="absolute bottom-20 right-20 w-96 h-96 bg-teal-400/20 rounded-full blur-3xl" />

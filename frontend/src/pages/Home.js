@@ -5,8 +5,8 @@ import CountUp from 'react-countup';
 import { Users, TrendingUp, TreePine } from 'lucide-react';
 import { AppIcon } from '../components/ui/AppIcon';
 import EcoGlobeLogo from '../components/ui/EcoGlobeLogo';
-import DashboardGlobeCard from '../components/globe/DashboardGlobeCard';
 import FeaturesBento from '../components/home/FeaturesBento';
+import TreeHeroAnimation from '../components/home/TreeHeroAnimation';
 
 // Componente isolado para cada card de estatística — garante que o CountUp
 // só inicia depois do elemento estar montado no DOM
@@ -82,9 +82,8 @@ const Home = () => {
         <div className="absolute bottom-0 left-0 w-[600px] h-[600px] bg-gradient-to-tr from-green-100/60 to-transparent rounded-full blur-[80px] pointer-events-none -translate-x-1/3 translate-y-1/3 opacity-80" />
         <div className="absolute top-1/2 left-1/4 w-[400px] h-[400px] bg-gradient-to-r from-blue-50/40 to-transparent rounded-full blur-[60px] pointer-events-none -translate-y-1/2 opacity-60" />
         
-        {/* Globo solto no hero (desktop) - fora do grid para poder ficar bem grande */}
-        <div className="absolute right-0 top-1/2 -translate-y-1/2 w-[min(75vw,960px)] h-[min(75vw,960px)] max-h-[85vh] pointer-events-none select-none hidden lg:block z-[1] opacity-90 drop-shadow-2xl">
-          <DashboardGlobeCard id="wwd-canvas-home-desktop" />
+        <div className="absolute right-[-3vw] top-1/2 -translate-y-1/2 w-[min(58vw,760px)] h-[min(58vw,760px)] max-h-[78vh] hidden lg:block z-[1] opacity-95">
+          <TreeHeroAnimation className="w-full h-full" />
         </div>
         
         <motion.div 
@@ -150,11 +149,8 @@ const Home = () => {
         </motion.div>
       </div>
 
-      {/* Globe card mobile - Massive Size */}
-      <div className="relative z-10 lg:hidden w-full flex justify-center items-center pb-8" style={{ marginTop: '-80px', height: '350px' }}>
-        <div className="w-[500px] h-[500px] sm:w-[600px] sm:h-[600px] shrink-0 pointer-events-none opacity-90 drop-shadow-2xl">
-          <DashboardGlobeCard id="wwd-canvas-home-mobile" />
-        </div>
+      <div className="relative z-10 lg:hidden w-full h-[300px] -mt-12 pointer-events-none select-none">
+        <TreeHeroAnimation className="w-full h-full" />
       </div>
 
       <FeaturesBento />
