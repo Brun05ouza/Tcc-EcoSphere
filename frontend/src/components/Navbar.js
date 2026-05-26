@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Bell, Sparkles, User, ChevronDown, Menu, X, Shield, Clock } from 'lucide-react';
+import { Bell, Sparkles, User, ChevronDown, Menu, X, Clock } from 'lucide-react';
 import { useUser } from '../contexts/UserContext';
 import { AppIcon } from './ui/AppIcon';
 import EcoGlobeLogo from './ui/EcoGlobeLogo';
@@ -26,7 +26,7 @@ const Navbar = () => {
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
-  const { user, isAdmin } = useUser();
+  const { user } = useUser();
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -154,19 +154,6 @@ const Navbar = () => {
 
           {/* Área do usuário: notificações, EcoPoints, perfil e menu mobile */}
           <div className="flex items-center gap-3 ml-auto">
-            {isAdmin && (
-              <Link
-                to="/admin"
-                className={`hidden lg:flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 ${
-                  location.pathname === '/admin'
-                    ? 'bg-eco-50 text-eco-700'
-                    : 'text-stone-600 hover:bg-stone-100 hover:text-stone-900'
-                }`}
-              >
-                <Shield size={18} />
-                <span>Admin</span>
-              </Link>
-            )}
             <div className="hidden lg:flex relative">
               <motion.button
                 whileHover={{ scale: 1.05 }}

@@ -12,20 +12,25 @@ const AdminLoginPanel = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const { updateUser } = useUser();
+  const { updateUser, isAdmin } = useUser();
   const navigate = useNavigate();
 
-  // Listener do atalho Ctrl + Shift + A
+  // Listener do atalho Ctrl + Alt + A
   const handleKeyDown = useCallback((e) => {
-    if (e.ctrlKey && e.shiftKey && e.key === 'A') {
+    if (e.ctrlKey && e.altKey && e.key.toLowerCase() === 'a') {
       e.preventDefault();
+      if (isAdmin) {
+        navigate('/admin');
+        setVisible(false);
+        return;
+      }
       setVisible((v) => !v);
       setError('');
     }
     if (e.key === 'Escape') {
       setVisible(false);
     }
-  }, []);
+  }, [isAdmin, navigate]);
 
   useEffect(() => {
     window.addEventListener('keydown', handleKeyDown);
@@ -183,7 +188,7 @@ const AdminLoginPanel = () => {
                 {/* Footer hint */}
                 <p className="text-center text-slate-600 text-xs mt-6">
                   Pressione <kbd className="bg-slate-800 border border-slate-700 rounded px-1.5 py-0.5 text-slate-400 font-mono text-[10px]">Ctrl</kbd>
-                  {' + '}<kbd className="bg-slate-800 border border-slate-700 rounded px-1.5 py-0.5 text-slate-400 font-mono text-[10px]">Shift</kbd>
+                  {' + '}<kbd className="bg-slate-800 border border-slate-700 rounded px-1.5 py-0.5 text-slate-400 font-mono text-[10px]">Alt</kbd>
                   {' + '}<kbd className="bg-slate-800 border border-slate-700 rounded px-1.5 py-0.5 text-slate-400 font-mono text-[10px]">A</kbd>
                   {' '}para fechar
                 </p>

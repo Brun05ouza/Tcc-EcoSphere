@@ -124,6 +124,7 @@ function buildReport({ formData, evidences, result }) {
     .map(([, label]) => label);
   const calculation = result?.calculation;
   const methodology = result?.methodology;
+  const calculationMemory = buildCalculationMemory({ formData, result });
 
   return `# Relatório preliminar EcoSphere — Projetos CO₂e
 
@@ -146,6 +147,9 @@ ${summarizeFormData(formData).join('\n')}
 Status do cálculo: ${calculation?.status === 'calculado' ? 'disponível' : 'indisponível'}
 Estimativa total: ${calculation?.totalTCO2e !== null && calculation?.totalTCO2e !== undefined ? `${calculation.totalTCO2e.toFixed(4)} tCO₂e` : 'não calculado'}
 Estimativa anual: ${calculation?.annualTCO2e !== null && calculation?.annualTCO2e !== undefined ? `${calculation.annualTCO2e.toFixed(4)} tCO₂e/ano` : 'não aplicável'}
+
+## Memória de cálculo
+${calculationMemory.map((item) => `${item.label}: ${item.value}`).join('\n')}
 
 ## Completude metodológica
 Índice: ${result?.completeness?.percentage ?? 0}%
@@ -188,6 +192,64 @@ function summarizeFormData(formData) {
   }
 
   return summary;
+}
+
+function formatNumber(value, digits = 6) {
+  if (value === null || value === undefined || Number.isNaN(Number(value))) return 'Não informado';
+  return Number(value).toLocaleString('pt-BR', {
+    maximumFractionDigits: digits,
+    minimumFractionDigits: 0
+  });
+}
+
+function formatCalculationValue(value, unit = 'tCO₂e') {
+  if (value === null || value === undefined || Number.isNaN(Number(value))) return 'Não calculado';
+  return `${formatNumber(value, 6)} ${unit}`;
+}
+
+function buildCalculationMemory({ formData, result }) {
+  const factor = result?.factorMatch;
+  const calculation = result?.calculation;
+  const source = factor?.fonte || result?.methodology?.fonte || 'Fonte não identificada';
+  const sourceUrl = factor?.urlFonte || 'URL não cadastrada';
+
+  if (formData.tipoAnalise === 'reflorestamento') {
+    const area = Number(formData.areaHa);
+    const period = Number(formData.periodoAnos || factor?.periodoPadraoAnos);
+    const initialStock = factor?.estoqueInicialTC_ha;
+    const finalStock = factor?.estoqueFinalTC_ha;
+    const delta = calculation?.deltaTC_ha ?? (
+      initialStock !== null && initialStock !== undefined && finalStock !== null && finalStock !== undefined
+        ? Number(finalStock) - Number(initialStock)
+        : null
+    );
+
+    return [
+      { label: 'Dado informado', value: `${formatNumber(area, 4)} ha em ${formatNumber(period, 2)} anos` },
+      { label: 'Estoque inicial aplicado', value: `${formatNumber(initialStock, 4)} tC/ha` },
+      { label: 'Estoque final aplicado', value: `${formatNumber(finalStock, 4)} tC/ha` },
+      { label: 'Delta de estoque', value: `${formatNumber(delta, 4)} tC/ha` },
+      { label: 'Fonte', value: source },
+      { label: 'URL da fonte', value: sourceUrl },
+      { label: 'Fórmula', value: 'tCO₂e total = (estoque final - estoque inicial) × 44/12 × área' },
+      { label: 'Cálculo aberto', value: `(${formatNumber(finalStock, 4)} - ${formatNumber(initialStock, 4)}) × 44/12 × ${formatNumber(area, 4)} = ${formatCalculationValue(calculation?.totalTCO2e)}` },
+      { label: 'Estimativa anual', value: calculation?.annualTCO2e !== null && calculation?.annualTCO2e !== undefined ? `${formatCalculationValue(calculation.annualTCO2e, 'tCO₂e/ano')} (${formatCalculationValue(calculation?.totalTCO2e)} / ${formatNumber(period, 2)} anos)` : 'Não calculada' }
+    ];
+  }
+
+  const quantityUnit = formData.tipoAnalise === 'energia_eletrica' ? 'kWh' : 'litros';
+  const factorUnit = formData.tipoAnalise === 'energia_eletrica' ? 'kWh' : 'litro';
+  const quantity = Number(formData.quantidade);
+  const factorValue = factor?.fator;
+
+  return [
+    { label: 'Dado informado', value: `${formatNumber(quantity, 4)} ${quantityUnit}` },
+    { label: 'Fator aplicado', value: factorValue !== null && factorValue !== undefined ? `${formatNumber(factorValue, 8)} tCO₂e/${factorUnit}` : 'Não cadastrado' },
+    { label: 'Fonte', value: source },
+    { label: 'URL da fonte', value: sourceUrl },
+    { label: 'Fórmula', value: 'emissões tCO₂e = quantidade × fator' },
+    { label: 'Cálculo aberto', value: `${formatNumber(quantity, 4)} × ${formatNumber(factorValue, 8)} = ${formatCalculationValue(calculation?.totalTCO2e)}` }
+  ];
 }
 
 function CarbonProjects() {
@@ -316,7 +378,7 @@ function CarbonProjects() {
             <div>
               <div className="flex items-center gap-3 mb-2">
                 <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-eco-500 to-teal-600 flex items-center justify-center shadow-lg shadow-eco-500/20">
-                  <img src={require('../assets/icons/carbono.svg')} alt="" className="w-5 h-5 brightness-0 invert" />
+                  <Leaf size={21} strokeWidth={2.2} className="text-white" />
                 </div>
                 <h1 className="text-3xl md:text-4xl font-black text-stone-800 tracking-tight">Projetos CO₂e</h1>
               </div>
@@ -646,6 +708,7 @@ function renderResultStep({ result, formData, evidences, copyReport, copied, cop
   const pendingValue = formData.tipoAnalise === 'reflorestamento'
     ? 'estoque inicial, estoque final e período metodológico reais'
     : 'fator de emissão real';
+  const calculationMemory = buildCalculationMemory({ formData, result });
 
   return (
     <div>
@@ -707,6 +770,28 @@ function renderResultStep({ result, formData, evidences, copyReport, copied, cop
           </p>
           <ListBlock title="Critérios atendidos" items={result.completeness.attended} />
           <ListBlock title="Pendências" items={result.completeness.pending} />
+        </div>
+      </div>
+
+      <div className="card p-6 mb-6">
+        <div className="flex items-start gap-3 mb-5">
+          <div className="w-10 h-10 rounded-xl bg-eco-50 text-eco-600 flex items-center justify-center shrink-0">
+            <FileText size={19} />
+          </div>
+          <div>
+            <h3 className="text-lg font-bold text-stone-800">Memória de cálculo</h3>
+            <p className="text-sm text-stone-500 leading-relaxed">
+              Esta seção mostra a rastreabilidade do resultado: dado informado, fator ou estoque aplicado, fonte metodológica, fórmula e conta aberta.
+            </p>
+          </div>
+        </div>
+        <div className="grid md:grid-cols-2 gap-4">
+          {calculationMemory.map((item) => (
+            <div key={item.label} className="rounded-2xl border border-stone-100 bg-stone-50/70 p-4">
+              <span className="block text-xs font-black uppercase tracking-widest text-stone-400 mb-1">{item.label}</span>
+              <span className="text-sm font-semibold text-stone-700 leading-relaxed break-words">{item.value}</span>
+            </div>
+          ))}
         </div>
       </div>
 
