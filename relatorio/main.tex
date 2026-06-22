@@ -1,0 +1,1076 @@
+\documentclass[
+	12pt,
+	openright,
+	oneside,
+	a4paper,
+	chapter=TITLE,
+	section=TITLE,
+	subsection=TITLE,
+	subsubsection=TITLE,
+	english,
+	brazil
+	]{abntex2}
+
+% ---
+% Pacotes básicos
+% ---
+\usepackage{mathptmx}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{lastpage}
+\usepackage{indentfirst}
+\usepackage{color}
+\usepackage{graphicx}
+\usepackage{tabularx,ragged2e}
+\usepackage{multirow}
+\usepackage[dvipsnames,table,xcdraw]{xcolor}
+\usepackage{fancyvrb}
+\usepackage{amsfonts}
+\usepackage{amsmath}
+\usepackage[font={bf, small}, labelsep=endash, labelfont=bf]{caption}
+\usepackage[final]{pdfpages}
+\usepackage{hyphenat}
+\usepackage{listings}
+\usepackage{float}
+\usepackage{newfloat}
+
+\newcolumntype{L}{>{\RaggedRight\arraybackslash}X}
+
+\widowpenalty=10000
+\clubpenalty=10000
+
+\usepackage[alf, abnt-emphasize=bf]{abntex2cite}
+
+% =============================================================
+% Substituição do modelo-ufpa/ufpa.sty (arquivo removido)
+% =============================================================
+
+% 1. Ambiente quadro com lista própria
+\DeclareFloatingEnvironment[
+  fileext=loq,
+  listname={Lista de Quadros},
+  name={Quadro},
+  placement=htbp,
+  within=chapter,
+]{quadro}
+\newcommand{\listofquadrosname}{Lista de Quadros}
+
+% 2. Comandos de metadados específicos do template UNIFESO
+\newcommand{\universidade}[1]{\gdef\imprimiruniversidade{#1}}
+\newcommand{\instituto}[1]{\gdef\imprimirinstituto{#1}}
+\newcommand{\curso}[1]{\gdef\imprimircurso{#1}}
+\newcommand{\sobrenome}[1]{\gdef\imprimirsobrenome{#1}}
+\newcommand{\nome}[1]{\gdef\imprimirnome{#1}}
+\newcommand{\palavraschave}[1]{\gdef\imprimirpalavraschave{#1}}
+\newcommand{\datadadefesa}[1]{\gdef\imprimirdatadadefesa{#1}}
+\newcommand{\faculdadedoorientador}[1]{\gdef\imprimirfaculdadedoorientador{#1}}
+\newcommand{\titulacaodoorientador}[1]{\gdef\imprimirtitulacaodoorientador{#1}}
+\newcommand{\faculdadedocoorientador}[1]{\gdef\imprimirfaculdadedocoorientador{#1}}
+\newcommand{\titulacaodocoorientador}[1]{\gdef\imprimirtitulacaodocoorientador{#1}}
+\newcommand{\primeiromembrodabanca}[1]{\gdef\imprimirprimeiromembrodabanca{#1}}
+\newcommand{\titulacaodoprimeiromembro}[1]{\gdef\imprimirtitulacaodoprimeiromembro{#1}}
+\newcommand{\faculdadedoprimeiromembrodabanca}[1]{\gdef\imprimirfaculdadedoprimeiromembrodabanca{#1}}
+\newcommand{\segundomembrodabanca}[1]{\gdef\imprimirsegundomembrodabanca{#1}}
+\newcommand{\titulacaodosegundomembro}[1]{\gdef\imprimirtitulacaodosegundomembro{#1}}
+\newcommand{\faculdadedosegundomembrodabanca}[1]{\gdef\imprimirfaculdadedosegundomembrodabanca{#1}}
+
+% 3. Capa (substitui \imprimircapa do ufpa.sty)
+\renewcommand{\imprimircapa}{%
+  \begin{capa}%
+    \center%
+    {\ABNTEXchapterfont\normalsize\MakeUppercase{\imprimiruniversidade}}\par%
+    \vspace*{0.2cm}%
+    {\normalsize\MakeUppercase{\imprimirinstituto}}\par%
+    \vspace*{0.2cm}%
+    {\normalsize\MakeUppercase{\imprimircurso}}\par%
+    \vspace*{\fill}%
+    {\ABNTEXchapterfont\bfseries\normalsize\imprimirtitulo}\par%
+    \vspace*{1cm}%
+    {\normalsize\imprimirautor}\par%
+    \vspace*{\fill}%
+    {\normalsize\MakeUppercase{\imprimirlocal}}\par%
+    {\normalsize\imprimirdata}%
+  \end{capa}%
+}
+
+% 4. Folha de aprovação (substitui \imprimirfolhadeaprovacao do ufpa.sty)
+\newcommand{\imprimirfolhadeaprovacao}{%
+  \begin{center}%
+    {\ABNTEXchapterfont\bfseries\normalsize\MakeUppercase{\imprimirtitulo}}\par%
+    \vspace{0.8cm}%
+    {\normalsize\imprimirautor}\par%
+    \vspace{0.8cm}%
+    {\normalsize\imprimirpreambulo}\par%
+    \vspace{1cm}%
+    {\normalsize\imprimirdatadadefesa}%
+  \end{center}%
+  \vspace{1.5cm}%
+  \assinatura{\imprimirtitulacaodoorientador\ \imprimirorientador \\ \imprimirfaculdadedoorientador \\ Orientador}%
+  \assinatura{\imprimirtitulacaodocoorientador\ \imprimircoorientador \\ \imprimirfaculdadedocoorientador \\ Coorientador}%
+  \assinatura{\imprimirtitulacaodoprimeiromembro\ \imprimirprimeiromembrodabanca \\ \imprimirfaculdadedoprimeiromembrodabanca \\ Membro da Banca}%
+  \assinatura{\imprimirtitulacaodosegundomembro\ \imprimirsegundomembrodabanca \\ \imprimirfaculdadedosegundomembrodabanca \\ Membro da Banca}%
+}
+
+\tolerance=9000
+\hyphenpenalty=10000
+\hbadness=10000
+\sloppy
+\renewcommand{\ABNTEXchapterfontsize}{\normalsize}
+\renewcommand{\ABNTEXsectionfontsize}{\normalsize}
+\renewcommand{\ABNTEXsubsectionfontsize}{\normalsize}
+\renewcommand{\ABNTEXsectionfont}{}
+\renewcommand{\ABNTEXsubsectionfont}{}
+\renewcommand{\chaptername}{ }
+
+\addto\captionsbrazil{%
+  \renewcommand{\listfigurename}{Lista de Ilustrações}%
+  \renewcommand{\listtablename}{Lista de Tabelas}%
+}
+
+% CORRIGIDO: graphicspath aponta para a pasta de imagens
+\graphicspath{{imagens/}}
+
+\newtheorem{experimento}{Experimento}[section]
+\newcommand{\experimentoautorefname}{Experimento}
+
+% Configuração do listings para código
+\lstset{
+  basicstyle=\small\ttfamily,
+  breaklines=true,
+  frame=single,
+  numbers=left,
+  numberstyle=\tiny,
+  tabsize=2
+}
+
+% ---
+% Informações de dados para CAPA, FOLHA DE ROSTO e FICHA CATALOGRÁFICA
+% ---
+\universidade{CENTRO UNIVERSITÁRIO SERRA DOS ÓRGÃOS - UNIFESO}
+\instituto{DIREÇÃO ACADÊMICA DE CIÊNCIAS HUMANAS E TECNOLÓGICAS - DACHT}
+\curso{CURSO DE BACHARELADO EM CIÊNCIA DA COMPUTAÇÃO}
+\titulo{EcoSphere: Sistema Inteligente para Monitoramento e Identificação de Problemas Ecológicos}
+\autor{BRUNO SOARES DE SOUZA}
+\local{TERESÓPOLIS}
+\data{2026}
+\orientador{Prof. Chessman Kennedy Faria Correa}
+\coorientador{Prof. Alberto Torres Angonese}
+\tipotrabalho{Monografia}
+\preambulo{Trabalho de Conclusão de Curso apresentado ao Centro Universitário Serra dos Órgãos como requisito obrigatório para obtenção do título de Bacharel em Ciência da Computação.}
+\sobrenome{Souza}
+\nome{Bruno}
+\palavraschave{%
+Sustentabilidade,
+Tecnologia Ambiental,
+Monitoramento Ecológico,
+Sistemas Web,
+Ciência da Computação.
+}
+
+\datadadefesa{Data da Defesa: 28 de Novembro de 2026}
+\faculdadedoorientador{FACULDADE DO ORIENTADOR}
+\titulacaodoorientador{MSc}
+\faculdadedocoorientador{FACULDADE DO COORIENTADOR}
+\titulacaodocoorientador{DSc}
+\primeiromembrodabanca{NOME DO PRIMEIRO MEMBRO DA BANCA}
+\titulacaodoprimeiromembro{DSc}
+\faculdadedoprimeiromembrodabanca{FACULDADE DO PRIMEIRO MEMBRO DA BANCA}
+\segundomembrodabanca{NOME DO SEGUNDO MEMBRO DA BANCA}
+\titulacaodosegundomembro{DSc}
+\faculdadedosegundomembrodabanca{FACULDADE DO SEGUNDO MEMBRO DA BANCA}
+
+% ---
+% Configurações de aparência do PDF
+% ---
+\definecolor{blue}{RGB}{41,5,195}
+
+\makeatletter
+\hypersetup{
+		pdftitle={\imprimirtitulo},
+		pdfauthor={\imprimirautor},
+    	pdfsubject={\imprimirpreambulo},
+	    pdfcreator={LaTeX with abnTeX2},
+		pdfkeywords={\imprimirpalavraschave},
+		colorlinks=true,
+    	linkcolor=black,
+    	citecolor=black,
+    	filecolor=magenta,
+		urlcolor=black,
+		bookmarksdepth=4,
+        breaklinks=true
+}
+\makeatother
+
+\setlength{\parindent}{1.5cm}
+\setlength{\parskip}{0.2cm}
+\makeindex
+
+% ----
+% Início do documento
+% ----
+\begin{document}
+
+\nocite{Vrs:2026}
+\selectlanguage{brazil}
+\frenchspacing
+
+% ----------------------------------------------------------
+% ELEMENTOS PRÉ-TEXTUAIS
+% ----------------------------------------------------------
+\imprimircapa
+\imprimirfolhaderosto
+
+\newpage
+
+\begin{folhadeaprovacao}
+\imprimirfolhadeaprovacao
+\end{folhadeaprovacao}
+
+% ---
+% Dedicatória
+% ---
+\begin{dedicatoria}
+   \vspace*{\fill}
+   \flushright
+   \textit{Dedico este trabalho à Thamyres, \\
+   cuja sensibilidade com os animais e com o meio ambiente \\
+   foi a semente que deu origem a esta ideia. \\
+   E a todos que acreditam que a tecnologia \\
+   pode — e deve — servir ao planeta.}
+\end{dedicatoria}
+
+% ---
+% Agradecimentos
+% ---
+\begin{agradecimentos}
+
+Gostaria de expressar meus mais sinceros agradecimentos a todas as pessoas que, de alguma forma, contribuíram para a realização deste trabalho de conclusão de curso, etapa importante da minha trajetória acadêmica em Ciência da Computação.
+
+Em especial, agradeço profundamente à minha namorada, Thamyres Faria de Oliveira, uma das pessoas mais importantes da minha vida. Foi por meio de sua convivência diária com animais e de sua experiência no meio veterinário que surgiram reflexões importantes sobre diversas falhas ecológicas presentes em determinados processos relacionados à área. A observação dessas problemáticas e as discussões que tivemos ao longo do tempo foram fundamentais para a concepção da ideia central deste trabalho. O problema abordado neste TCC nasceu justamente dessas conversas e da vontade de buscar, por meio da tecnologia, soluções que possam gerar impacto positivo. Sem sua contribuição, incentivo e visão prática sobre essa realidade, este projeto provavelmente não teria se concretizado.
+
+Agradeço também ao meu professor orientador, Chessman Kennedy Faria Correa, por toda a orientação, dedicação e apoio ao longo do desenvolvimento deste projeto. Sua experiência, conhecimento técnico e direcionamento foram essenciais desde as primeiras etapas de estruturação da ideia até a consolidação final deste trabalho. Ter o acompanhamento de um profissional experiente foi determinante para que este projeto pudesse evoluir de forma estruturada, crítica e consistente. Sua orientação foi fundamental para transformar uma ideia inicial em uma proposta com potencial real de impacto.
+
+Estendo meus agradecimentos ao coordenador do curso, Professor Alberto Torres Angonese, pela condução do curso de Ciência da Computação e pelo comprometimento com a formação dos alunos. Ao longo da graduação, sua atuação contribuiu significativamente para a construção de um ambiente acadêmico que incentiva o pensamento crítico, a inovação e o desenvolvimento técnico dos estudantes.
+
+Agradeço também a todos os professores do curso que, ao longo da graduação, compartilharam seus conhecimentos, experiências e ensinamentos. Cada disciplina, orientação e desafio enfrentado ao longo dessa jornada contribuiu para a formação do profissional que estou me tornando.
+
+Por fim, agradeço a todos que, direta ou indiretamente, fizeram parte dessa caminhada acadêmica e pessoal. Este trabalho representa não apenas a conclusão de uma etapa importante da minha formação, mas também o resultado de anos de aprendizado, esforço e colaboração.
+
+\end{agradecimentos}
+
+% ---
+% Epígrafe
+% ---
+\begin{epigrafe}
+    \vspace*{\fill}
+	\begin{flushright}
+		\textit{``Que todos os nossos esforços estejam sempre focados no desafio à impossibilidade.\\ Todas as grandes conquistas humanas vieram daquilo que parecia impossível.''\\
+		(Charles Chaplin)}
+	\end{flushright}
+\end{epigrafe}
+
+% ---
+% Resumo (parágrafo único, objetivo) — alinhado à arquitetura atual
+% ---
+\setlength{\absparsep}{18pt}
+\begin{resumo}
+
+O crescimento das atividades humanas tem gerado impactos ambientais cada vez mais significativos, tornando necessário o uso de ferramentas tecnológicas capazes de auxiliar na identificação, monitoramento e análise de problemas ecológicos. Nesse contexto, este trabalho apresenta o desenvolvimento do EcoSphere, uma plataforma web de sustentabilidade ambiental que integra inteligência artificial, gamificação e educação ecológica em um único sistema, com o objetivo de conscientizar e engajar usuários em práticas sustentáveis. A motivação surgiu da observação prática de falhas ecológicas recorrentes identificadas no ambiente veterinário. A solução adota uma arquitetura web composta por uma aplicação de página única (\textit{Single Page Application}) em React, uma API REST própria em Node.js/Express e um banco de dados PostgreSQL gerenciado na nuvem (Neon), recorrendo a um modelo de inteligência artificial multimodal pré-treinado (Google Gemini) para a classificação de resíduos por imagem e a serviços públicos de dados ambientais (Open-Meteo). Os resultados demonstram que a abordagem adotada constitui uma solução acessível e de baixo custo para democratizar o acesso à tecnologia ambiental, ao apoiar-se em serviços gerenciados e gratuitos e dispensando a infraestrutura dedicada de treinamento e inferência normalmente associada a sistemas de aprendizado de máquina.
+
+\textbf{Palavras-chave}: \imprimirpalavraschave
+
+\end{resumo}
+
+% ---
+% Resumo em inglês
+% ---
+\begin{resumo}[Abstract]
+ \begin{otherlanguage*}{english}
+
+The growth of human activities has generated increasingly significant environmental impacts, making it necessary to use technological tools capable of assisting in the identification, monitoring, and analysis of ecological problems. In this context, this work presents the development of EcoSphere, a web-based environmental sustainability platform that integrates artificial intelligence, gamification, and ecological education into a single system, aiming to raise awareness and engage users in sustainable practices. The motivation arose from practical observations of recurring ecological flaws identified in the veterinary environment. The solution adopts a web architecture composed of a Single Page Application built with React, a custom REST API written in Node.js/Express, and a managed cloud PostgreSQL database (Neon), relying on a pre-trained multimodal artificial intelligence model (Google Gemini) for image-based waste classification and on public environmental data services (Open-Meteo). The results demonstrate that the adopted approach constitutes an accessible and low-cost solution for democratizing access to environmental technology, by relying on managed and free services and dispensing with the dedicated training and inference infrastructure usually associated with machine learning systems.
+
+   \vspace{\onelineskip}
+   \noindent
+   \textbf{Keywords}: Sustainability. Environmental Technology. Ecological Monitoring. Web Systems. Computer Science.
+ \end{otherlanguage*}
+\end{resumo}
+
+% ---
+% Listas
+% ---
+\pdfbookmark[0]{\listfigurename}{lof}
+\listoffigures*
+\cleardoublepage
+
+\pdfbookmark[0]{Lista de Quadros}{loq}
+\listof{quadro}{Lista de Quadros}
+\cleardoublepage
+
+\pdfbookmark[0]{\listtablename}{lot}
+\listoftables*
+\cleardoublepage
+
+% ---
+% Lista de abreviaturas e siglas
+% ---
+\begin{siglas}
+  \item[ABNT] Associação Brasileira de Normas Técnicas
+  \item[API] \textit{Application Programming Interface}
+  \item[AQI] \textit{Air Quality Index} — Índice de Qualidade do Ar
+  \item[BaaS] \textit{Backend as a Service}
+  \item[BD] Banco de Dados
+  \item[CNN] \textit{Convolutional Neural Network} — Rede Neural Convolucional
+  \item[CSS] \textit{Cascading Style Sheets}
+  \item[HTML] \textit{HyperText Markup Language}
+  \item[HTTP] \textit{HyperText Transfer Protocol}
+  \item[IA] Inteligência Artificial
+  \item[IoT] \textit{Internet of Things} — Internet das Coisas
+  \item[JWT] \textit{JSON Web Token}
+  \item[LLM] \textit{Large Language Model} — Modelo de Linguagem de Grande Escala
+  \item[ML] \textit{Machine Learning} — Aprendizado de Máquina
+  \item[ORM] \textit{Object-Relational Mapping}
+  \item[PWA] \textit{Progressive Web App}
+  \item[REST] \textit{Representational State Transfer}
+  \item[SPA] \textit{Single Page Application}
+  \item[SQL] \textit{Structured Query Language}
+  \item[TI] Tecnologia da Informação
+  \item[UI] \textit{User Interface} — Interface do Usuário
+  \item[UV] Ultravioleta
+  \item[UX] \textit{User Experience} — Experiência do Usuário
+\end{siglas}
+
+% ---
+% Lista de símbolos
+% ---
+\begin{simbolos}
+  \item[$CO_2$] Dióxido de carbono
+  \item[$O_2$] Oxigênio
+  \item[$\%$] Percentual
+  \item[$n$] Número de camadas em uma rede neural
+\end{simbolos}
+
+% ---
+% Sumário
+% ---
+\pdfbookmark[0]{\contentsname}{toc}
+\tableofcontents*
+\cleardoublepage
+
+% ----------------------------------------------------------
+% ELEMENTOS TEXTUAIS
+% ----------------------------------------------------------
+\textual
+\pagestyle{simple}
+% CORRIGIDO (ponto do professor): a Introdução deve iniciar na página 1.
+% Reinicia a numeração arábica no começo da parte textual.
+\pagenumbering{arabic}
+\setcounter{page}{1}
+
+% ==========================================================
+% CAPÍTULO 1 — INTRODUÇÃO
+% ==========================================================
+\chapter{Introdução}
+
+A crescente preocupação com os impactos ambientais causados pelas atividades humanas tem impulsionado o desenvolvimento de soluções tecnológicas voltadas ao monitoramento, análise e mitigação de problemas ecológicos. O descarte inadequado de resíduos sólidos, a emissão descontrolada de gases de efeito estufa e o baixo engajamento da população com práticas sustentáveis configuram desafios urgentes na sociedade contemporânea \cite{PNUMA2023}.
+
+Nesse cenário, a Tecnologia da Informação pode desempenhar papel estratégico ao fornecer ferramentas acessíveis, interativas e escaláveis que promovam mudanças de comportamento. A combinação de inteligência artificial, gamificação e educação digital representa uma abordagem promissora para ampliar o alcance e a efetividade de iniciativas ambientais \cite{DETERDING2011}.
+
+A motivação para o projeto surgiu da observação prática de situações recorrentes no ambiente veterinário, nas quais determinadas práticas e processos apresentavam impactos ecológicos relevantes — como o descarte inadequado de materiais biológicos e o uso indiscriminado de recursos. Essas observações impulsionaram a busca por uma solução tecnológica capaz de conscientizar, educar e engajar pessoas em ações mais sustentáveis.
+
+Diante desse contexto, este trabalho propõe o \textbf{EcoSphere}, uma plataforma web de sustentabilidade ambiental que reúne, em um único sistema, recursos de visão computacional para a identificação de resíduos, mecânicas de gamificação para o engajamento e módulos educativos sobre meio ambiente. A plataforma é projetada para que qualquer usuário com acesso a um \textit{smartphone} ou computador possa classificar resíduos por imagem, acompanhar dados climáticos em tempo real, aprender sobre sustentabilidade de forma interativa e acumular recompensas por suas ações.
+
+% CORRIGIDO (ponto do professor): a Justificativa passa a vir ANTES dos Objetivos.
+\section{Justificativa}
+
+O descarte inadequado de resíduos sólidos representa um dos maiores desafios ambientais urbanos. Segundo o Panorama dos Resíduos Sólidos no Brasil \cite{ABRELPE2022}, o país gerou mais de 82 milhões de toneladas de resíduos em 2022, dos quais aproximadamente 47\% foram destinados de forma inadequada. Além disso, a falta de informação e de meios acessíveis de identificação de resíduos recicláveis constitui uma barreira significativa à prática da reciclagem.
+
+Estudos na área de psicologia comportamental e \textit{design} de jogos demonstram que a gamificação — a aplicação de elementos de jogos em contextos não lúdicos — aumenta significativamente a adesão a mudanças de comportamento \cite{HAMARI2014}. Ao transformar ações sustentáveis em desafios com recompensas mensuráveis, é possível criar ciclos de engajamento que sustentam a prática ao longo do tempo.
+
+O EcoSphere surge como resposta tecnológica a esse cenário, unindo inteligência artificial (tornando acessível a identificação de resíduos para qualquer pessoa com um \textit{smartphone}), gamificação (transformando ações sustentáveis em desafios com recompensas), educação digital (oferecendo conteúdo de qualidade de forma interativa e progressiva) e comunidade (criando um senso de pertencimento e impacto coletivo mensurável). Além disso, ao apoiar-se em serviços gerenciados e gratuitos, a proposta busca demonstrar que é possível disponibilizar tecnologia ambiental de qualidade com baixo custo de infraestrutura, ampliando seu potencial de adoção.
+
+\section{Objetivos}
+
+\subsection{Objetivo Geral}
+
+% CORRIGIDO (ponto do professor): objetivo geral focado no PROBLEMA, e não na solução.
+Investigar como recursos de Tecnologia da Informação — em especial visão computacional, gamificação e educação digital — podem contribuir para mitigar o descarte inadequado de resíduos sólidos e o baixo engajamento da população com práticas sustentáveis, tornando a identificação de resíduos, a conscientização ambiental e o monitoramento ecológico mais acessíveis ao cidadão comum.
+
+\subsection{Objetivos Específicos}
+
+Para alcançar o objetivo geral, foram definidos os seguintes objetivos específicos:
+
+\begin{itemize}
+    \item Implementar um sistema de classificação de resíduos por imagem apoiado em inteligência artificial, utilizando um modelo multimodal pré-treinado (Google Gemini) e um mecanismo de \textit{fallback} de execução no navegador (TensorFlow.js), dispensando a infraestrutura dedicada de treinamento e inferência de modelos;
+    \item Criar um sistema de gamificação completo com pontos (\textit{EcoPoints}), \textit{badges}, ranking e missões para aumentar o engajamento dos usuários;
+    \item Desenvolver um módulo educacional com cursos interativos, artigos, desafios e dicas práticas sobre sustentabilidade;
+    \item Integrar dados meteorológicos e de qualidade do ar reais por meio de APIs públicas (Open-Meteo) para o monitoramento ambiental;
+    \item Construir um sistema de recompensas no qual o usuário possa trocar pontos por benefícios;
+    \item Garantir que toda a plataforma seja responsiva e funcione adequadamente em dispositivos móveis e \textit{desktop};
+    \item Implementar autenticação segura por \textit{e-mail}/senha, com armazenamento de credenciais por \textit{hashing} (bcrypt) e sessões baseadas em \textit{tokens} JWT;
+    \item Persistir os dados em um banco de dados PostgreSQL gerenciado na nuvem (Neon), acessado por meio de uma API REST própria desenvolvida em Node.js/Express.
+\end{itemize}
+
+\section{Estrutura do Trabalho}
+
+Este trabalho está organizado em cinco capítulos. O \textbf{Capítulo 2} apresenta a fundamentação teórica, abordando os conceitos de sustentabilidade, inteligência artificial aplicada à visão computacional, gamificação, tecnologias web utilizadas e trabalhos relacionados. O \textbf{Capítulo 3} descreve a metodologia e o desenvolvimento do sistema, detalhando a arquitetura, o banco de dados, os módulos implementados e as decisões técnicas tomadas. O \textbf{Capítulo 4} apresenta os resultados obtidos e uma discussão sobre o desempenho e as funcionalidades da plataforma. Por fim, o \textbf{Capítulo 5} apresenta as conclusões, limitações e possíveis trabalhos futuros.
+
+% ==========================================================
+% CAPÍTULO 2 — FUNDAMENTAÇÃO TEÓRICA
+% ==========================================================
+\chapter{Fundamentação Teórica}
+
+Este capítulo apresenta os principais conceitos e tecnologias que fundamentam o desenvolvimento do EcoSphere, organizados em cinco eixos: sustentabilidade e gestão de resíduos, inteligência artificial e visão computacional, gamificação como estratégia de engajamento, tecnologias web modernas e trabalhos relacionados.
+
+\section{Sustentabilidade e Gestão de Resíduos Sólidos}
+
+A gestão adequada de resíduos sólidos é uma das dimensões centrais do desenvolvimento sustentável. A Política Nacional de Resíduos Sólidos (Lei nº 12.305/2010) \cite{PNRS2010} estabelece princípios como a responsabilidade compartilhada pelo ciclo de vida dos produtos e a hierarquia de tratamento: não geração, redução, reutilização, reciclagem, tratamento e disposição final ambientalmente adequada. Tais princípios estão diretamente alinhados ao conceito de economia circular, no qual os materiais são mantidos em uso pelo maior tempo possível, reduzindo a extração de recursos naturais e a geração de rejeitos.
+
+A correta separação de resíduos na origem é condição indispensável para viabilizar a reciclagem. No Brasil, a triagem por cores segue a Resolução CONAMA nº 275/2001 \cite{CONAMA275}: azul (papel), vermelho (plástico), verde (vidro), amarelo (metal), marrom (orgânicos) e laranja (perigosos/eletrônicos). A falta de conhecimento sobre essa classificação é identificada como um dos principais obstáculos à reciclagem domiciliar \cite{IPEA2012}. Esse cenário evidencia a oportunidade de uso de ferramentas tecnológicas que auxiliem o cidadão a identificar corretamente o tipo de resíduo e a destinação adequada, reduzindo a barreira informacional que limita a adesão à coleta seletiva.
+
+\section{Inteligência Artificial e Visão Computacional}
+
+A inteligência artificial (IA) compreende um conjunto de técnicas computacionais destinadas a simular capacidades cognitivas humanas, como percepção, raciocínio e aprendizado. No contexto deste trabalho, destaca-se o \textit{machine learning} (ML) — aprendizado de máquina —, paradigma no qual o sistema aprende padrões a partir de dados em vez de regras explicitamente programadas, e em particular o \textit{deep learning}, baseado em redes neurais profundas com múltiplas camadas de representação \cite{LECUN2015}.
+
+\subsection{Redes Neurais Convolucionais}
+
+As redes neurais convolucionais (CNNs) são arquiteturas de redes neurais profundas especialmente adequadas ao processamento de imagens. Sua estrutura é composta por camadas convolucionais (que extraem características locais por meio de filtros aplicados sobre regiões da imagem), camadas de \textit{pooling} (que reduzem a dimensionalidade preservando as informações mais relevantes) e camadas densas (que realizam a classificação a partir das características extraídas). A capacidade de aprender representações hierárquicas de \textit{features} — das bordas e texturas mais simples, nas primeiras camadas, a formas e objetos complexos, nas camadas profundas — torna as CNNs altamente eficazes em tarefas de reconhecimento visual \cite{GOODFELLOW2016}.
+
+\subsection{Transfer Learning e MobileNet}
+
+O \textit{transfer learning} consiste no reaproveitamento de um modelo previamente treinado em um grande conjunto de dados como ponto de partida para uma nova tarefa. Essa técnica reduz significativamente o tempo e o volume de dados necessários para o treinamento, sendo especialmente útil em cenários com poucos dados rotulados \cite{PAN2010}.
+
+O MobileNetV2 é uma arquitetura CNN otimizada para dispositivos com recursos computacionais limitados. Utiliza \textit{depthwise separable convolutions}, que reduzem o número de operações mantendo boa acurácia, tornando-a adequada para execução em dispositivos móveis e navegadores \cite{SANDLER2018}.
+
+\subsection{TensorFlow.js}
+
+O TensorFlow.js é uma biblioteca JavaScript que permite o treinamento e a execução de modelos de aprendizado de máquina diretamente no navegador, aproveitando a aceleração via WebGL. Essa abordagem elimina a necessidade de um servidor de inferência dedicado, reduz a latência, preserva a privacidade do usuário (as imagens não são transmitidas para servidores externos) e permite funcionamento \textit{offline} após o carregamento inicial do modelo \cite{SMILKOV2019}. No EcoSphere, essa tecnologia é empregada como mecanismo de \textit{fallback} para a classificação de resíduos, garantindo o funcionamento da plataforma mesmo quando o serviço de IA em nuvem não está disponível.
+
+\subsection{Google Teachable Machine}
+
+O Google Teachable Machine é uma plataforma \textit{no-code} que permite criar e treinar modelos de classificação de imagens por meio de uma interface gráfica intuitiva, exportando-os no formato compatível com TensorFlow.js. A plataforma utiliza \textit{transfer learning} sobre o MobileNetV2, possibilitando o treinamento com conjuntos de dados relativamente pequenos \cite{CARNEY2020}.
+
+\subsection{Modelos Multimodais e o Google Gemini}
+
+Os avanços recentes em inteligência artificial deram origem aos modelos de linguagem de grande escala (\textit{Large Language Models}, LLMs) e, mais recentemente, aos modelos multimodais, capazes de processar conjuntamente diferentes modalidades de dados — como texto e imagens — em uma única arquitetura \cite{GEMINI2023}. O Google Gemini é uma família de modelos multimodais pré-treinados que pode receber uma imagem como entrada e produzir uma descrição ou classificação textual estruturada, dispensando o treinamento de um modelo específico para cada tarefa.
+
+A utilização de um modelo multimodal pré-treinado, acessível por meio de uma API, representa uma alternativa de baixo custo de desenvolvimento para tarefas de visão computacional: transfere-se o esforço de treinamento e a manutenção da infraestrutura de inferência para o provedor do serviço, exigindo apenas requisições à API. Em contrapartida, essa abordagem introduz uma dependência de conectividade e dos limites de uso (\textit{quotas}) do serviço, além de implicar o envio das imagens a um servidor externo — aspectos que devem ser considerados no projeto da solução. No EcoSphere, o Gemini é o mecanismo principal de classificação de resíduos por imagem, complementado pelo \textit{fallback} local em TensorFlow.js.
+
+\section{Gamificação}
+
+A gamificação é definida como o uso de elementos e mecânicas de \textit{design} de jogos em contextos não lúdicos com o objetivo de motivar e engajar pessoas \cite{DETERDING2011}. Os principais elementos de gamificação incluem: pontos (recompensas numéricas por ações), \textit{badges} ou conquistas (reconhecimento visual de marcos), rankings (comparação social de desempenho), missões (objetivos estruturados) e barras de progresso (visualização do avanço rumo a um objetivo) \cite{HAMARI2014}.
+
+Estudos empíricos demonstram que a gamificação pode aumentar a motivação intrínseca e extrínseca dos usuários em plataformas digitais, especialmente quando associada a objetivos com significado social, como ações ambientais \cite{JOHNSON2016}. A teoria da autodeterminação \cite{RYAN2000} sugere que sistemas gamificados são mais eficazes quando satisfazem as necessidades psicológicas básicas de competência (a sensação de progresso e domínio), autonomia (a percepção de que as escolhas são próprias) e pertencimento (o vínculo com uma comunidade). Quando esses fatores são contemplados, a gamificação tende a converter a motivação inicial — frequentemente extrínseca, baseada em recompensas — em hábitos sustentados ao longo do tempo, resultado especialmente desejável no contexto de mudanças de comportamento ambiental.
+
+\section{Tecnologias Web Modernas}
+
+\subsection{React e Single Page Applications}
+
+O React é uma biblioteca JavaScript para construção de interfaces de usuário baseada no conceito de componentes reutilizáveis e em um DOM virtual (\textit{Virtual DOM}), que otimiza as atualizações da interface ao realizar comparações eficientes entre estados \cite{REACTDOCS2024}. O padrão SPA (\textit{Single Page Application}) consiste em carregar a aplicação em uma única requisição HTML, com as navegações subsequentes sendo gerenciadas pelo \textit{JavaScript} no cliente, resultando em experiências mais fluidas e responsivas \cite{FLANAGAN2020}.
+
+\subsection{APIs REST e Arquitetura Cliente-Servidor}
+
+O estilo arquitetural REST (\textit{Representational State Transfer}), formalizado por \citeonline{FIELDING2000}, define um conjunto de restrições para a construção de sistemas distribuídos na web, baseando-se em recursos identificados por URLs, na ausência de estado entre requisições (\textit{statelessness}) e no uso dos métodos do protocolo HTTP (GET, POST, PUT, DELETE) para manipular esses recursos. Em uma arquitetura cliente-servidor que segue esse estilo, a aplicação \textit{front-end} comunica-se com um servidor por meio de uma API REST que expõe operações sobre os dados, normalmente trafegando informações no formato JSON. Esse desacoplamento permite que a interface e a lógica de negócio evoluam de forma independente e que o mesmo \textit{back-end} atenda a diferentes clientes (web, móvel, entre outros).
+
+\subsection{Autenticação por Token (JWT) e Hashing de Senhas}
+
+Em aplicações web modernas, a autenticação sem estado é frequentemente implementada por meio de \textit{tokens}. O padrão JWT (\textit{JSON Web Token}) \cite{JONES2015} define um formato compacto e autocontido para a transmissão segura de informações entre as partes na forma de um objeto JSON assinado digitalmente. Após a autenticação, o servidor emite um \textit{token} que o cliente apresenta nas requisições seguintes, dispensando a manutenção de sessões no servidor.
+
+A proteção das credenciais dos usuários exige que as senhas nunca sejam armazenadas em texto puro. Para isso, utilizam-se funções de \textit{hashing} criptográfico projetadas especificamente para senhas, como o bcrypt, que incorpora um fator de custo ajustável e um valor aleatório (\textit{salt}) para dificultar ataques de força bruta e de tabelas pré-computadas \cite{PROVOS1999}.
+
+\subsection{PostgreSQL e Bancos de Dados Gerenciados}
+
+O PostgreSQL é um sistema de gerenciamento de banco de dados relacional de código aberto, reconhecido por sua robustez, conformidade com o padrão SQL e suporte a recursos avançados, como o tipo de dado JSONB, que permite armazenar e consultar documentos JSON de forma eficiente dentro de um modelo relacional \cite{POSTGRESQL2024}. Essa flexibilidade possibilita combinar a integridade de um esquema relacional com a flexibilidade de estruturas semiestruturadas.
+
+O modelo de \textit{Backend as a Service} (BaaS) disponibiliza infraestrutura de \textit{backend} pré-configurada — banco de dados, autenticação e APIs — como um serviço gerenciado, reduzindo o tempo de desenvolvimento e os custos de infraestrutura \cite{LANE2017}. Uma variação desse modelo é o uso de bancos de dados gerenciados (\textit{managed databases}), nos quais apenas a camada de persistência é delegada a um provedor, mantendo-se o controle sobre a lógica de negócio. O Neon é um serviço de PostgreSQL gerenciado, com arquitetura \textit{serverless} e plano gratuito, que oferece o banco de dados como serviço enquanto a aplicação mantém uma API própria para autenticação e regras de negócio \cite{NEONDOCS2024}. Essa estratégia combina o baixo custo operacional do banco gerenciado com a flexibilidade de uma camada de aplicação personalizada.
+
+\subsection{Tailwind CSS e Design Systems}
+
+O Tailwind CSS é um \textit{framework} CSS utilitário que possibilita a construção de interfaces diretamente nas marcações HTML por meio de classes pré-definidas. Sua abordagem \textit{utility-first} agiliza o desenvolvimento e garante consistência visual quando combinada a um sistema de \textit{design} (paleta de cores, tipografia e espaçamentos padronizados) \cite{TAILWINDDOCS2024}.
+
+\section{Monitoramento Ambiental Digital}
+
+O monitoramento ambiental em tempo real por meio de APIs meteorológicas e sensores IoT representa uma tendência crescente na gestão ambiental urbana. A disponibilização de dados como temperatura, umidade, qualidade do ar e índice UV de forma acessível ao cidadão comum constitui um passo importante para a democratização da informação ambiental \cite{ANTUNES2020}. A API Open-Meteo disponibiliza dados meteorológicos e de qualidade do ar de forma gratuita e sem necessidade de chave de acesso, com granularidade geográfica e previsões de vários dias, sendo adequada a aplicações de monitoramento ambiental de baixo custo \cite{OPENMETEO2024}. Alternativamente, serviços comerciais como o OpenWeatherMap oferecem dados semelhantes mediante o uso de chaves de API \cite{OWMDOCS2024}.
+
+% NOVO: Seção de Trabalhos Relacionados
+\section{Trabalhos Relacionados}
+
+Esta seção apresenta trabalhos que abordam temáticas similares ao EcoSphere, situando a proposta no contexto do estado da arte em plataformas de sustentabilidade, classificação de resíduos por inteligência artificial e sistemas gamificados de engajamento ambiental.
+
+\subsection{Classificação de Resíduos com Inteligência Artificial}
+
+Diversos trabalhos exploram o uso de visão computacional para a classificação automática de resíduos sólidos. \citeonline{ARAL2019} propõem um sistema baseado em CNNs treinadas sobre o conjunto de dados TrashNet, alcançando acurácia superior a 90\% na identificação de seis categorias de resíduos. O trabalho demonstra a viabilidade técnica da abordagem, porém exige o treinamento de um modelo dedicado e infraestrutura de servidor para inferência. O EcoSphere segue um caminho distinto: em vez de treinar um classificador próprio, reutiliza um modelo multimodal pré-treinado (Google Gemini) acessível por API, reduzindo o custo de desenvolvimento, e oferece um \textit{fallback} de inferência no navegador via TensorFlow.js.
+
+\citeonline{YANG2016} introduzem o conjunto de dados TrashNet — amplamente utilizado como referência na área — e avaliam classificadores baseados em SVM e CNNs para seis categorias de resíduos. O EcoSphere se apoia nas mesmas categorias (plástico, metal, vidro, papel, orgânico e eletrônico), adaptando-as à Resolução CONAMA nº 275/2001 para o contexto brasileiro.
+
+\subsection{Gamificação Aplicada à Sustentabilidade}
+
+\citeonline{JOHNSON2016} analisam o impacto de mecânicas de gamificação em plataformas de educação ambiental, concluindo que pontos, \textit{badges} e rankings aumentam significativamente o tempo de engajamento e a retenção de conteúdo. O EcoSphere incorpora essas mecânicas de forma integrada, conectando-as diretamente a ações concretas de sustentabilidade, como a classificação de resíduos e a conclusão de cursos.
+
+A plataforma Opower \cite{ALCOTT2008}, utilizada por concessionárias de energia nos Estados Unidos, emprega comparação social e metas personalizadas para reduzir o consumo de energia residencial. Os resultados demonstram reduções de até 2\% no consumo, evidenciando o potencial de plataformas digitais gamificadas na promoção de comportamentos sustentáveis. O EcoSphere adota abordagem similar, com ranking público e missões progressivas.
+
+\subsection{Plataformas Web de Monitoramento Ambiental}
+
+\citeonline{ANTUNES2020} propõem uma arquitetura de monitoramento ambiental baseada em IoT e visualização de dados em tempo real, voltada à gestão urbana. Embora de escopo diferente, o trabalho reforça a importância de interfaces acessíveis para a democratização da informação ambiental, objetivo também perseguido pelo módulo de monitoramento climático do EcoSphere.
+
+\subsection{Posicionamento do EcoSphere}
+
+O EcoSphere se diferencia dos trabalhos analisados por três características centrais: (i) o uso de um modelo multimodal pré-treinado para a classificação de resíduos, que dispensa o treinamento de um modelo dedicado e reduz o custo de desenvolvimento, com um mecanismo de \textit{fallback} de execução no navegador; (ii) a integração de múltiplos módulos — classificação de resíduos, monitoramento ambiental, gamificação e educação — em uma única plataforma coesa; e (iii) a adaptação ao contexto regulatório brasileiro, seguindo a Resolução CONAMA nº 275/2001 na categorização dos resíduos. Essa combinação de características não foi identificada em nenhum dos trabalhos relacionados levantados, evidenciando a contribuição original da proposta.
+
+% ==========================================================
+% CAPÍTULO 3 — METODOLOGIA E DESENVOLVIMENTO
+% ==========================================================
+\chapter{Metodologia e Desenvolvimento}
+
+Este capítulo descreve as decisões técnicas, a arquitetura e os módulos implementados no EcoSphere. O desenvolvimento seguiu uma abordagem iterativa e incremental, com as funcionalidades sendo implementadas e validadas por módulo.
+
+% CORRIGIDO (ponto do professor): as figuras foram deslocadas da Introdução para
+% o capítulo da solução. A Figura do problema e a da visão conceitual são
+% apresentadas aqui, no início da descrição da solução.
+\section{Visão Geral da Solução}
+
+O EcoSphere foi concebido como resposta direta ao problema ecológico observado na prática, sintetizado na Figura~\ref{fig:problema-ecologico}: o descarte inadequado de resíduos e o baixo engajamento com práticas sustentáveis. A partir desse problema, projetou-se uma plataforma web integrada cuja visão conceitual é apresentada na Figura~\ref{fig:conceito-ecosphere}, reunindo, em um único sistema, a classificação de resíduos por imagem, o monitoramento ambiental, a gamificação e a educação ecológica.
+
+\begin{figure}[H]
+\centering
+\caption{Representação do problema ecológico identificado}
+\includegraphics[width=0.9\textwidth]{fig_problema_ecologico.png}
+\legend{Fonte: Elaborado pelo autor (2026).}
+\label{fig:problema-ecologico}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\caption{Visão conceitual do sistema EcoSphere}
+\includegraphics[width=0.9\textwidth]{fig_conceito_ecosphere.png}
+\legend{Fonte: Elaborado pelo autor (2026).}
+\label{fig:conceito-ecosphere}
+\end{figure}
+
+\section{Arquitetura Geral do Sistema}
+
+O EcoSphere adota o padrão \textbf{SPA} (\textit{Single Page Application}) com React 18, no qual toda a navegação é controlada pelo React Router v6 no cliente, sem recarregamento de página. A arquitetura é organizada em três camadas principais:
+
+\begin{itemize}
+    \item \textbf{Camada de Apresentação}: componentes React responsivos, estilizados com Tailwind CSS e animados com Framer Motion;
+    \item \textbf{Camada de Serviços}: módulos de \textit{front-end} (\texttt{api.js} e um adaptador de serviços) que abstraem a comunicação com a API REST e com os serviços externos;
+    \item \textbf{Camada de \textit{Back-end} e Infraestrutura}: uma API REST própria em Node.js/Express, um banco de dados PostgreSQL gerenciado (Neon), a API pública Open-Meteo (dados climáticos) e o serviço Google Gemini (classificação de imagens e assistente virtual), além do TensorFlow.js executado no próprio navegador como \textit{fallback}.
+\end{itemize}
+
+A Figura~\ref{fig:arquitetura-tecnica} ilustra a comunicação entre essas camadas. O \textit{front-end} consome a API REST própria — responsável pela autenticação (JWT), pelas regras de negócio e pela persistência no PostgreSQL gerenciado (Neon) — e integra-se diretamente a serviços externos a partir do navegador: a API Open-Meteo, para dados climáticos, e o Google Gemini, para a classificação de resíduos por imagem.
+
+% OBSERVAÇÃO: atualizar a imagem fig_arquitetura_tecnica.png para refletir os
+% serviços atuais (API Node/Express + Neon, Open-Meteo, Google Gemini, TensorFlow.js).
+\begin{figure}[htbp]
+\centering
+\caption{Arquitetura técnica do sistema EcoSphere}
+\includegraphics[width=0.9\textwidth]{fig_arquitetura_tecnica.png}
+\legend{Fonte: Elaborado pelo autor (2026).}
+\label{fig:arquitetura-tecnica}
+\end{figure}
+
+\subsection{Decisões Arquiteturais}
+
+A escolha por uma SPA em React apoiada em uma API REST própria foi motivada por três fatores principais. Primeiro, a necessidade de entregar uma experiência de usuário fluida e responsiva, sem os atrasos associados a recarregamentos de página. Segundo, o controle total sobre a lógica de autenticação e as regras de negócio, mantido na API em Node.js/Express, ao mesmo tempo em que a complexidade de operar o banco de dados é delegada a um serviço gerenciado (Neon), de baixo custo e com plano gratuito. Terceiro, a segurança baseada em \textit{tokens} JWT e na verificação de permissões no servidor, que garante que cada usuário acesse apenas os recursos a que tem direito.
+
+A decisão de utilizar um modelo multimodal pré-treinado (Google Gemini) para a classificação de resíduos, em vez de treinar um modelo próprio, representa um diferencial relevante: dispensa a coleta e a rotulagem de grandes conjuntos de dados, bem como a manutenção de infraestrutura dedicada de treinamento e inferência. Para preservar o funcionamento da plataforma em cenários sem conectividade ou sem a chave de API configurada, o sistema conta com um mecanismo de \textit{fallback} de classificação executado no navegador via TensorFlow.js.
+
+\section{Banco de Dados}
+
+\subsection{Modelagem e Estrutura das Tabelas}
+
+O banco de dados PostgreSQL, gerenciado pelo Neon, é composto por três tabelas principais. A Figura~\ref{fig:bd-ecosfera} apresenta o modelo entidade-relacionamento.
+
+\begin{figure}[htbp]
+\centering
+\caption{Modelo entidade-relacionamento do banco de dados do EcoSphere}
+\includegraphics[width=0.95\textwidth]{fig_banco_dados.png}
+\legend{Fonte: Elaborado pelo autor (2026).}
+\label{fig:bd-ecosfera}
+\end{figure}
+
+A tabela \texttt{profiles} armazena os dados do perfil de cada usuário, incluindo nome, e-mail, \textit{hash} da senha, URL do avatar, quantidade de \textit{EcoPoints}, nível, \textit{badges} (em formato JSONB), \textit{streak} de dias consecutivos e um campo booleano de administrador. Os campos \texttt{badges} e \texttt{streak} foram modelados como JSONB para permitir estruturas flexíveis sem a criação de tabelas adicionais.
+
+A tabela \texttt{waste\_classifications} registra cada classificação de resíduo realizada, armazenando a categoria identificada, o grau de confiança do modelo (entre 0,0 e 1,0), os pontos concedidos e a referência ao usuário. A tabela \texttt{user\_game\_actions} registra ações de gamificação (jogos, quiz, desafios), permitindo o cálculo do histórico de pontuação e a geração de gráficos de progresso.
+
+O Quadro~\ref{qua:tabela-profiles} apresenta os campos e tipos de dados da tabela \texttt{profiles}.
+
+\begin{quadro}[htbp]
+\caption{Estrutura da tabela \texttt{profiles}}
+\label{qua:tabela-profiles}
+\begin{tabularx}{\textwidth}{|l|l|L|}
+\hline
+\textbf{Campo} & \textbf{Tipo} & \textbf{Descrição} \\
+\hline
+\texttt{id} & UUID & Chave primária (gerada por \texttt{gen\_random\_uuid()}) \\
+\hline
+\texttt{name} & TEXT & Nome do usuário \\
+\hline
+\texttt{email} & TEXT & E-mail do usuário (único) \\
+\hline
+\texttt{password\_hash} & TEXT & \textit{Hash} da senha gerado com bcrypt \\
+\hline
+\texttt{avatar\_url} & TEXT & URL/dados da foto de perfil \\
+\hline
+\texttt{eco\_points} & INTEGER & Pontos acumulados (padrão: 0) \\
+\hline
+\texttt{level} & TEXT & Nível atual (padrão: ``Iniciante'') \\
+\hline
+\texttt{badges} & JSONB & Array de badges conquistadas \\
+\hline
+\texttt{streak} & JSONB & Sequência de dias consecutivos \\
+\hline
+\texttt{is\_admin} & BOOLEAN & Indica se o usuário é administrador \\
+\hline
+\texttt{created\_at} & TIMESTAMPTZ & Data de criação do registro \\
+\hline
+\texttt{updated\_at} & TIMESTAMPTZ & Data da última atualização \\
+\hline
+\end{tabularx}
+\legend{Fonte: Elaborado pelo autor (2026).}
+\end{quadro}
+
+\subsection{Criação de Perfil no Registro}
+
+A criação do perfil do usuário ocorre no momento do cadastro, tratada diretamente pela API. Ao receber uma requisição no \textit{endpoint} de registro, o servidor valida os dados, gera o \textit{hash} da senha com bcrypt e insere o novo registro na tabela \texttt{profiles}. Como regra de inicialização, o primeiro usuário cadastrado recebe automaticamente a permissão de administrador (\texttt{is\_admin = true}), o que facilita a configuração inicial do ambiente.
+
+\subsection{Autenticação e Autorização na API}
+
+O isolamento dos dados é garantido na camada de aplicação. Cada requisição a recursos protegidos passa por um \textit{middleware} de autenticação (\texttt{requireAuth}) que valida o \textit{token} JWT apresentado pelo cliente e recupera o perfil correspondente; operações administrativas exigem, adicionalmente, o \textit{middleware} \texttt{requireAdmin}, que verifica o campo \texttt{is\_admin}. Dessa forma, asseguram-se as seguintes regras: (a) o ranking expõe apenas dados públicos e agregados dos perfis; (b) um usuário só pode atualizar o próprio perfil; e (c) as classificações de resíduos e as ações de jogo são acessíveis apenas pelo usuário que as gerou.
+
+\subsection{Sistema de Níveis}
+
+O nível do usuário é calculado de forma determinística com base na quantidade de \textit{EcoPoints} acumulados, conforme apresentado na Tabela~\ref{tab:niveis}.
+
+\begin{table}[htbp]
+\caption{Sistema de níveis baseado em EcoPoints}
+\label{tab:niveis}
+\begin{tabularx}{\textwidth}{|c|L|c|}
+\hline
+\textbf{EcoPoints} & \textbf{Nível} & \textbf{Perfil do Usuário} \\
+\hline
+0 -- 49 & Iniciante & Novo usuário \\
+\hline
+50 -- 199 & Iniciante Consciente & Começa a engajar \\
+\hline
+200 -- 499 & Reciclador & Usuário regular \\
+\hline
+500 -- 999 & Eco Warrior & Usuário dedicado \\
+\hline
+1000 -- 1999 & Guardião Verde & Usuário avançado \\
+\hline
+2000+ & Mestre Ambiental & Usuário expert \\
+\hline
+\end{tabularx}
+\legend{Fonte: Elaborado pelo autor (2026).}
+\end{table}
+
+\section{Front-end React}
+
+\subsection{Estrutura de Componentes e Roteamento}
+
+A aplicação é composta por 13 páginas e mais de 20 componentes reutilizáveis, organizados em uma hierarquia clara de responsabilidades. O roteamento é gerenciado pelo React Router v6, com rotas protegidas pelo componente \texttt{ProtectedRoute}, que verifica a existência de uma sessão ativa no \texttt{UserContext} e redireciona para \texttt{/login} em caso negativo. As rotas administrativas são adicionalmente protegidas pelo componente \texttt{AdminProtectedRoute}.
+
+\subsection{Gerenciamento de Estado Global}
+
+O estado global da aplicação é gerenciado pelo \texttt{UserContext} (Context API do React), que centraliza os dados do usuário autenticado, métodos de atualização de pontos e controle de sessão. As requisições à API implementam um \textit{timeout} de 15 segundos: caso a API não responda dentro desse prazo, a requisição é cancelada, e os dados previamente salvos no \texttt{localStorage} são utilizados como \textit{cache}, evitando que o usuário fique preso em uma tela de carregamento.
+
+\subsection{Camada de Serviços}
+
+A comunicação com o \textit{back-end} é abstraída por uma camada de serviços. O módulo \texttt{api.js} concentra as chamadas à API REST (autenticação, perfis, gamificação, resíduos e administração), expondo objetos padronizados por domínio funcional, enquanto um módulo adaptador padroniza essas operações para as páginas. Essa separação facilita a manutenção e permite substituir implementações sem impacto direto nas páginas.
+
+\section{Módulo de Classificação de Resíduos com Inteligência Artificial}
+
+\subsection{Arquitetura do Módulo de IA}
+
+O módulo de IA representa o diferencial técnico central do EcoSphere. A classificação de resíduos por imagem é realizada, prioritariamente, por meio do modelo multimodal Google Gemini: a imagem capturada (ou enviada) é transmitida ao serviço, que retorna a categoria do resíduo, um grau de confiança e dicas de descarte em formato estruturado (JSON). Essa estratégia dispensa o treinamento de um modelo dedicado e a manutenção de servidor de inferência próprio.
+
+Para garantir o funcionamento da plataforma quando o serviço de IA em nuvem não está disponível (por ausência de chave de API ou de conectividade), o módulo conta com um mecanismo de \textit{fallback} executado no navegador. Esse \textit{fallback} prevê o uso de um modelo TensorFlow.js — criado com o Google Teachable Machine sobre o MobileNetV2, com entrada de 224×224 pixels em RGB e saída sobre seis classes de resíduos — e, na ausência do modelo, um modo simulado baseado em heurísticas, que mantém todas as funcionalidades operantes e exibe um aviso ao usuário.
+
+\subsection{Categorias de Classificação}
+
+A Tabela~\ref{tab:residuos} apresenta as seis categorias de resíduos classificadas pelo sistema, com as respectivas cores de lixeira, conforme a Resolução CONAMA nº 275/2001.
+
+\begin{table}[htbp]
+\caption{Categorias de resíduos e cores de lixeira (CONAMA 275)}
+\label{tab:residuos}
+\begin{tabularx}{\textwidth}{|l|l|L|}
+\hline
+\textbf{Categoria} & \textbf{Cor da Lixeira} & \textbf{Exemplos} \\
+\hline
+Plástico & Vermelha & Garrafas PET, sacolas, embalagens \\
+\hline
+Metal & Amarela & Latas, alumínio, ferro \\
+\hline
+Vidro & Verde & Garrafas, potes, frascos \\
+\hline
+Papel & Azul & Jornais, caixas, papelão \\
+\hline
+Orgânico & Marrom & Restos de comida, folhas \\
+\hline
+Eletrônico & Laranja & Pilhas, celulares, chips \\
+\hline
+\end{tabularx}
+\legend{Fonte: Elaborado pelo autor (2026).}
+\end{table}
+
+\subsection{Fluxo de Classificação}
+
+O fluxo de uso do módulo de IA segue as seguintes etapas: (1) o usuário abre a câmera do dispositivo ou realiza o \textit{upload} de uma imagem; (2) caso o serviço Gemini esteja configurado, a imagem é enviada e o modelo retorna a categoria, a confiança e as dicas de descarte; (3) caso contrário, o \textit{fallback} em TensorFlow.js (ou o modo simulado) é acionado no navegador; (4) a interface exibe a categoria identificada, o percentual de confiança, a cor correta da lixeira, dicas de descarte e os pontos a serem ganhos; (5) ao confirmar, a classificação é persistida na API e os \textit{EcoPoints} são adicionados ao perfil do usuário.
+
+A pontuação concedida por classificação é determinada pelo grau de confiança da identificação, conforme a Tabela~\ref{tab:pontos-classificacao}, incentivando o usuário a registrar imagens nítidas e bem enquadradas.
+
+\begin{table}[htbp]
+\caption{Pontuação por classificação conforme o grau de confiança}
+\label{tab:pontos-classificacao}
+\begin{tabularx}{\textwidth}{|L|c|}
+\hline
+\textbf{Grau de confiança da classificação} & \textbf{EcoPoints} \\
+\hline
+Alta (confiança $\geq$ 90\%) & 10 \\
+\hline
+Média (confiança entre 70\% e 89\%) & 5 \\
+\hline
+Baixa (confiança $<$ 70\%) & 2 \\
+\hline
+\end{tabularx}
+\legend{Fonte: Elaborado pelo autor (2026).}
+\end{table}
+
+\section{Sistema de Gamificação}
+
+\subsection{EcoPoints}
+
+Os \textit{EcoPoints} constituem a moeda virtual da plataforma. Cada ação gera uma quantidade específica de pontos, conforme apresentado na Tabela~\ref{tab:ecopoints}. No caso da classificação de resíduos, a pontuação é proporcional ao grau de confiança da identificação (Tabela~\ref{tab:pontos-classificacao}); nos minijogos e quizzes, a pontuação varia conforme o desempenho do usuário.
+
+\begin{table}[htbp]
+\caption{Ações e pontuações do sistema de gamificação}
+\label{tab:ecopoints}
+\begin{tabularx}{\textwidth}{|L|c|}
+\hline
+\textbf{Ação} & \textbf{EcoPoints} \\
+\hline
+Classificar resíduo (conforme confiança da IA) & 2 -- 10 \\
+\hline
+Eco Quiz & proporcional aos acertos \\
+\hline
+Eco Catcher (minijogo) & variável, conforme itens coletados \\
+\hline
+Completar curso ou desafio educacional & concede EcoPoints ao concluir \\
+\hline
+\end{tabularx}
+\legend{Fonte: Elaborado pelo autor (2026).}
+\end{table}
+
+\subsection{Sistema de Badges}
+
+O sistema de \textit{badges} reconhece marcos progressivos de engajamento, conforme o Quadro~\ref{qua:badges}.
+
+\begin{quadro}[htbp]
+\caption{Badges disponíveis na plataforma}
+\label{qua:badges}
+\begin{tabularx}{\textwidth}{|c|l|L|c|}
+\hline
+\textbf{\#} & \textbf{Badge} & \textbf{Requisito} & \textbf{Bônus (pts)} \\
+\hline
+1 & Bem-vindo & Primeira ação realizada & 10 \\
+\hline
+2 & Primeiro Passo & 1ª classificação de resíduo & 25 \\
+\hline
+3 & Reciclador & 10 classificações realizadas & 50 \\
+\hline
+4 & Eco Warrior & 50 classificações realizadas & 100 \\
+\hline
+5 & Guardião Verde & 100 classificações realizadas & 200 \\
+\hline
+6 & Mestre Ambiental & 500 classificações realizadas & 500 \\
+\hline
+7 & Gamer Ecológico & 100+ pontos obtidos em jogos & 50 \\
+\hline
+\end{tabularx}
+\legend{Fonte: Elaborado pelo autor (2026).}
+\end{quadro}
+
+\subsection{Minijogos e Quiz}
+
+O \textbf{Eco Catcher} é um minijogo de reflexo, desenvolvido com o motor de jogos Phaser, em que o usuário controla um cesto para coletar itens recicláveis que caem pela tela. Itens recicláveis rendem pontos conforme o tipo (plástico, +10; vidro, +15; metal, +20), sujeitos a um multiplicador, enquanto itens incorretos penalizam a pontuação. O \textbf{Quiz Eco} apresenta perguntas aleatórias de um banco com mais de 30 questões sobre sustentabilidade e meio ambiente, com pontuação proporcional ao número de acertos.
+
+\subsection{Fluxo de Pontuação}
+
+O processo de atribuição de pontos segue um fluxo definido: a ação do usuário dispara a função de registro no módulo de serviços, que soma os pontos ao perfil, recalcula o nível, verifica critérios de novas \textit{badges} e persiste o registro na API (tabela \texttt{user\_game\_actions}). O \texttt{UserContext} é atualizado em seguida, e um evento customizado (\texttt{ecoPointsUpdated}) é disparado para sincronizar os componentes que exibem a pontuação em tempo real.
+
+\section{Módulo de Monitoramento Ambiental}
+
+O módulo de monitoramento ambiental integra dados climáticos reais por meio da API pública Open-Meteo, com suporte a 10 estados brasileiros e suas respectivas cidades e bairros. Como a Open-Meteo é gratuita e não exige chave de acesso, o módulo funciona sem configuração adicional; opcionalmente, caso uma chave do OpenWeatherMap seja configurada, o sistema pode utilizá-la como fonte alternativa. Na indisponibilidade dos serviços, o sistema exibe dados simulados realistas, mantendo toda a interface operante.
+
+O módulo exibe temperatura em destaque, sensação térmica, umidade relativa, velocidade do vento, visibilidade, pressão atmosférica, índice de qualidade do ar (AQI), índice UV com recomendações de proteção, nascer e pôr do sol, previsão para vários dias e gráficos de evolução de temperatura ao longo do dia.
+
+\section{Módulo Educacional}
+
+O módulo educacional está organizado em quatro seções: \textbf{Cursos} (trilhas em níveis Iniciante, Intermediário e Avançado, com conteúdo em \textit{slides} interativos e atribuição de \textit{EcoPoints} ao completar); \textbf{Artigos} (artigos com imagens, tempo estimado de leitura e resumo); \textbf{Desafios} (desafios com tarefas, barra de progresso e recompensas em pontos); e \textbf{Dicas Práticas} (categorias temáticas com ações concretas de sustentabilidade).
+
+\section{Autenticação e Segurança}
+
+A autenticação é gerenciada pela API própria, com base em \textit{e-mail}/senha. No cadastro, a senha é submetida a uma validação de força no \textit{front-end} (em cinco níveis) e armazenada apenas como \textit{hash} gerado com bcrypt; jamais em texto puro. Após a autenticação, a API emite um \textit{token} JWT, mantido no \texttt{sessionStorage} do navegador e enviado nas requisições subsequentes. A persistência de uma cópia do perfil no \texttt{localStorage} permite uma experiência contínua entre recarregamentos de página. A proteção de rotas é implementada no \textit{front-end} pelos componentes \texttt{ProtectedRoute} e \texttt{AdminProtectedRoute} e, no \textit{back-end}, pelos \textit{middlewares} \texttt{requireAuth} e \texttt{requireAdmin}; o painel administrativo requer adicionalmente o campo \texttt{is\_admin = true} no perfil. O \textit{login} social via Google (OAuth), presente em versões anteriores baseadas em \textit{BaaS}, encontra-se em processo de reintegração à nova arquitetura.
+
+\section{Responsividade}
+
+A plataforma foi desenvolvida com abordagem \textit{mobile-first}, utilizando os \textit{breakpoints} do Tailwind CSS. Os principais ajustes por \textit{breakpoint} incluem: a \textit{Navbar} colapsa para um menu hambúrguer em telas menores que 768px; o globo 3D é exibido abaixo do \textit{hero} em dispositivos móveis e posicionado absolutamente à direita em \textit{desktops}; os \textit{grids} de cards ajustam de 1 coluna (mobile) para até 4 colunas (desktop); e o formulário de \textit{login} exibe apenas a coluna do formulário em mobile, ocultando o painel de \textit{features}.
+
+\section{Sistema de Design}
+
+A identidade visual do EcoSphere é fundamentada em uma paleta de cores estendida no Tailwind CSS, com \texttt{eco} (verde, cor primária da marca) e \texttt{surface} (neutros de fundo). Cada módulo possui uma cor de destaque específica (Tabela~\ref{tab:cores}), garantindo consistência visual e orientação contextual ao usuário.
+
+\begin{table}[htbp]
+\caption{Identidade de cores por módulo da plataforma}
+\label{tab:cores}
+\begin{tabularx}{\textwidth}{|l|l|L|}
+\hline
+\textbf{Módulo} & \textbf{Cor de Destaque} & \textbf{Aplicação} \\
+\hline
+Home / Geral & Verde (eco, teal) & Botões, logos, acentos \\
+\hline
+Monitoramento Ambiental & Azul / Ciano & Temperatura, vento, clima \\
+\hline
+IA / Classificação & Eco / Azul & Cards de resultado \\
+\hline
+Gamificação & Âmbar / Laranja & Pontos, badges, troféus \\
+\hline
+Loja de Recompensas & Rosa (pink) & Botões de ação \\
+\hline
+Educação & Verde / Azul & Cursos, artigos \\
+\hline
+Perfil & Índigo / Roxo & Formulários, inputs \\
+\hline
+\end{tabularx}
+\legend{Fonte: Elaborado pelo autor (2026).}
+\end{table}
+
+A tipografia utiliza a fonte \textit{Plus Jakarta Sans} (Google Fonts), com títulos em \texttt{font-black} e \texttt{tracking-tight} para impacto visual. Todas as animações de entrada de elementos seguem o padrão de \textit{fade-in} com translação vertical via Framer Motion, criando uma experiência de navegação coesa em toda a plataforma.
+
+\section{Páginas e Funcionalidades}
+
+A Figura~\ref{fig:dashboard} apresenta o painel principal (\textit{dashboard}) do sistema, que concentra métricas do usuário, atalhos rápidos para as funcionalidades mais utilizadas e gráficos de acompanhamento de progresso.
+
+\begin{figure}[htbp]
+\centering
+\caption{Tela principal (dashboard) do sistema EcoSphere}
+\includegraphics[width=0.95\textwidth]{fig_dashboard.png}
+\legend{Fonte: Elaborado pelo autor (2026).}
+\label{fig:dashboard}
+\end{figure}
+
+A Figura~\ref{fig:registro-ocorrencias} apresenta a interface de classificação de resíduos, com área de \textit{upload}/câmera, resultado da inferência e confirmação de pontos.
+
+\begin{figure}[htbp]
+\centering
+\caption{Interface do classificador de resíduos com IA}
+\includegraphics[width=0.95\textwidth]{fig_registro_dados.png}
+\legend{Fonte: Elaborado pelo autor (2026).}
+\label{fig:registro-ocorrencias}
+\end{figure}
+
+A plataforma é composta por 13 rotas distintas, organizadas conforme o Quadro~\ref{qua:rotas}.
+
+\begin{quadro}[htbp]
+\caption{Rotas e funcionalidades da plataforma EcoSphere}
+\label{qua:rotas}
+\begin{tabularx}{\textwidth}{|l|L|}
+\hline
+\textbf{Rota} & \textbf{Funcionalidade} \\
+\hline
+\texttt{/} & Página inicial (\textit{landing page}) com apresentação da plataforma \\
+\hline
+\texttt{/login} & Autenticação (e-mail/senha) \\
+\hline
+\texttt{/dashboard} & Painel com métricas, gráficos e atalhos do usuário \\
+\hline
+\texttt{/classificar-residuos} & Classificador de resíduos com IA (Gemini + TensorFlow.js) \\
+\hline
+\texttt{/monitoramento} & Monitoramento ambiental em tempo real \\
+\hline
+\texttt{/gamificacao} & Sistema de gamificação completo \\
+\hline
+\texttt{/eco-catcher} & Minijogo Eco Catcher \\
+\hline
+\texttt{/educacao} & Módulo educacional (cursos, artigos, desafios, dicas) \\
+\hline
+\texttt{/recompensas} & Loja de recompensas (resgate de EcoPoints) \\
+\hline
+\texttt{/historico} & Histórico de ações e classificações \\
+\hline
+\texttt{/perfil} & Gerenciamento de dados pessoais e foto de perfil \\
+\hline
+\texttt{/guia} & Tour guiado pelas funcionalidades da plataforma \\
+\hline
+\texttt{/admin} & Painel administrativo (restrito) \\
+\hline
+\end{tabularx}
+\legend{Fonte: Elaborado pelo autor (2026).}
+\end{quadro}
+
+% ==========================================================
+% CAPÍTULO 4 — RESULTADOS E DISCUSSÃO
+% ==========================================================
+\chapter{Resultados e Discussão}
+
+\section{Funcionalidades Implementadas}
+
+Ao término do desenvolvimento, o EcoSphere contempla o conjunto de funcionalidades planejadas nos objetivos específicos. O Quadro~\ref{qua:funcionalidades} apresenta um inventário das funcionalidades implementadas com suas respectivas tecnologias de suporte.
+
+\begin{quadro}[htbp]
+\caption{Inventário de funcionalidades implementadas}
+\label{qua:funcionalidades}
+\begin{tabularx}{\textwidth}{|L|l|}
+\hline
+\textbf{Funcionalidade} & \textbf{Status} \\
+\hline
+Autenticação por e-mail/senha (JWT + bcrypt) & Implementada \\
+\hline
+Login social via Google (OAuth) & Em reintegração \\
+\hline
+Classificação de resíduos por IA (Gemini + \textit{fallback} TensorFlow.js) & Implementada \\
+\hline
+Monitoramento ambiental (Open-Meteo) & Implementada \\
+\hline
+Sistema de gamificação (pontos, badges, ranking, missões) & Implementada \\
+\hline
+Minijogo Eco Catcher (Phaser) & Implementada \\
+\hline
+Quiz ecológico com banco de 30+ questões & Implementada \\
+\hline
+Módulo educacional (cursos, artigos, desafios, dicas) & Implementada \\
+\hline
+Loja de recompensas com resgate de pontos & Implementada \\
+\hline
+Upload de foto de perfil (armazenada via API) & Implementada \\
+\hline
+Assistente virtual EcoBot (Google Gemini) & Implementada \\
+\hline
+Painel administrativo & Implementada \\
+\hline
+Globo/animação 3D interativa (Three.js/Lottie) & Implementada \\
+\hline
+Design responsivo (mobile + desktop) & Implementada \\
+\hline
+\end{tabularx}
+\legend{Fonte: Elaborado pelo autor (2026).}
+\end{quadro}
+
+\section{Diferenciais Técnicos}
+
+\subsection{IA sem Infraestrutura de Treinamento Dedicada}
+
+A classificação de resíduos apoiada em um modelo multimodal pré-treinado (Google Gemini), complementada por um \textit{fallback} de execução no navegador (TensorFlow.js), constitui o principal diferencial técnico do EcoSphere. Essa abordagem dispensa a coleta e a rotulagem de grandes conjuntos de dados, bem como a manutenção de um servidor de inferência dedicado, reduzindo significativamente o custo de desenvolvimento e de infraestrutura. Como contrapartida, o uso do serviço em nuvem implica dependência de conectividade e de limites de uso da API — limitação mitigada pelo mecanismo de \textit{fallback} local.
+
+\subsection{Arquitetura com API REST Própria e Autenticação JWT}
+
+O uso de uma API REST própria em Node.js/Express, combinada a um banco de dados PostgreSQL gerenciado (Neon), garante uma camada de segurança robusta e o controle integral sobre as regras de negócio. As senhas são armazenadas apenas como \textit{hash} (bcrypt), e o acesso aos recursos é controlado por \textit{tokens} JWT verificados no servidor: ainda que o código JavaScript do \textit{front-end} seja inspecionado, a verificação de permissões no \textit{back-end} impede que um usuário acesse dados de outro. O uso de um banco gerenciado com plano gratuito mantém o custo operacional baixo, sem abrir mão da confiabilidade de um SGBD relacional consolidado.
+
+\subsection{Design System Consistente}
+
+A adoção de um sistema de \textit{design} baseado em Tailwind CSS com paleta de cores estendida, tipografia padronizada e animações uniformes via Framer Motion resulta em uma experiência de usuário coesa em todas as páginas da plataforma. A identidade visual reforça a temática ambiental por meio do uso consistente do verde como cor primária.
+
+\section{Limitações e Trabalhos Futuros}
+
+As principais limitações identificadas referem-se à dependência do serviço de IA em nuvem para a classificação de resíduos: a qualidade e a disponibilidade da classificação ficam sujeitas à conectividade e aos limites de uso (\textit{quotas}) da API do Gemini. Embora exista um mecanismo de \textit{fallback} em TensorFlow.js, o modelo treinado correspondente ainda não é distribuído com a aplicação, de modo que, na ausência do serviço em nuvem, a classificação recai em um modo simulado por heurísticas. Adicionalmente, o \textit{login} social via Google, disponível em versões anteriores baseadas em \textit{BaaS}, encontra-se em reintegração à arquitetura atual.
+
+Como trabalhos futuros, destacam-se: a distribuição de um modelo de classificação treinado para uso \textit{offline} via TensorFlow.js; a reintegração do \textit{login} social via Google (OAuth); a implementação de notificações \textit{push} e de modo \textit{offline} completo via Service Workers (transformando a aplicação em uma PWA); o compartilhamento social de conquistas; a integração de um mapa interativo de pontos de coleta de reciclagem; e o desenvolvimento de um aplicativo móvel nativo com React Native.
+
+% ==========================================================
+% CAPÍTULO 5 — CONCLUSÃO
+% ==========================================================
+\chapter{Conclusão}
+
+Este trabalho apresentou o desenvolvimento do EcoSphere, uma plataforma web de sustentabilidade ambiental que integra inteligência artificial, gamificação e educação ecológica em um sistema web completo e responsivo. A plataforma foi concebida a partir da observação de problemas práticos no manejo de resíduos e impactos ambientais em contextos cotidianos, e materializada por meio de tecnologias modernas de desenvolvimento web.
+
+Os objetivos propostos foram alcançados. O sistema de classificação de resíduos demonstrou ser possível oferecer visão computacional acessível ao usuário comum sem a necessidade de treinar um modelo próprio nem de manter infraestrutura de inferência dedicada, recorrendo a um modelo multimodal pré-treinado e a um \textit{fallback} de execução no navegador. O sistema de gamificação com \textit{EcoPoints}, \textit{badges}, ranking e missões proveu mecanismos de engajamento alinhados com a literatura sobre motivação comportamental. O módulo educacional ampliou o escopo da plataforma para além da classificação, oferecendo uma jornada de aprendizado progressiva sobre sustentabilidade.
+
+Do ponto de vista técnico, a combinação de React 18, uma API REST em Node.js/Express e um banco de dados PostgreSQL gerenciado (Neon), aliada ao uso de serviços externos gratuitos ou de baixo custo (Open-Meteo e Google Gemini), mostrou-se uma escolha acertada, permitindo o desenvolvimento de uma aplicação robusta com baixo custo de infraestrutura. A autenticação baseada em \textit{tokens} JWT, o armazenamento de senhas por \textit{hashing} (bcrypt) e a verificação de permissões no servidor conferem à plataforma uma base de segurança adequada para uso real.
+
+Espera-se que o EcoSphere contribua, mesmo que em escala reduzida, para ampliar o acesso a informações ambientais e incentivar mudanças de comportamento sustentáveis. A tecnologia, quando bem aplicada, pode ser uma poderosa aliada na promoção da consciência ambiental — e é nessa crença que este trabalho se fundamenta.
+
+% ----------------------------------------------------------
+% ELEMENTOS PÓS-TEXTUAIS
+% ----------------------------------------------------------
+\postextual
+
+% ----------------------------------------------------------
+% Referências bibliográficas
+% ----------------------------------------------------------
+\bibliography{bibliografia}
+
+% ----------------------------------------------------------
+% Apêndices
+% ----------------------------------------------------------
+\begin{apendicesenv}
+\partapendices
+
+\chapter{Configuração do Ambiente de Desenvolvimento}
+
+Para executar o EcoSphere localmente, são necessários os seguintes pré-requisitos:
+
+\begin{itemize}
+    \item Node.js 18+ e npm 8+
+    \item Conta no Neon (\textit{plano gratuito é suficiente}) para o banco PostgreSQL
+    \item (Opcional) Chave de API do Google Gemini, para a classificação de resíduos por imagem em nuvem
+\end{itemize}
+
+Os passos de configuração são:
+
+\begin{enumerate}
+    \item Clonar o repositório: \texttt{git clone} \url{https://github.com/Brun05ouza/Tcc-EcoSphere.git}
+    \item Criar um banco no Neon e executar o \textit{script} de esquema \texttt{neon/schema.sql} no editor SQL do Neon (cria as tabelas \texttt{profiles}, \texttt{waste\_classifications} e \texttt{user\_game\_actions});
+    \item Configurar e iniciar a API: \texttt{cd api-service}, \texttt{npm install}, copiar \texttt{.env.example} para \texttt{.env}, preencher \texttt{DATABASE\_URL} e \texttt{JWT\_SECRET}, e executar \texttt{npm run dev};
+    \item Configurar e iniciar o \textit{front-end}: \texttt{cd frontend}, \texttt{npm install}, copiar \texttt{.env.example} para \texttt{.env}, preencher \texttt{REACT\_APP\_API\_URL} e executar \texttt{npm start}.
+\end{enumerate}
+
+A API fica disponível em \texttt{http://localhost:4000} e a aplicação \textit{front-end} em \texttt{http://localhost:3000}. O primeiro usuário cadastrado torna-se administrador automaticamente.
+
+\chapter{Variáveis de Ambiente}
+
+O arquivo \texttt{api-service/.env} deve conter as variáveis do \textit{back-end}:
+
+\begin{verbatim}
+# Banco de dados PostgreSQL gerenciado (Neon) - OBRIGATÓRIO
+DATABASE_URL=postgresql://usuario:senha@host/neondb?sslmode=require
+
+# Segredo para assinatura dos tokens JWT - OBRIGATÓRIO
+JWT_SECRET=troque-por-um-segredo-longo-e-aleatorio
+
+# Porta da API e origem permitida (CORS)
+PORT=4000
+FRONTEND_ORIGIN=http://localhost:3000
+\end{verbatim}
+
+O arquivo \texttt{frontend/.env} deve conter as variáveis do \textit{front-end}:
+
+\begin{verbatim}
+# URL da API REST - OBRIGATÓRIO
+REACT_APP_API_URL=http://localhost:4000
+
+# Chave do Google Gemini (opcional): habilita a classificação
+# de resíduos por imagem e o assistente EcoBot
+REACT_APP_GEMINI_API_KEY=sua_chave_gemini_aqui
+
+# Serviço Flask de IA (opcional, alternativa de inferência)
+REACT_APP_AI_SERVICE_URL=http://localhost:8000
+
+# OpenWeatherMap (opcional): fonte alternativa de dados climáticos
+REACT_APP_OPENWEATHER_API_KEY=sua_chave_openweather_aqui
+\end{verbatim}
+
+\end{apendicesenv}
+
+% ----------------------------------------------------------
+% Anexos
+% ----------------------------------------------------------
+\begin{anexosenv}
+\partanexos
+
+\chapter{Resolução CONAMA nº 275/2001 — Código de Cores para Resíduos}
+
+A Resolução CONAMA nº 275 de 25 de abril de 2001 estabelece o código de cores para diferentes tipos de resíduos, a ser adotado na identificação de coletores e transportadores utilizados em programas de coleta seletiva. As cores estabelecidas são: azul (papel/papelão), vermelho (plástico), verde (vidro), amarelo (metal), marrom (resíduos orgânicos), preto (madeira), laranja (resíduos perigosos), roxo (resíduos radioativos), branco (resíduos ambulatoriais e de serviços de saúde) e cinza (resíduo geral não reciclável ou misturado).
+
+\end{anexosenv}
+
+\end{document}

@@ -81,7 +81,6 @@ const Navbar = () => {
     { path: '/dashboard', label: 'Dashboard', icon: 'dashboard' },
     { path: '/classificar-residuos', label: 'IA Resíduos', icon: 'IA' },
     { path: '/monitoramento', label: 'Monitoramento', icon: 'monitoramento' },
-    { path: '/projetos-carbono', label: 'Projetos CO₂e', icon: 'carbono' },
     { path: '/gamificacao', label: 'EcoPoints', icon: 'ecopoints', opensEcoPointsModal: true },
     { path: '/educacao', label: 'Educação', icon: 'educacao' }
   ];

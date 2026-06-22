@@ -40,7 +40,6 @@ PLATAFORMA EcoSphere (mencione quando relevante):
 - Gamificação e EcoPoints: /gamificacao
 - Recompensas: /recompensas
 - Educação ambiental: /educacao
-- Calculadora de carbono: /calculadora-carbono
 
 REGRAS:
 - Sempre responda em português brasileiro

@@ -160,7 +160,7 @@ const Dashboard = () => {
           ))}
         </div>
 
-        {/* Quiz Diário e Calculadora de Carbono */}
+        {/* Quiz Diário e Monitoramento Ambiental */}
         <div className="grid lg:grid-cols-2 gap-6 mb-8">
           <motion.div
             initial={{ opacity: 0, x: -20 }}
@@ -195,7 +195,7 @@ const Dashboard = () => {
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
             className="group bg-white p-6 rounded-3xl shadow-soft border border-stone-100 cursor-pointer transition-all duration-300 hover:shadow-xl hover:border-eco-200 relative overflow-hidden"
-            onClick={() => window.location.href = '/calculadora-carbono'}
+            onClick={() => window.location.href = '/monitoramento'}
           >
             <div className="absolute inset-0 bg-gradient-to-br from-eco-50/50 to-teal-50/50 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
             
@@ -205,9 +205,9 @@ const Dashboard = () => {
                   <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-eco-500 to-teal-600 flex items-center justify-center shadow-lg shadow-eco-500/20">
                     <Leaf size={24} className="text-white" />
                   </div>
-                  <h3 className="text-xl font-bold text-stone-800">Pegada de Carbono</h3>
+                  <h3 className="text-xl font-bold text-stone-800">Monitoramento Ambiental</h3>
                 </div>
-                <p className="text-stone-500 text-sm mb-4">Calcule seu impacto ambiental!</p>
+                <p className="text-stone-500 text-sm mb-4">Veja o clima e a qualidade do ar em tempo real!</p>
                 <div className="flex items-center gap-2 bg-stone-100 text-stone-600 px-3 py-1.5 rounded-lg w-fit group-hover:bg-eco-100 group-hover:text-eco-700 transition-colors">
                   <BarChart3 size={16} />
                   <span className="text-xs font-bold">Descubra agora</span>

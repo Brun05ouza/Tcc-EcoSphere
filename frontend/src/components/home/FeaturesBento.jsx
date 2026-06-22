@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { BarChart3, Sparkles, Trophy, GraduationCap, Calculator, History, Thermometer, Wind, Gauge } from 'lucide-react';
+import { BarChart3, Sparkles, Trophy, GraduationCap, History, Thermometer, Wind, Gauge } from 'lucide-react';
 
 export default function FeaturesBento() {
   return (
@@ -89,22 +89,6 @@ export default function FeaturesBento() {
             <p className="text-sm text-slate-600 mt-1">
               Cursos e desafios para aprender
               sobre sustentabilidade.
-            </p>
-          </motion.div>
-
-          {/* Calculadora de Carbono */}
-          <motion.div
-            whileHover={{ y: -6 }}
-            transition={{ duration: 0.2 }}
-            className="bg-white rounded-2xl p-6 shadow-lg border border-slate-200/60"
-          >
-            <Calculator className="w-9 h-9 text-teal-500 mb-3" aria-hidden />
-            <h3 className="font-semibold text-slate-900">
-              Calculadora de Carbono
-            </h3>
-            <p className="text-sm text-slate-600 mt-1">
-              Calcule sua pegada de carbono
-              e veja como compensar.
             </p>
           </motion.div>
 

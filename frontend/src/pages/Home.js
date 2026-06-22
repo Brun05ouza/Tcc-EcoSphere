@@ -82,7 +82,7 @@ const Home = () => {
         <div className="absolute bottom-0 left-0 w-[600px] h-[600px] bg-gradient-to-tr from-green-100/60 to-transparent rounded-full blur-[80px] pointer-events-none -translate-x-1/3 translate-y-1/3 opacity-80" />
         <div className="absolute top-1/2 left-1/4 w-[400px] h-[400px] bg-gradient-to-r from-blue-50/40 to-transparent rounded-full blur-[60px] pointer-events-none -translate-y-1/2 opacity-60" />
         
-        <div className="absolute right-[-3vw] top-1/2 -translate-y-1/2 w-[min(58vw,760px)] h-[min(58vw,760px)] max-h-[78vh] hidden lg:block z-[1] opacity-95">
+        <div className="absolute right-[9vw] top-1/2 -translate-y-1/2 w-[min(58vw,760px)] h-[min(58vw,760px)] max-h-[78vh] hidden lg:block z-[1] opacity-95">
           <TreeHeroAnimation className="w-full h-full" />
         </div>
         
