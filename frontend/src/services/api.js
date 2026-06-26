@@ -1,5 +1,5 @@
 const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:4000';
-const AUTH_TIMEOUT_MS = 15000;
+const AUTH_TIMEOUT_MS = 60000; // 60s: o plano gratuito do Render pode levar ~50s para "acordar" apos inatividade
 
 function getToken() {
   try {
@@ -40,7 +40,7 @@ async function request(path, options = {}) {
     return data;
   } catch (error) {
     if (error.name === 'AbortError') {
-      throw new Error('Tempo esgotado. Verifique se a API local esta rodando em http://localhost:4000.');
+      throw new Error('Tempo esgotado. O servidor pode estar iniciando (plano gratuito do Render leva ~50s para acordar). Tente novamente em instantes.');
     }
     throw error;
   } finally {
