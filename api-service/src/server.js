@@ -11,7 +11,25 @@ const app = express();
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 2 * 1024 * 1024 } });
 const port = Number(process.env.PORT || 4000);
 
-app.use(cors({ origin: process.env.FRONTEND_ORIGIN || 'http://localhost:3000', credentials: true }));
+const allowedOrigins = new Set([
+  process.env.FRONTEND_ORIGIN || 'http://localhost:3000',
+]);
+// Em desenvolvimento o Create React App pode subir em 3000, 3001, 3002...
+// entao liberamos qualquer porta de localhost / 127.0.0.1
+const devOriginRegex = /^http:\/\/(localhost|127\.0\.0\.1):\d+$/;
+// Em producao, libera o dominio de producao e os previews da Vercel (*.vercel.app)
+const vercelRegex = /^https:\/\/[a-z0-9-]+\.vercel\.app$/i;
+app.use(cors({
+  origin(origin, callback) {
+    // Permite ferramentas sem Origin (curl, apps mobile), as origens conhecidas,
+    // localhost em qualquer porta e qualquer subdominio *.vercel.app
+    if (!origin || allowedOrigins.has(origin) || devOriginRegex.test(origin) || vercelRegex.test(origin)) {
+      return callback(null, true);
+    }
+    return callback(null, false);
+  },
+  credentials: true,
+}));
 app.use(express.json({ limit: '10mb' }));
 
 function authResponse(row) {

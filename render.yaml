@@ -1,0 +1,25 @@
+# Blueprint do Render para a API (backend Express) do EcoSphere.
+# Uso: no painel do Render -> New -> Blueprint -> conectar este repositorio.
+# (Voce tambem pode criar manualmente em New -> Web Service; veja o passo a passo.)
+services:
+  - type: web
+    name: ecosphere-api
+    runtime: node
+    plan: free
+    rootDir: api-service
+    buildCommand: npm install
+    startCommand: npm start
+    healthCheckPath: /health
+    envVars:
+      # Connection string do Neon (a MESMA do seu api-service/.env local).
+      # Marcada como secreta: cole o valor no painel do Render.
+      - key: DATABASE_URL
+        sync: false
+      # Segredo para assinar os tokens JWT. O Render gera um valor aleatorio e seguro.
+      - key: JWT_SECRET
+        generateValue: true
+      # Dominio do front na Vercel (ex.: https://seu-app.vercel.app).
+      # Opcional: o CORS ja aceita qualquer *.vercel.app; preencha se usar dominio proprio.
+      - key: FRONTEND_ORIGIN
+        sync: false
+    # PORT NAO precisa ser definida: o Render injeta a porta e o codigo ja usa process.env.PORT.
