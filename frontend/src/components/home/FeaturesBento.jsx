@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { BarChart3, Sparkles, Trophy, GraduationCap, History, Thermometer, Wind, Gauge } from 'lucide-react';
+import { BarChart3, Sparkles, Trophy, GraduationCap, History, Thermometer, Wind, Gauge, Gift } from 'lucide-react';
 
 export default function FeaturesBento() {
   return (
@@ -105,6 +105,22 @@ export default function FeaturesBento() {
             <p className="text-sm text-slate-600 mt-1">
               Acompanhe suas classificações
               e evolução ao longo do tempo.
+            </p>
+          </motion.div>
+
+          {/* Recompensas */}
+          <motion.div
+            whileHover={{ y: -6 }}
+            transition={{ duration: 0.2 }}
+            className="bg-white rounded-2xl p-6 shadow-lg border border-slate-200/60"
+          >
+            <Gift className="w-9 h-9 text-pink-500 mb-3" aria-hidden />
+            <h3 className="font-semibold text-slate-900">
+              Recompensas
+            </h3>
+            <p className="text-sm text-slate-600 mt-1">
+              Troque seus EcoPoints por benefícios
+              e prêmios sustentáveis.
             </p>
           </motion.div>
         </div>

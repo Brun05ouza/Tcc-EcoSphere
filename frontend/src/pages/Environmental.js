@@ -5,6 +5,7 @@ import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend, ArcElement, Filler);
 import { Cloud, CloudRain, Sun, Wind, Droplets, Eye, Gauge, ThermometerSun, MapPin, Calendar, Clock, Sunrise, Sunset, Zap, AlertTriangle, Check } from 'lucide-react';
 import { AppIcon } from '../components/ui/AppIcon';
+import { useBodyScrollLock } from '../hooks/useBodyScrollLock';
 
 const weatherCodeDescription = {
   0: 'Ceu limpo',
@@ -67,6 +68,8 @@ const Environmental = () => {
   const [dataError, setDataError] = useState('');
   const [loading, setLoading] = useState(false);
   const [showStateModal, setShowStateModal] = useState(false);
+
+  useBodyScrollLock(showStateModal);
 
   const estados = [
     { sigla: 'SP', nome: 'São Paulo', cidades: ['São Paulo', 'Campinas', 'Santos', 'Ribeirão Preto'] },

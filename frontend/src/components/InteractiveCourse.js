@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useUser } from '../contexts/UserContext';
+import { useBodyScrollLock } from '../hooks/useBodyScrollLock';
 import { AppIcon } from './ui/AppIcon';
 import { ChevronRight, Sparkles } from 'lucide-react';
 
 const InteractiveCourse = ({ course, onClose }) => {
+  useBodyScrollLock(true);
   const [started, setStarted] = useState(false);
   const [currentLesson, setCurrentLesson] = useState(0);
   const [quizAnswers, setQuizAnswers] = useState({});

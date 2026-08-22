@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { Shield, X, Eye, EyeOff, Lock, Mail, AlertCircle, Loader2 } from 'lucide-react';
 import { auth, getCurrentProfile } from '../services/supabaseService';
 import { useUser } from '../contexts/UserContext';
+import { useBodyScrollLock } from '../hooks/useBodyScrollLock';
 
 const AdminLoginPanel = () => {
   const [visible, setVisible] = useState(false);
@@ -14,6 +15,8 @@ const AdminLoginPanel = () => {
   const [error, setError] = useState('');
   const { updateUser, isAdmin } = useUser();
   const navigate = useNavigate();
+
+  useBodyScrollLock(visible);
 
   // Listener do atalho Ctrl + Alt + A
   const handleKeyDown = useCallback((e) => {

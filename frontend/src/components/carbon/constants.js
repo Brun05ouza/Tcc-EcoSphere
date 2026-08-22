@@ -4,6 +4,7 @@ export const INITIAL_FORM_DATA = {
   status: '',
   responsavelTecnico: '',
   pais: 'Brasil',
+  cep: '',
   estado: '',
   cidade: '',
   areaHa: '',

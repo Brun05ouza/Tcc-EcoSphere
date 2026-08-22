@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
+import { useBodyScrollLock } from '../hooks/useBodyScrollLock';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Bell, Sparkles, User, ChevronDown, Menu, X, Clock } from 'lucide-react';
 import { useUser } from '../contexts/UserContext';
 import { AppIcon } from './ui/AppIcon';
@@ -39,6 +41,19 @@ const Navbar = () => {
     window.addEventListener('scroll', onScroll, { passive: true });
     return () => window.removeEventListener('scroll', onScroll);
   }, [location.pathname]);
+
+  useBodyScrollLock(showEcoPointsModal);
+
+  useEffect(() => {
+    if (!showEcoPointsModal) return undefined;
+
+    const onKeyDown = (e) => {
+      if (e.key === 'Escape') setShowEcoPointsModal(false);
+    };
+
+    document.addEventListener('keydown', onKeyDown);
+    return () => document.removeEventListener('keydown', onKeyDown);
+  }, [showEcoPointsModal]);
 
   const ecoTips = [
     { iconName: 'leaf', text: 'Já plantou uma árvore hoje?', action: 'Plante uma muda!' },
@@ -81,7 +96,6 @@ const Navbar = () => {
     { path: '/dashboard', label: 'Dashboard', icon: 'dashboard' },
     { path: '/classificar-residuos', label: 'IA Resíduos', icon: 'IA' },
     { path: '/monitoramento', label: 'Monitoramento', icon: 'monitoramento' },
-    { path: '/carbono/cadastro-projeto', label: 'Carbono', icon: 'carbono', matchPrefix: '/carbono' },
     { path: '/gamificacao', label: 'EcoPoints', icon: 'ecopoints', opensEcoPointsModal: true },
     { path: '/educacao', label: 'Educação', icon: 'educacao' }
   ];
@@ -394,72 +408,117 @@ const Navbar = () => {
           </motion.div>
         )}
 
-        {showEcoPointsModal && (
-          <div className="fixed inset-0 z-[80] flex items-center justify-center bg-stone-950/40 backdrop-blur-sm px-4">
-            <motion.div
-              initial={{ opacity: 0, y: 16, scale: 0.96 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              className="w-full max-w-lg bg-white rounded-3xl shadow-2xl border border-stone-100 overflow-hidden"
-            >
-              <div className="bg-gradient-to-br from-eco-500 to-teal-500 p-5 text-white">
-                <div className="flex items-start justify-between gap-4">
-                  <div>
-                    <div className="flex items-center gap-2 mb-2">
-                      <Sparkles size={20} className="text-amber-200" />
-                      <h2 className="text-xl font-bold">EcoPoints</h2>
-                    </div>
-                    <p className="text-sm text-white/80">
-                      Acompanhe seus pontos ou use o saldo na área de recompensas.
-                    </p>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => setShowEcoPointsModal(false)}
-                    className="p-2 rounded-xl bg-white/10 hover:bg-white/20 transition-colors"
-                    aria-label="Fechar modal EcoPoints"
-                  >
-                    <X size={18} />
-                  </button>
-                </div>
-                <div className="mt-4 flex items-center gap-2 rounded-2xl bg-white/15 px-4 py-3">
-                  <span className="text-sm text-white/80">Saldo atual</span>
-                  <span className="ml-auto text-2xl font-black">{user?.ecoPoints || 0}</span>
-                </div>
-              </div>
-
-              <div className="p-4 space-y-3">
-                <button
-                  type="button"
-                  onClick={() => { setShowEcoPointsModal(false); navigate('/gamificacao'); }}
-                  className="w-full text-left p-4 rounded-2xl border border-stone-100 hover:border-eco-200 hover:bg-eco-50 transition-all flex items-center gap-4"
-                >
-                  <div className="w-11 h-11 rounded-xl bg-eco-50 flex items-center justify-center">
-                    <Icon name="ecopoints" className="w-5 h-5" />
-                  </div>
-                  <div>
-                    <div className="font-bold text-stone-800">Ver meus EcoPoints</div>
-                    <div className="text-sm text-stone-500">Ranking, conquistas e evolução do perfil.</div>
-                  </div>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => { setShowEcoPointsModal(false); navigate('/recompensas'); }}
-                  className="w-full text-left p-4 rounded-2xl border border-stone-100 hover:border-amber-200 hover:bg-amber-50 transition-all flex items-center gap-4"
-                >
-                  <div className="w-11 h-11 rounded-xl bg-amber-50 flex items-center justify-center">
-                    <Icon name="recompensas" className="w-5 h-5" />
-                  </div>
-                  <div>
-                    <div className="font-bold text-stone-800">Usar recompensas</div>
-                    <div className="text-sm text-stone-500">Troque pontos quando quiser acessar benefícios.</div>
-                  </div>
-                </button>
-              </div>
-            </motion.div>
-          </div>
-        )}
+      <EcoPointsModal
+        open={showEcoPointsModal}
+        onClose={() => setShowEcoPointsModal(false)}
+        user={user}
+        onNavigateGamificacao={() => {
+          setShowEcoPointsModal(false);
+          navigate('/gamificacao');
+        }}
+        onNavigateRecompensas={() => {
+          setShowEcoPointsModal(false);
+          navigate('/recompensas');
+        }}
+      />
     </motion.header>
+  );
+};
+
+const EcoPointsModal = ({ open, onClose, user, onNavigateGamificacao, onNavigateRecompensas }) => {
+  const Icon = ({ name, className = 'w-5 h-5' }) => (
+    <img
+      src={require(`../assets/icons/${name}.svg`)}
+      alt={name}
+      className={className}
+      style={{ filter: 'invert(40%) sepia(93%) saturate(500%) hue-rotate(100deg)' }}
+    />
+  );
+
+  if (typeof document === 'undefined') return null;
+
+  return createPortal(
+    <AnimatePresence>
+      {open && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="fixed inset-0 z-[200] flex items-center justify-center bg-stone-950/40 backdrop-blur-sm px-4 py-8"
+          onClick={onClose}
+          role="presentation"
+        >
+          <motion.div
+            initial={{ opacity: 0, y: 16, scale: 0.96 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 16, scale: 0.96 }}
+            transition={{ type: 'spring', stiffness: 380, damping: 28 }}
+            className="w-full max-w-lg bg-white rounded-3xl shadow-2xl border border-stone-100 overflow-hidden"
+            onClick={(e) => e.stopPropagation()}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="ecopoints-modal-title"
+          >
+            <div className="bg-gradient-to-br from-eco-500 to-teal-500 p-5 text-white">
+              <div className="flex items-start justify-between gap-4">
+                <div>
+                  <div className="flex items-center gap-2 mb-2">
+                    <Sparkles size={20} className="text-amber-200" />
+                    <h2 id="ecopoints-modal-title" className="text-xl font-bold">EcoPoints</h2>
+                  </div>
+                  <p className="text-sm text-white/80">
+                    Acompanhe seus pontos ou use o saldo na área de recompensas.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={onClose}
+                  className="p-2 rounded-xl bg-white/10 hover:bg-white/20 transition-colors shrink-0"
+                  aria-label="Fechar modal EcoPoints"
+                >
+                  <X size={18} />
+                </button>
+              </div>
+              <div className="mt-4 flex items-center gap-2 rounded-2xl bg-white/15 px-4 py-3">
+                <span className="text-sm text-white/80">Saldo atual</span>
+                <span className="ml-auto text-2xl font-black">{user?.ecoPoints || 0}</span>
+              </div>
+            </div>
+
+            <div className="p-4 space-y-3">
+              <button
+                type="button"
+                onClick={onNavigateGamificacao}
+                className="w-full text-left p-4 rounded-2xl border border-stone-100 hover:border-eco-200 hover:bg-eco-50 transition-all flex items-center gap-4"
+              >
+                <div className="w-11 h-11 rounded-xl bg-eco-50 flex items-center justify-center shrink-0">
+                  <Icon name="ecopoints" className="w-5 h-5" />
+                </div>
+                <div className="min-w-0">
+                  <div className="font-bold text-stone-800">Ver meus EcoPoints</div>
+                  <div className="text-sm text-stone-500">Ranking, conquistas e evolução do perfil.</div>
+                </div>
+              </button>
+
+              <button
+                type="button"
+                onClick={onNavigateRecompensas}
+                className="w-full text-left p-4 rounded-2xl border border-stone-100 hover:border-amber-200 hover:bg-amber-50 transition-all flex items-center gap-4"
+              >
+                <div className="w-11 h-11 rounded-xl bg-amber-50 flex items-center justify-center shrink-0">
+                  <Icon name="recompensas" className="w-5 h-5" />
+                </div>
+                <div className="min-w-0">
+                  <div className="font-bold text-stone-800">Usar recompensas</div>
+                  <div className="text-sm text-stone-500">Troque pontos quando quiser acessar benefícios.</div>
+                </div>
+              </button>
+            </div>
+          </motion.div>
+        </motion.div>
+      )}
+    </AnimatePresence>,
+    document.body
   );
 };
 

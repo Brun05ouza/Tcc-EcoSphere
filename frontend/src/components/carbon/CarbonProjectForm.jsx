@@ -11,7 +11,7 @@ import {
   BRAZILIAN_STATES,
 } from './constants';
 
-const CarbonProjectForm = ({ formData, onChange }) => (
+const CarbonProjectForm = ({ formData, onChange, onCepChange, cepLoading, cepError }) => (
   <div className="space-y-6">
     <CarbonFormSection title="Identificação do Projeto" index={0}>
       <CarbonFormField
@@ -49,6 +49,20 @@ const CarbonProjectForm = ({ formData, onChange }) => (
     </CarbonFormSection>
 
     <CarbonFormSection title="Localização" index={1}>
+      <CarbonFormField
+        label="CEP"
+        name="cep"
+        value={formData.cep}
+        onChange={onCepChange}
+        placeholder="00000-000"
+        loading={cepLoading}
+        helperText={
+          cepError
+            ? cepError
+            : 'Informe o CEP para preencher automaticamente cidade, estado, latitude e longitude.'
+        }
+        error={Boolean(cepError)}
+      />
       <div className="grid sm:grid-cols-3 gap-5">
         <CarbonFormField
           label="País"
@@ -90,7 +104,7 @@ const CarbonProjectForm = ({ formData, onChange }) => (
           type="number"
           value={formData.latitude}
           onChange={onChange}
-          placeholder="Ex: -23.5505"
+          placeholder="Ex: -23.550520"
           step="any"
         />
         <CarbonFormField
@@ -99,11 +113,11 @@ const CarbonProjectForm = ({ formData, onChange }) => (
           type="number"
           value={formData.longitude}
           onChange={onChange}
-          placeholder="Ex: -46.6333"
+          placeholder="Ex: -46.633308"
           step="any"
         />
       </div>
-      <p className="text-xs text-slate-500 -mt-2">
+      <p className="text-xs text-stone-500 -mt-2">
         As coordenadas ajudam futuramente na validação por mapa, satélite e histórico ambiental.
       </p>
     </CarbonFormSection>
@@ -111,18 +125,20 @@ const CarbonProjectForm = ({ formData, onChange }) => (
     <CarbonFormSection title="Período do Projeto" index={2}>
       <div className="grid sm:grid-cols-2 gap-5">
         <CarbonFormField
-          label="Data de início"
           name="dataInicio"
           type="date"
           value={formData.dataInicio}
           onChange={onChange}
+          placeholder="Data Inicial"
+          hideLabel
         />
         <CarbonFormField
-          label="Previsão de término"
           name="dataTermino"
           type="date"
           value={formData.dataTermino}
           onChange={onChange}
+          placeholder="Data Final"
+          hideLabel
         />
       </div>
       <CarbonFormField

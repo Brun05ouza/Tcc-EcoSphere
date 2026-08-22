@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useUser } from '../contexts/UserContext';
+import { useBodyScrollLock } from '../hooks/useBodyScrollLock';
 import { Brain, Flame, Sparkles } from 'lucide-react';
 
 const DailyQuiz = ({ onClose }) => {
+  useBodyScrollLock(true);
   const [answered, setAnswered] = useState(false);
   const [selectedAnswer, setSelectedAnswer] = useState(null);
   const [streak, setStreak] = useState(7);

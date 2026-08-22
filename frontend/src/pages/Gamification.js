@@ -6,6 +6,7 @@ import { getRandomQuestions } from '../data/quizQuestions';
 import { Sparkles, Trophy, Recycle, Leaf, TreePine, Globe, Flame, Brain, Gamepad2, Award, Target, Check, X, BarChart3, RotateCcw, Medal } from 'lucide-react';
 import { AppIcon } from '../components/ui/AppIcon';
 import LoadingScreen from '../components/ui/LoadingScreen';
+import { useBodyScrollLock } from '../hooks/useBodyScrollLock';
 
 const Gamification = () => {
   const [user, setUser] = useState(null);
@@ -47,6 +48,8 @@ const Gamification = () => {
   const [pendingPoints, setPendingPoints] = useState(0);
   const [pendingType, setPendingType] = useState('');
   const [showConfirmation, setShowConfirmation] = useState(false);
+
+  useBodyScrollLock(showConfirmation);
 
   const wasteItems = [
     { type: 'plastic', iconName: 'bottle', points: 10 },

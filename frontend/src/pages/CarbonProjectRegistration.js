@@ -10,7 +10,7 @@ import { useCarbonProjectForm } from '../components/carbon/useCarbonProjectForm'
 
 const CarbonProjectRegistration = () => {
   const navigate = useNavigate();
-  const { formData, handleChange, getSummary, handleSaveMock } = useCarbonProjectForm();
+  const { formData, handleChange, handleCepChange, cepLoading, cepError, getSummary, handleSaveMock } = useCarbonProjectForm();
   const [notification, setNotification] = useState(null);
   const [saving, setSaving] = useState(false);
 
@@ -134,7 +134,13 @@ const CarbonProjectRegistration = () => {
 
         <form onSubmit={handleSave} className="grid lg:grid-cols-3 gap-8">
           <div className="lg:col-span-2">
-            <CarbonProjectForm formData={formData} onChange={handleChange} />
+            <CarbonProjectForm
+              formData={formData}
+              onChange={handleChange}
+              onCepChange={handleCepChange}
+              cepLoading={cepLoading}
+              cepError={cepError}
+            />
           </div>
 
           <div className="lg:col-span-1">

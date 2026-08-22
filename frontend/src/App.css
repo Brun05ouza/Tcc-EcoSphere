@@ -94,6 +94,29 @@ html.lenis body {
   overscroll-behavior: contain;
 }
 
+.carbon-dropdown-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: #a8a29e transparent;
+}
+
+.carbon-dropdown-scroll::-webkit-scrollbar {
+  display: block;
+  width: 6px;
+}
+
+.carbon-dropdown-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.carbon-dropdown-scroll::-webkit-scrollbar-thumb {
+  background-color: #d6d3d1;
+  border-radius: 9999px;
+}
+
+.carbon-dropdown-scroll::-webkit-scrollbar-thumb:hover {
+  background-color: #a8a29e;
+}
+
 .lenis.lenis-stopped {
   overflow: hidden;
 }

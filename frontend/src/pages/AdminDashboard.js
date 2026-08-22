@@ -11,6 +11,7 @@ import {
   adminGetAllUsers, adminSetEcoPoints, adminToggleAdmin,
   adminCreateUser, adminDeleteUser, adminGetStats
 } from '../services/supabaseService';
+import { useBodyScrollLock } from '../hooks/useBodyScrollLock';
 
 // ── Utilitários ──────────────────────────────────────────────────────────────
 const levelColor = (level) => {
@@ -27,7 +28,10 @@ const levelColor = (level) => {
 const fmt = (d) => d ? new Date(d).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', year: 'numeric' }) : '—';
 
 // ── Modal de confirmação ──────────────────────────────────────────────────────
-const ConfirmModal = ({ title, message, onConfirm, onCancel, danger = false }) => (
+const ConfirmModal = ({ title, message, onConfirm, onCancel, danger = false }) => {
+  useBodyScrollLock(true);
+
+  return (
   <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm">
     <motion.div
       initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}
@@ -44,10 +48,12 @@ const ConfirmModal = ({ title, message, onConfirm, onCancel, danger = false }) =
       </div>
     </motion.div>
   </div>
-);
+  );
+};
 
 // ── Modal editar pontos ───────────────────────────────────────────────────────
 const EditPointsModal = ({ user, onSave, onCancel }) => {
+  useBodyScrollLock(true);
   const [value, setValue] = useState(String(user.ecoPoints || 0));
   const [loading, setLoading] = useState(false);
 
@@ -95,6 +101,7 @@ const EditPointsModal = ({ user, onSave, onCancel }) => {
 
 // ── Modal criar usuário ───────────────────────────────────────────────────────
 const CreateUserModal = ({ onSave, onCancel }) => {
+  useBodyScrollLock(true);
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');

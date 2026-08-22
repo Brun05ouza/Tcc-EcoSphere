@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { useLocation } from 'react-router-dom';
 import Lenis from 'lenis';
+import { registerLenis } from '../utils/bodyScrollLock';
 
 const SmoothScrollProvider = ({ children }) => {
   const lenisRef = useRef(null);
@@ -20,6 +21,7 @@ const SmoothScrollProvider = ({ children }) => {
     });
 
     lenisRef.current = lenis;
+    registerLenis(lenis);
     let animationFrame;
 
     const raf = (time) => {
@@ -33,6 +35,7 @@ const SmoothScrollProvider = ({ children }) => {
       cancelAnimationFrame(animationFrame);
       lenis.destroy();
       lenisRef.current = null;
+      registerLenis(null);
     };
   }, []);
 

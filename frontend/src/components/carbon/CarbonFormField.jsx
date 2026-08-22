@@ -1,7 +1,7 @@
 import React from 'react';
-
-const fieldClassName =
-  'w-full px-4 py-3 bg-white border border-stone-200 rounded-xl text-stone-800 placeholder-stone-400 transition-colors outline-none focus:border-eco-400 focus:ring-2 focus:ring-eco-500/20 [color-scheme:light]';
+import { Loader2 } from 'lucide-react';
+import CarbonSelect, { carbonFieldClassName } from './CarbonSelect';
+import CarbonDatePicker from './CarbonDatePicker';
 
 const labelClassName = 'block text-xs font-bold text-stone-400 uppercase tracking-wider mb-2';
 
@@ -18,16 +18,34 @@ const CarbonFormField = ({
   suffix,
   step,
   min,
+  hideLabel = false,
+  loading = false,
+  onBlur,
+  readOnly = false,
+  error,
 }) => {
   const renderInput = () => {
     if (type === 'select') {
       return (
-        <select name={name} id={name} value={value} onChange={onChange} className={`${fieldClassName} cursor-pointer`}>
-          <option value="">Selecione...</option>
-          {options.map((opt) => (
-            <option key={opt} value={opt}>{opt}</option>
-          ))}
-        </select>
+        <CarbonSelect
+          name={name}
+          id={name}
+          value={value}
+          onChange={onChange}
+          options={options}
+        />
+      );
+    }
+
+    if (type === 'date') {
+      return (
+        <CarbonDatePicker
+          name={name}
+          id={name}
+          value={value}
+          onChange={onChange}
+          placeholder={placeholder}
+        />
       );
     }
 
@@ -40,7 +58,8 @@ const CarbonFormField = ({
           onChange={onChange}
           placeholder={placeholder}
           rows={rows}
-          className={`${fieldClassName} resize-y min-h-[100px]`}
+          readOnly={readOnly}
+          className={`${carbonFieldClassName} resize-y min-h-[100px] cursor-text`}
         />
       );
     }
@@ -52,20 +71,28 @@ const CarbonFormField = ({
         id={name}
         value={value}
         onChange={onChange}
+        onBlur={onBlur}
         placeholder={placeholder}
         step={step}
         min={min}
-        className={suffix ? `${fieldClassName} pr-20` : fieldClassName}
+        readOnly={readOnly}
+        className={`${carbonFieldClassName} cursor-text ${suffix || loading ? 'pr-12' : ''} ${readOnly ? 'bg-stone-50 text-stone-600 cursor-default' : ''}`}
       />
     );
 
-    if (suffix) {
+    if (suffix || loading) {
       return (
         <div className="relative">
           {inputEl}
-          <span className="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-medium text-stone-400 pointer-events-none">
-            {suffix}
-          </span>
+          {loading ? (
+            <span className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-eco-600">
+              <Loader2 size={18} className="animate-spin" />
+            </span>
+          ) : (
+            <span className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-xs font-medium text-stone-400">
+              {suffix}
+            </span>
+          )}
         </div>
       );
     }
@@ -75,10 +102,14 @@ const CarbonFormField = ({
 
   return (
     <div>
-      <label htmlFor={name} className={labelClassName}>{label}</label>
+      {!hideLabel && label && (
+        <label htmlFor={name} className={labelClassName}>{label}</label>
+      )}
       {renderInput()}
       {helperText && (
-        <p className="mt-1.5 text-xs text-stone-500 leading-relaxed">{helperText}</p>
+        <p className={`mt-1.5 text-xs leading-relaxed ${error ? 'text-red-500' : 'text-stone-500'}`}>
+          {helperText}
+        </p>
       )}
     </div>
   );

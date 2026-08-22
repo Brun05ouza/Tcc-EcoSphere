@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useUser } from '../contexts/UserContext';
 import { AppIcon } from '../components/ui/AppIcon';
 import { Gift, Sparkles, Check, X, CreditCard } from 'lucide-react';
+import { useBodyScrollLock } from '../hooks/useBodyScrollLock';
 
 const Rewards = () => {
   const [selectedCategory, setSelectedCategory] = useState('education');
@@ -11,6 +12,8 @@ const Rewards = () => {
   const [selectedReward, setSelectedReward] = useState(null);
   const [showNotificationModal, setShowNotificationModal] = useState(false);
   const [notificationData, setNotificationData] = useState({ type: '', message: '', iconName: 'sparkles' });
+
+  useBodyScrollLock(showRedeemModal || showNotificationModal);
 
   const categories = [
     { id: 'education', label: 'Educação', iconName: 'book', color: 'from-blue-500 to-cyan-500' },
