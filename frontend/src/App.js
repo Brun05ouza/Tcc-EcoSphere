@@ -21,6 +21,7 @@ import Profile from './pages/Profile';
 import Guide from './pages/Guide';
 import EcoCatcher from './pages/EcoCatcher';
 import History from './pages/History';
+import CarbonProjectRegistration from './pages/CarbonProjectRegistration';
 import './App.css';
 
 function App() {
@@ -52,6 +53,7 @@ function App() {
                         <Route path="/educacao" element={<Education />} />
                         <Route path="/recompensas" element={<Rewards />} />
                         <Route path="/historico" element={<History />} />
+                        <Route path="/carbono/cadastro-projeto" element={<CarbonProjectRegistration />} />
                         <Route path="/perfil" element={<Profile />} />
                         <Route path="/guia" element={<Guide />} />
                       </Routes>

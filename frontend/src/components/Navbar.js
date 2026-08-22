@@ -81,16 +81,32 @@ const Navbar = () => {
     { path: '/dashboard', label: 'Dashboard', icon: 'dashboard' },
     { path: '/classificar-residuos', label: 'IA Resíduos', icon: 'IA' },
     { path: '/monitoramento', label: 'Monitoramento', icon: 'monitoramento' },
+    { path: '/carbono/cadastro-projeto', label: 'Carbono', icon: 'carbono', matchPrefix: '/carbono' },
     { path: '/gamificacao', label: 'EcoPoints', icon: 'ecopoints', opensEcoPointsModal: true },
     { path: '/educacao', label: 'Educação', icon: 'educacao' }
   ];
 
+  const isNavActive = (item) => {
+    if (item.opensEcoPointsModal) {
+      return location.pathname === item.path || location.pathname === '/recompensas';
+    }
+    if (item.matchPrefix) {
+      return location.pathname.startsWith(item.matchPrefix);
+    }
+    return location.pathname === item.path;
+  };
+
+  const navLinkClass = (item) =>
+    isNavActive(item)
+      ? 'bg-eco-50 text-eco-700'
+      : 'text-stone-600 hover:bg-stone-100 hover:text-stone-900';
+
   const Icon = ({ name, className = "w-5 h-5", active = false }) => {
     const iconStyle = active ? { filter: 'invert(48%) sepia(79%) saturate(2476%) hue-rotate(86deg) brightness(118%) contrast(119%)' } : { filter: 'invert(40%) sepia(5%) saturate(500%) hue-rotate(180deg)' };
     return (
-      <img 
-        src={require(`../assets/icons/${name}.svg`)} 
-        alt={name} 
+      <img
+        src={require(`../assets/icons/${name}.svg`)}
+        alt={name}
         className={className}
         style={iconStyle}
       />
@@ -106,7 +122,6 @@ const Navbar = () => {
       className={`sticky top-0 z-50 transition-all duration-300 ${navBg}`}
     >
       <div className="relative flex items-center h-16 md:h-[72px] py-2 w-full px-6 md:px-10">
-        {/* Logo: esquerda */}
         <Link to="/" className="flex items-center gap-2.5 group shrink-0">
           <EcoGlobeLogo
             size={48}
@@ -117,7 +132,6 @@ const Navbar = () => {
           </span>
         </Link>
 
-          {/* Nav: absolutamente centralizado no header */}
           <nav className="hidden lg:flex absolute left-1/2 -translate-x-1/2 items-center gap-2" aria-label="Menu principal">
             {navItems.map((item) => (
               item.opensEcoPointsModal ? (
@@ -125,33 +139,24 @@ const Navbar = () => {
                   key={item.path}
                   type="button"
                   onClick={() => setShowEcoPointsModal(true)}
-                  className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 whitespace-nowrap ${
-                    location.pathname === item.path || location.pathname === '/recompensas'
-                      ? 'bg-eco-50 text-eco-700'
-                      : 'text-stone-600 hover:bg-stone-100 hover:text-stone-900'
-                  }`}
+                  className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 whitespace-nowrap ${navLinkClass(item)}`}
                 >
-                  <Icon name={item.icon} className="w-4 h-4 shrink-0" active={location.pathname === item.path || location.pathname === '/recompensas'} />
+                  <Icon name={item.icon} className="w-4 h-4 shrink-0" active={isNavActive(item)} />
                   <span>{item.label}</span>
                 </button>
               ) : (
                 <Link
                   key={item.path}
                   to={item.path}
-                  className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 whitespace-nowrap ${
-                    location.pathname === item.path
-                      ? 'bg-eco-50 text-eco-700'
-                      : 'text-stone-600 hover:bg-stone-100 hover:text-stone-900'
-                  }`}
+                  className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 whitespace-nowrap ${navLinkClass(item)}`}
                 >
-                  <Icon name={item.icon} className="w-4 h-4 shrink-0" active={location.pathname === item.path} />
+                  <Icon name={item.icon} className="w-4 h-4 shrink-0" active={isNavActive(item)} />
                   <span>{item.label}</span>
                 </Link>
               )
             ))}
           </nav>
 
-          {/* Área do usuário: notificações, EcoPoints, perfil e menu mobile */}
           <div className="flex items-center gap-3 ml-auto">
             <div className="hidden lg:flex relative">
               <motion.button
@@ -250,7 +255,6 @@ const Navbar = () => {
                   transition={{ duration: 0.15 }}
                   className="absolute right-0 top-full mt-2 w-64 bg-white rounded-2xl shadow-xl border border-stone-100 z-50 overflow-hidden"
                 >
-                  {/* Header do dropdown */}
                   <div className="bg-gradient-to-br from-eco-500 to-teal-500 p-4">
                     <div className="flex items-center gap-3">
                       <div className="w-11 h-11 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center ring-2 ring-white/30 overflow-hidden">
@@ -272,7 +276,6 @@ const Navbar = () => {
                     </div>
                   </div>
 
-                  {/* Ações */}
                   <div className="p-2">
                     <button
                       onClick={() => { navigate('/perfil'); setShowProfile(false); }}
@@ -333,11 +336,7 @@ const Navbar = () => {
                     key={item.path}
                     type="button"
                     onClick={() => { setIsOpen(false); setShowEcoPointsModal(true); }}
-                    className={`block w-full text-left px-4 py-3 rounded-xl text-sm font-medium ${
-                      location.pathname === item.path || location.pathname === '/recompensas'
-                        ? 'bg-eco-50 text-eco-700'
-                        : 'text-stone-600 hover:bg-stone-50'
-                    }`}
+                    className={`block w-full text-left px-4 py-3 rounded-xl text-sm font-medium ${navLinkClass(item)}`}
                   >
                     {item.label}
                   </button>
@@ -346,11 +345,7 @@ const Navbar = () => {
                     key={item.path}
                     to={item.path}
                     onClick={() => setIsOpen(false)}
-                    className={`block px-4 py-3 rounded-xl text-sm font-medium ${
-                      location.pathname === item.path
-                        ? 'bg-eco-50 text-eco-700'
-                        : 'text-stone-600 hover:bg-stone-50'
-                    }`}
+                    className={`block px-4 py-3 rounded-xl text-sm font-medium ${navLinkClass(item)}`}
                   >
                     {item.label}
                   </Link>
@@ -378,7 +373,7 @@ const Navbar = () => {
                   </div>
                   Histórico
                 </Link>
-                
+
                 <div className="flex items-center justify-between px-4 py-2">
                   <span className="text-sm font-medium text-stone-600">Saldo:</span>
                   <div className="flex items-center gap-1.5 bg-amber-50 text-amber-600 px-2.5 py-1 rounded-lg text-xs font-bold">
@@ -386,8 +381,8 @@ const Navbar = () => {
                     {user?.ecoPoints || 0} pts
                   </div>
                 </div>
-                
-                <button 
+
+                <button
                   onClick={handleLogout}
                   className="w-full flex items-center justify-center gap-2 bg-red-50 text-red-600 px-4 py-3 mt-2 rounded-xl text-sm font-medium hover:bg-red-100"
                 >
