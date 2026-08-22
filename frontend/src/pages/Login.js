@@ -4,8 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { userAPI } from '../services/api';
 import { useUser } from '../contexts/UserContext';
 import GoogleLogin from '../components/GoogleLogin';
-import EcoGlobeLogo from '../components/ui/EcoGlobeLogo';
-import { Brain, Recycle, BarChart3, Trophy, Eye, EyeOff, Loader2, AlertTriangle, Check } from 'lucide-react';
+import { Eye, EyeOff, Loader2, AlertTriangle, Check } from 'lucide-react';
 
 const Login = () => {
   const [isLogin, setIsLogin] = useState(true);
@@ -22,8 +21,9 @@ const Login = () => {
   const navigate = useNavigate();
   const { updateUser } = useUser();
   const useSupabase = false;
-  const inputClassName = "w-full px-5 py-4 bg-white/10 border border-white/20 rounded-2xl hover:bg-white/15 hover:border-white/30 focus:bg-white/15 focus:border-white/40 focus:ring-0 focus:shadow-[inset_0_0_0_1px_rgba(255,255,255,0.22)] text-white placeholder-white/40 transition-colors font-medium outline-none";
-  const passwordInputClassName = "w-full pl-5 pr-12 py-4 bg-white/10 border border-white/20 rounded-2xl hover:bg-white/15 hover:border-white/30 focus:bg-white/15 focus:border-white/40 focus:ring-0 focus:shadow-[inset_0_0_0_1px_rgba(255,255,255,0.22)] text-white placeholder-white/40 transition-colors font-medium outline-none";
+  const inputClassName = "auth-input";
+  const passwordInputClassName = "auth-input auth-input--password";
+  const labelClassName = "auth-label";
 
   const showNotification = (message, type = 'error') => {
     setNotification({ message, type });
@@ -182,13 +182,10 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-eco-600 via-teal-600 to-eco-700 flex items-center justify-center p-4 relative overflow-hidden">
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-20 left-10 w-72 h-72 bg-white/10 rounded-full blur-3xl" />
-        <div className="absolute bottom-20 right-20 w-96 h-96 bg-teal-400/20 rounded-full blur-3xl" />
-        <div className="absolute top-1/2 left-1/3 w-64 h-64 bg-white/5 rounded-full blur-2xl" />
-      </div>
-
+    <div
+      className="auth-page"
+      style={{ backgroundImage: "url('/fundo-login-tcc.svg')" }}
+    >
       {/* Notification */}
       <AnimatePresence>
         {notification && (
@@ -198,22 +195,22 @@ const Login = () => {
             exit={{ opacity: 0, y: -50, scale: 0.9 }}
             className="fixed top-6 left-1/2 -translate-x-1/2 z-50 w-full max-w-md px-4"
           >
-            <div className={`p-4 rounded-2xl shadow-2xl border backdrop-blur-xl flex items-start gap-3 ${
-              notification.type === 'success' ? 'bg-green-500/20 border-green-500/30 text-white' :
-              notification.type === 'warning' ? 'bg-yellow-500/20 border-yellow-500/30 text-white' :
-              'bg-red-500/20 border-red-500/30 text-white'
+            <div className={`p-4 rounded-2xl shadow-soft-lg border flex items-start gap-3 ${
+              notification.type === 'success' ? 'bg-white border-eco-200 text-stone-800' :
+              notification.type === 'warning' ? 'bg-white border-amber-200 text-stone-800' :
+              'bg-white border-red-200 text-stone-800'
             }`}>
               <div className="shrink-0 mt-0.5">
-                {notification.type === 'success' ? <Check size={20} className="text-green-400" /> :
-                 notification.type === 'warning' ? <AlertTriangle size={20} className="text-yellow-400" /> :
-                 <AlertTriangle size={20} className="text-red-400" />}
+                {notification.type === 'success' ? <Check size={20} className="text-eco-600" /> :
+                 notification.type === 'warning' ? <AlertTriangle size={20} className="text-amber-500" /> :
+                 <AlertTriangle size={20} className="text-red-500" />}
               </div>
               <div className="flex-1">
                 <p className="text-sm font-semibold">{notification.message}</p>
               </div>
               <button
                 onClick={() => setNotification(null)}
-                className="shrink-0 text-white/50 hover:text-white transition-colors"
+                className="shrink-0 text-stone-400 hover:text-stone-600 transition-colors"
               >
                 ✕
               </button>
@@ -222,294 +219,242 @@ const Login = () => {
         )}
       </AnimatePresence>
 
-      {/* Container Principal */}
-      <div className="w-full max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between relative z-10 gap-12 lg:gap-24 px-4 sm:px-6 lg:px-8">
-        {/* Coluna Esquerda - Boas-vindas */}
-        <motion.div
-          initial={{ opacity: 0, x: -50 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.8, ease: "easeOut" }}
-          className="text-white space-y-10 flex-1 hidden md:flex flex-col justify-center"
-        >
-          {/* Logo e Título */}
-          <div>
-            <motion.div 
-              initial={{ scale: 0.8, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              transition={{ delay: 0.2, duration: 0.5 }}
-              className="mb-8 inline-block drop-shadow-xl"
-            >
-              <EcoGlobeLogo size={72} style={{ filter: 'brightness(0) invert(1)' }} />
-            </motion.div>
-            <h1 className="text-5xl lg:text-6xl xl:text-7xl font-black mb-6 tracking-tighter leading-tight">
+      <div className="auth-shell">
+        <div className="auth-card">
+          {/* Brand */}
+          <div className="mb-5 text-center">
+            <p className="text-[11px] font-black uppercase tracking-[0.22em] text-emerald-300/90 mb-3">
               EcoSphere
-            </h1>
-            <p className="text-xl lg:text-2xl text-white/90 font-medium max-w-xl leading-relaxed">
-              Junte-se a nós na missão de construir um futuro sustentável através da tecnologia.
+            </p>
+            <h2 className="text-2xl font-bold text-white tracking-tight">
+              {isLogin ? 'Bem-vindo de volta' : 'Crie sua conta'}
+            </h2>
+            <p className="mt-1.5 text-sm text-white/60 leading-relaxed">
+              {isLogin
+                ? 'Acesse sua área de monitoramento ambiental.'
+                : 'Comece a acompanhar seu impacto sustentável.'}
             </p>
           </div>
 
-          {/* Features Cards */}
-          <div className="grid sm:grid-cols-2 gap-4 max-w-2xl">
-            {[
-              { icon: Brain, title: 'IA Inteligente', desc: 'Classificação automática' },
-              { icon: Trophy, title: 'Gamificação', desc: 'Ganhe prêmios reais' },
-              { icon: BarChart3, title: 'Dashboard', desc: 'Métricas em tempo real' },
-              { icon: Recycle, title: 'Comunidade', desc: 'Impacto coletivo' }
-            ].map((feature, index) => {
-              const IconComponent = feature.icon;
-              return (
-                <motion.div
-                  key={index}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.4 + index * 0.1 }}
-                  whileHover={{ scale: 1.03, backgroundColor: 'rgba(255, 255, 255, 0.15)' }}
-                  className="flex items-start gap-4 p-5 rounded-3xl bg-white/10 backdrop-blur-md border border-white/20 shadow-xl transition-all"
-                >
-                  <div className="p-3 bg-white/20 rounded-2xl shrink-0">
-                    <IconComponent size={24} className="text-white" />
-                  </div>
-                  <div>
-                    <h3 className="font-bold text-white mb-1">{feature.title}</h3>
-                    <p className="text-white/70 text-sm font-medium">{feature.desc}</p>
-                  </div>
-                </motion.div>
-              );
-            })}
-          </div>
-        </motion.div>
-
-        {/* Coluna Direita - Formulário Glassmorphism */}
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.2 }}
-          className="w-full max-w-[440px] shrink-0"
-        >
-          <div className="bg-white/10 backdrop-blur-2xl rounded-[2.5rem] p-8 sm:p-10 border border-white/20 shadow-[0_8px_32px_0_rgba(0,0,0,0.3)] relative z-10 overflow-hidden">
-            {/* Efeito de brilho interno do card */}
-            <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-white/50 to-transparent" />
-            <div className="absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-black/20 to-transparent pointer-events-none" />
-
-            {/* Toggle Login/Register */}
-            <div className="relative flex bg-black/20 rounded-2xl p-1 mb-8">
-              <motion.div
-                className="absolute top-1 bottom-1 bg-white rounded-xl shadow-lg"
-                animate={{
-                  left: isLogin ? '4px' : '50%',
-                  right: isLogin ? '50%' : '4px'
-                }}
-                transition={{ type: "spring", stiffness: 400, damping: 30 }}
-              />
-              <button
-                onClick={() => setIsLogin(true)}
-                className={`relative z-10 flex-1 py-3 px-4 rounded-xl transition-all text-sm font-bold tracking-wide ${
-                  isLogin ? 'text-stone-900' : 'text-white hover:text-white/80'
-                }`}
-              >
-                Entrar
-              </button>
-              <button
-                onClick={() => setIsLogin(false)}
-                className={`relative z-10 flex-1 py-3 px-4 rounded-xl transition-all text-sm font-bold tracking-wide ${
-                  !isLogin ? 'text-stone-900' : 'text-white hover:text-white/80'
-                }`}
-              >
-                Registrar
-              </button>
-            </div>
-
-            <div className="mb-8 text-center relative z-10">
-              <h2 className="text-2xl font-bold text-white mb-2">
-                {isLogin ? 'Bem-vindo de volta!' : 'Crie sua conta'}
-              </h2>
-              <p className="text-white/70 text-sm">
-                {isLogin ? 'Insira seus dados para acessar sua conta' : 'Junte-se à comunidade sustentável'}
-              </p>
-            </div>
-
-            {/* Form */}
-            <motion.form
-              onSubmit={handleSubmit}
-              className="space-y-4 relative z-10"
-              key={isLogin ? 'login' : 'register'}
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.3 }}
+          {/* Tabs Entrar / Registrar */}
+          <div className="auth-tabs" role="tablist" aria-label="Modo de autenticação">
+            <motion.div
+              className="auth-tab-pill"
+              animate={{ x: isLogin ? '0%' : '100%' }}
+              transition={{ type: 'spring', stiffness: 420, damping: 34, mass: 0.8 }}
+            />
+            <button
+              type="button"
+              role="tab"
+              aria-selected={isLogin}
+              onClick={() => setIsLogin(true)}
+              className={`auth-tab ${isLogin ? 'auth-tab-active' : 'auth-tab-inactive'}`}
             >
-              <AnimatePresence mode="wait">
-                {!isLogin && (
-                  <motion.div
-                    initial={{ opacity: 0, height: 0, marginBottom: 0 }}
-                    animate={{ opacity: 1, height: 'auto', marginBottom: 16 }}
-                    exit={{ opacity: 0, height: 0, marginBottom: 0 }}
-                    transition={{ duration: 0.3 }}
-                    className="overflow-hidden"
-                  >
-                    <label className="block text-xs font-bold text-white/90 uppercase tracking-wider mb-2 ml-1">
-                      Nome Completo
-                    </label>
-                    <input
-                      type="text"
-                      name="name"
-                      value={formData.name}
-                      onChange={handleChange}
-                      className={inputClassName}
-                      placeholder="Seu nome completo"
-                    />
-                  </motion.div>
-                )}
-              </AnimatePresence>
+              Entrar
+            </button>
+            <button
+              type="button"
+              role="tab"
+              aria-selected={!isLogin}
+              onClick={() => setIsLogin(false)}
+              className={`auth-tab ${!isLogin ? 'auth-tab-active' : 'auth-tab-inactive'}`}
+            >
+              Registrar
+            </button>
+          </div>
 
-              <div>
-                <label className="block text-xs font-bold text-white/90 uppercase tracking-wider mb-2 ml-1">
-                  Email
-                </label>
-                <input
-                  type="email"
-                  name="email"
-                  value={formData.email}
-                  onChange={handleChange}
-                  className={inputClassName}
-                  placeholder="seu@email.com"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold text-white/90 uppercase tracking-wider mb-2 ml-1">
-                  Senha
-                </label>
-                <div className="relative">
+          {/* Form — lógica intacta */}
+          <motion.form
+            onSubmit={handleSubmit}
+            className="space-y-3.5"
+            key={isLogin ? 'login' : 'register'}
+            initial={{ opacity: 0, x: 12 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.28 }}
+          >
+            <AnimatePresence mode="wait">
+              {!isLogin && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0, marginBottom: 0 }}
+                  animate={{ opacity: 1, height: 'auto', marginBottom: 0 }}
+                  exit={{ opacity: 0, height: 0, marginBottom: 0 }}
+                  transition={{ duration: 0.25 }}
+                  className="overflow-hidden"
+                >
+                  <label htmlFor="name" className={labelClassName}>
+                    Nome Completo
+                  </label>
                   <input
-                    type={showPassword ? "text" : "password"}
-                    name="password"
-                    value={formData.password}
+                    id="name"
+                    type="text"
+                    name="name"
+                    value={formData.name}
                     onChange={handleChange}
-                    className={passwordInputClassName}
-                    placeholder="••••••••"
+                    className={inputClassName}
+                    placeholder="Seu nome completo"
+                    autoComplete="name"
                   />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-4 top-1/2 -translate-y-1/2 text-white/50 hover:text-white transition-colors"
-                  >
-                    {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
-                  </button>
-                </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
 
-                {isLogin && (
-                  <div className="mt-2 text-right">
-                    <a href="#" className="text-xs font-bold text-teal-300 hover:text-white transition-colors">
-                      Esqueceu a senha?
-                    </a>
-                  </div>
-                )}
+            <div>
+              <label htmlFor="email" className={labelClassName}>
+                Email
+              </label>
+              <input
+                id="email"
+                type="email"
+                name="email"
+                value={formData.email}
+                onChange={handleChange}
+                className={inputClassName}
+                placeholder="seu@email.com"
+                autoComplete="email"
+              />
+            </div>
 
-                {/* Password Strength */}
-                <AnimatePresence>
-                  {!isLogin && formData.password && (
-                    <motion.div
-                      initial={{ opacity: 0, height: 0 }}
-                      animate={{ opacity: 1, height: 'auto' }}
-                      exit={{ opacity: 0, height: 0 }}
-                      className="mt-3 overflow-hidden"
-                    >
-                      <div className="flex items-center gap-3 mb-1">
-                        <div className="flex-1 h-1.5 bg-black/20 rounded-full overflow-hidden">
-                          <motion.div 
-                            className={`h-full ${getPasswordStrength(formData.password).color}`}
-                            initial={{ width: 0 }}
-                            animate={{ width: `${getPasswordStrength(formData.password).strength}%` }}
-                            transition={{ duration: 0.3 }}
-                          />
-                        </div>
-                        <span className="text-[10px] font-bold text-white/80 uppercase w-20 text-right">
-                          {getPasswordStrength(formData.password).label}
-                        </span>
-                      </div>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
+            <div>
+              <label htmlFor="password" className={labelClassName}>
+                Senha
+              </label>
+              <div className="relative">
+                <input
+                  id="password"
+                  type={showPassword ? 'text' : 'password'}
+                  name="password"
+                  value={formData.password}
+                  onChange={handleChange}
+                  className={passwordInputClassName}
+                  placeholder="••••••••"
+                  autoComplete={isLogin ? 'current-password' : 'new-password'}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-white/45 hover:text-white/85 transition-colors"
+                  aria-label={showPassword ? 'Ocultar senha' : 'Mostrar senha'}
+                >
+                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                </button>
               </div>
 
-              <AnimatePresence mode="wait">
-                {!isLogin && (
-                  <motion.div
-                    initial={{ opacity: 0, height: 0, marginTop: 0 }}
-                    animate={{ opacity: 1, height: 'auto', marginTop: 16 }}
-                    exit={{ opacity: 0, height: 0, marginTop: 0 }}
-                    transition={{ duration: 0.3 }}
-                    className="overflow-hidden"
+              {isLogin && (
+                <div className="mt-2 text-right">
+                  <a
+                    href="#"
+                    className="text-[11px] font-semibold text-emerald-300/90 hover:text-emerald-200 transition-colors"
                   >
-                    <label className="block text-xs font-bold text-white/90 uppercase tracking-wider mb-2 ml-1">
-                      Confirmar Senha
-                    </label>
-                    <div className="relative">
-                      <input
-                        type={showConfirmPassword ? "text" : "password"}
-                        name="confirmPassword"
-                        value={formData.confirmPassword}
-                        onChange={handleChange}
-                        className={passwordInputClassName}
-                        placeholder="••••••••"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                        className="absolute right-4 top-1/2 -translate-y-1/2 text-white/50 hover:text-white transition-colors"
-                      >
-                        {showConfirmPassword ? <EyeOff size={20} /> : <Eye size={20} />}
-                      </button>
+                    Esqueceu a senha?
+                  </a>
+                </div>
+              )}
+
+              <AnimatePresence>
+                {!isLogin && formData.password && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: 'auto' }}
+                    exit={{ opacity: 0, height: 0 }}
+                    className="mt-2.5 overflow-hidden"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="flex-1 h-1.5 bg-white/10 rounded-full overflow-hidden">
+                        <motion.div
+                          className={`h-full ${getPasswordStrength(formData.password).color}`}
+                          initial={{ width: 0 }}
+                          animate={{ width: `${getPasswordStrength(formData.password).strength}%` }}
+                          transition={{ duration: 0.3 }}
+                        />
+                      </div>
+                      <span className="text-[10px] font-bold text-white/55 uppercase w-20 text-right">
+                        {getPasswordStrength(formData.password).label}
+                      </span>
                     </div>
                   </motion.div>
                 )}
               </AnimatePresence>
-
-              <button
-                type="submit"
-                disabled={loading}
-                className="w-full py-4 px-6 bg-white text-stone-900 rounded-2xl font-bold text-lg hover:bg-stone-50 hover:shadow-[inset_0_0_0_1px_rgba(0,0,0,0.08)] transition-colors disabled:opacity-70 flex items-center justify-center gap-2 mt-6 active:scale-[0.98]"
-              >
-                {loading ? (
-                  <div className="flex items-center gap-2">
-                    <Loader2 size={24} className="animate-spin text-stone-900" />
-                    <span>Processando...</span>
-                  </div>
-                ) : (
-                  isLogin ? 'Entrar na Plataforma' : 'Criar Conta'
-                )}
-              </button>
-            </motion.form>
-
-            {/* Google Login */}
-            <div className="mt-8 relative z-10">
-              <div className="flex justify-center text-sm mb-4">
-                <span className="text-[11px] font-black text-white/60 uppercase tracking-widest">
-                  {isLogin ? 'Ou continue com' : 'Ou registre-se com'}
-                </span>
-              </div>
-
-              <div>
-                <GoogleLogin
-                  onGoogleClick={handleGoogleClick}
-                  onSuccess={handleGoogleClick}
-                  onError={handleGoogleError}
-                  text="Continuar com Google"
-                  useSupabase={useSupabase}
-                />
-              </div>
             </div>
 
-            {/* Footer */}
-            {!isLogin && (
-              <p className="mt-8 text-center text-xs text-white/60 font-medium relative z-10">
-                Ao se registrar, você concorda com nossos <br/>
-                <a href="#" className="text-white hover:underline">Termos de Uso</a> e <a href="#" className="text-white hover:underline">Política de Privacidade</a>.
-              </p>
-            )}
+            <AnimatePresence mode="wait">
+              {!isLogin && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: 'auto' }}
+                  exit={{ opacity: 0, height: 0 }}
+                  transition={{ duration: 0.25 }}
+                  className="overflow-hidden"
+                >
+                  <label htmlFor="confirmPassword" className={labelClassName}>
+                    Confirmar Senha
+                  </label>
+                  <div className="relative">
+                    <input
+                      id="confirmPassword"
+                      type={showConfirmPassword ? 'text' : 'password'}
+                      name="confirmPassword"
+                      value={formData.confirmPassword}
+                      onChange={handleChange}
+                      className={passwordInputClassName}
+                      placeholder="••••••••"
+                      autoComplete="new-password"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-white/45 hover:text-white/85 transition-colors"
+                      aria-label={showConfirmPassword ? 'Ocultar senha' : 'Mostrar senha'}
+                    >
+                      {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                    </button>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            <button
+              type="submit"
+              disabled={loading}
+              className="auth-primary-button"
+            >
+              {loading ? (
+                <>
+                  <Loader2 size={18} className="animate-spin" />
+                  <span>Processando...</span>
+                </>
+              ) : (
+                isLogin ? 'Acessar EcoSphere' : 'Criar Conta'
+              )}
+            </button>
+          </motion.form>
+
+          <div className="mt-6">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="flex-1 h-px bg-white/10" />
+              <span className="text-[10px] font-bold uppercase tracking-[0.16em] text-white/40">
+                ou continue com
+              </span>
+              <div className="flex-1 h-px bg-white/10" />
+            </div>
+
+            <GoogleLogin
+              onGoogleClick={handleGoogleClick}
+              onSuccess={handleGoogleClick}
+              onError={handleGoogleError}
+              text="Continuar com Google"
+              useSupabase={useSupabase}
+            />
           </div>
-        </motion.div>
+
+          {!isLogin && (
+            <p className="mt-5 text-center text-[11px] text-white/45 font-medium leading-relaxed">
+              Ao se registrar, você concorda com nossos{' '}
+              <a href="#" className="text-emerald-300/90 hover:underline">Termos de Uso</a>
+              {' '}e{' '}
+              <a href="#" className="text-emerald-300/90 hover:underline">Política de Privacidade</a>.
+            </p>
+          )}
+        </div>
       </div>
     </div>
   );
