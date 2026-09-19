@@ -88,6 +88,10 @@ export const gamificationAPI = {
   getBadges: async () => ({ data: await request('/gamification/badges') }),
 };
 
+export const platformAPI = {
+  getStats: async () => ({ data: await request('/platform/stats') }),
+};
+
 export const userAPI = {
   login: async (credentials) => ({ data: await request('/auth/login', {
     method: 'POST',
@@ -147,4 +151,4 @@ export const adminAPI = {
   getStats: async () => request('/admin/stats'),
 };
 
-export default { environmentalAPI, wasteAPI, gamificationAPI, userAPI, adminAPI };
+export default { environmentalAPI, wasteAPI, gamificationAPI, platformAPI, userAPI, adminAPI };

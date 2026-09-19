@@ -6,6 +6,10 @@ import multer from 'multer';
 import { query } from './db.js';
 import { requireAdmin, requireAuth, signToken } from './auth.js';
 import { getLevelForPoints, profileToApp } from './mappers.js';
+import {
+  deriveImpactFromClassifications,
+  fetchPlatformCounts,
+} from './platformStats.js';
 
 const app = express();
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 2 * 1024 * 1024 } });
@@ -185,16 +189,35 @@ app.post('/gamification/actions', requireAuth, async (req, res) => {
     'insert into user_game_actions (user_id, game_type, points, data) values ($1, $2, $3, $4)',
     [req.user.id, type, points, req.body?.data || {}]
   );
-  const newPoints = (req.user.eco_points || 0) + points;
+  const previousPoints = req.user.eco_points || 0;
+  const newPoints = previousPoints + points;
+  const previousLevel = req.user.level || 'Iniciante';
+  const nextLevel = getLevelForPoints(newPoints);
   await query(
     'update profiles set eco_points = $1, level = $2, updated_at = now() where id = $3',
-    [newPoints, getLevelForPoints(newPoints), req.user.id]
+    [newPoints, nextLevel, req.user.id]
   );
-  res.json({ totalPoints: points, newBadges: [], levelChanged: false });
+  res.json({
+    totalPoints: points,
+    ecoPoints: newPoints,
+    newBadges: [],
+    levelChanged: previousLevel !== nextLevel,
+  });
 });
 
 app.get('/gamification/badges', requireAuth, (req, res) => {
   res.json(req.user.badges || []);
+});
+
+app.get('/platform/stats', requireAuth, async (_req, res) => {
+  const counts = await fetchPlatformCounts(query);
+  const impact = deriveImpactFromClassifications(counts.totalClassifications);
+  res.json({
+    totalClassifications: counts.totalClassifications,
+    totalUsers: counts.totalUsers,
+    co2SavedKg: impact.co2SavedKg,
+    treesEquivalent: impact.treesEquivalent,
+  });
 });
 
 app.post('/waste/classifications', requireAuth, async (req, res) => {
@@ -268,18 +291,8 @@ app.delete('/admin/users/:id', requireAuth, requireAdmin, async (req, res) => {
 });
 
 app.get('/admin/stats', requireAuth, requireAdmin, async (_req, res) => {
-  const [users, classifications, gameActions, points] = await Promise.all([
-    query('select count(*)::int as total from profiles'),
-    query('select count(*)::int as total from waste_classifications'),
-    query('select count(*)::int as total from user_game_actions'),
-    query('select coalesce(sum(eco_points), 0)::int as total from profiles'),
-  ]);
-  res.json({
-    totalUsers: users.rows[0]?.total || 0,
-    totalClassifications: classifications.rows[0]?.total || 0,
-    totalGameActions: gameActions.rows[0]?.total || 0,
-    totalPoints: points.rows[0]?.total || 0,
-  });
+  const counts = await fetchPlatformCounts(query);
+  res.json(counts);
 });
 
 app.use((err, _req, res, _next) => {

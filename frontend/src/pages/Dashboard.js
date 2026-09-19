@@ -3,13 +3,41 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Line, Doughnut, Bar } from 'react-chartjs-2';
 import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend, ArcElement, BarElement, Filler } from 'chart.js';
 import { useEcoPoints } from '../hooks/useEcoPoints';
-import { gamificationAPI } from '../services/api';
+import { gamificationAPI, platformAPI } from '../services/api';
 import DailyQuiz from '../components/DailyQuiz';
 import { Brain, Flame, Target, BarChart3, Leaf, Sparkles, Users } from 'lucide-react';
 import EcoGlobeLogo from '../components/ui/EcoGlobeLogo';
 import LoadingScreen from '../components/ui/LoadingScreen';
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend, ArcElement, BarElement, Filler);
+
+function formatCompactCount(value) {
+  if (value == null || Number.isNaN(Number(value))) return '—';
+  const n = Number(value);
+  if (n >= 1000) {
+    const compact = (n / 1000).toFixed(1).replace(/\.0$/, '');
+    return `${compact}k+`;
+  }
+  return String(Math.round(n));
+}
+
+function formatTonsFromKg(kg) {
+  if (kg == null || Number.isNaN(Number(kg))) return { main: '—', unit: '' };
+  const tons = Number(kg) / 1000;
+  if (tons >= 1) {
+    return { main: tons.toFixed(1).replace(/\.0$/, ''), unit: 't' };
+  }
+  return { main: `${Math.round(Number(kg))}`, unit: 'kg' };
+}
+
+function formatTrees(value) {
+  if (value == null || Number.isNaN(Number(value))) return '—';
+  const n = Number(value);
+  if (n >= 1000) {
+    return `${(n / 1000).toFixed(1).replace(/\.0$/, '')}k`;
+  }
+  return String(Math.round(n));
+}
 
 const Dashboard = () => {
   const [userStats, setUserStats] = useState({
@@ -19,6 +47,12 @@ const Dashboard = () => {
     weeklyGoal: 0,
     badges: 0,
     level: 'Iniciante'
+  });
+  const [platformStats, setPlatformStats] = useState({
+    totalClassifications: null,
+    totalUsers: null,
+    co2SavedKg: null,
+    treesEquivalent: null,
   });
   const [loading, setLoading] = useState(true);
   const [showDailyQuiz, setShowDailyQuiz] = useState(false);
@@ -42,10 +76,14 @@ const Dashboard = () => {
 
   const loadDashboardData = async () => {
     try {
-      const [profileRes, rankingRes, badgesRes] = await Promise.all([
+      const [profileRes, rankingRes, badgesRes, platformRes] = await Promise.all([
         gamificationAPI.getProfile(),
         gamificationAPI.getRanking(),
-        gamificationAPI.getBadges()
+        gamificationAPI.getBadges(),
+        platformAPI.getStats().catch((err) => {
+          console.error('Erro ao carregar estatísticas da plataforma:', err);
+          return { data: null };
+        }),
       ]);
       
       const userRanking = rankingRes.data.find(r => r.isCurrentUser);
@@ -60,6 +98,22 @@ const Dashboard = () => {
         badges: earnedBadges.length,
         level: profileRes.data.level || 'Iniciante'
       });
+
+      if (platformRes?.data) {
+        setPlatformStats({
+          totalClassifications: platformRes.data.totalClassifications ?? null,
+          totalUsers: platformRes.data.totalUsers ?? null,
+          co2SavedKg: platformRes.data.co2SavedKg ?? null,
+          treesEquivalent: platformRes.data.treesEquivalent ?? null,
+        });
+      } else {
+        setPlatformStats({
+          totalClassifications: null,
+          totalUsers: null,
+          co2SavedKg: null,
+          treesEquivalent: null,
+        });
+      }
     } catch (error) {
       console.error('Erro ao carregar dados do dashboard:', error);
     } finally {
@@ -242,19 +296,33 @@ const Dashboard = () => {
             
                       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-8 divide-x-0 md:divide-x divide-stone-100">
               <div className="md:px-4 first:px-0">
-                <div className="text-4xl font-black text-amber-500 tracking-tighter mb-1">12.5k+</div>
+                <div className="text-4xl font-black text-amber-500 tracking-tighter mb-1">
+                  {formatCompactCount(platformStats.totalClassifications)}
+                </div>
                 <div className="text-stone-500 text-sm font-medium">Classificações Feitas</div>
               </div>
               <div className="md:px-4">
-                <div className="text-4xl font-black text-eco-500 tracking-tighter mb-1">31.4<span className="text-2xl">t</span></div>
+                {(() => {
+                  const co2 = formatTonsFromKg(platformStats.co2SavedKg);
+                  return (
+                    <div className="text-4xl font-black text-eco-500 tracking-tighter mb-1">
+                      {co2.main}
+                      {co2.unit ? <span className="text-2xl">{co2.unit}</span> : null}
+                    </div>
+                  );
+                })()}
                 <div className="text-stone-500 text-sm font-medium">CO2 Economizado</div>
               </div>
               <div className="md:px-4">
-                <div className="text-4xl font-black text-blue-500 tracking-tighter mb-1">1.4k</div>
+                <div className="text-4xl font-black text-blue-500 tracking-tighter mb-1">
+                  {formatTrees(platformStats.treesEquivalent)}
+                </div>
                 <div className="text-stone-500 text-sm font-medium">Árvores Equivalentes</div>
               </div>
               <div className="md:px-4">
-                <div className="text-4xl font-black text-purple-500 tracking-tighter mb-1">3.8k</div>
+                <div className="text-4xl font-black text-purple-500 tracking-tighter mb-1">
+                  {formatCompactCount(platformStats.totalUsers)}
+                </div>
                 <div className="text-stone-500 text-sm font-medium">Usuários Ativos</div>
               </div>
             </div>

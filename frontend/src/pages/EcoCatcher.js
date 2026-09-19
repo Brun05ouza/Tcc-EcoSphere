@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import Phaser from 'phaser';
 import { motion } from 'framer-motion';
 import { Trophy, Play, RotateCcw, Gamepad2 } from 'lucide-react';
+import { gamificationAPI } from '../services/api';
 
 const PUBLIC_URL = process.env.PUBLIC_URL || '';
 
@@ -100,6 +101,8 @@ class GameScene extends Phaser.Scene {
     this.lives = 3;
     this.timeLeft = 60;
     this.combo = 0;
+    this.maxCombo = 0;
+    this.itemsCollected = 0;
     this.multiplier = 1;
     this.magnetActive = false;
     this.lastFrameMoving = false;
@@ -347,6 +350,8 @@ class GameScene extends Phaser.Scene {
       });
 
       this.combo++;
+      if (this.combo > this.maxCombo) this.maxCombo = this.combo;
+      this.itemsCollected++;
       if (this.combo >= 5) {
         this.multiplier = 2;
         this.comboText.setText('COMBO x2 🔥');
@@ -379,8 +384,14 @@ class GameScene extends Phaser.Scene {
   }
 
   gameOver() {
+    if (this._gameOverTriggered) return;
+    this._gameOverTriggered = true;
     if (this.spawnTimer) this.spawnTimer.remove();
-    this.scene.start('GameOver', { score: this.score });
+    this.scene.start('GameOver', {
+      score: this.score,
+      maxCombo: this.maxCombo,
+      itemsCollected: this.itemsCollected,
+    });
   }
 }
 
@@ -392,6 +403,9 @@ class GameOver extends Phaser.Scene {
 
   init(data) {
     this.finalScore = data.score || 0;
+    this.maxCombo = data.maxCombo || 0;
+    this.itemsCollected = data.itemsCollected || 0;
+    this._scoreSaved = false;
   }
 
   create() {
@@ -450,9 +464,13 @@ class GameOver extends Phaser.Scene {
     menuBtn.on('pointerout', () => menuBtn.setFillStyle(0x2196F3));
     menuBtn.on('pointerdown', () => this.scene.start('MainMenu'));
 
-    // Save score to parent component
-    if (window.saveGameScore) {
-      window.saveGameScore(this.finalScore, ecoPoints);
+    // Persist score once per Game Over
+    if (!this._scoreSaved && window.saveGameScore) {
+      this._scoreSaved = true;
+      window.saveGameScore(this.finalScore, ecoPoints, {
+        maxCombo: this.maxCombo,
+        itemsCollected: this.itemsCollected,
+      });
     }
   }
 }
@@ -462,9 +480,12 @@ export default function EcoCatcher() {
   const gameRef = useRef(null);
   const [gameInstance, setGameInstance] = useState(null);
   const [showGame, setShowGame] = useState(false);
+  const savingRef = useRef(false);
 
   useEffect(() => {
     if (showGame && !gameInstance) {
+      savingRef.current = false;
+
       const config = {
         type: Phaser.AUTO,
         parent: 'game-container',
@@ -484,8 +505,52 @@ export default function EcoCatcher() {
       const game = new Phaser.Game(config);
       setGameInstance(game);
 
-      window.saveGameScore = (score, ecoPoints) => {
-        console.log('Score:', score, 'EcoPoints:', ecoPoints);
+      window.saveGameScore = async (score, ecoPoints, meta = {}) => {
+        // Evita requisições concorrentes; a cena GameOver já guarda _scoreSaved
+        // para não chamar duas vezes no mesmo fim de partida.
+        if (savingRef.current) return;
+        if (!ecoPoints || ecoPoints <= 0) return;
+
+        savingRef.current = true;
+
+        try {
+          const response = await gamificationAPI.registrarAcao({
+            type: 'eco_catcher',
+            points: ecoPoints,
+            data: {
+              score,
+              maxCombo: meta.maxCombo || 0,
+              itemsCollected: meta.itemsCollected || 0,
+            },
+          });
+
+          const newPoints = response.data?.ecoPoints;
+          if (typeof newPoints === 'number') {
+            try {
+              const raw = localStorage.getItem('user');
+              if (raw) {
+                const user = JSON.parse(raw);
+                user.ecoPoints = newPoints;
+                localStorage.setItem('user', JSON.stringify(user));
+                sessionStorage.setItem('user', JSON.stringify(user));
+              }
+            } catch (storageErr) {
+              console.error('EcoCatcher: falha ao atualizar storage local', storageErr);
+            }
+
+            window.dispatchEvent(new CustomEvent('ecoPointsUpdated', {
+              detail: {
+                newPoints,
+                addedPoints: ecoPoints,
+                type: 'eco_catcher',
+              },
+            }));
+          }
+        } catch (err) {
+          console.error('EcoCatcher: falha ao persistir pontos', err);
+        } finally {
+          savingRef.current = false;
+        }
       };
     }
 
@@ -493,10 +558,10 @@ export default function EcoCatcher() {
       if (gameInstance && !showGame) {
         gameInstance.destroy(true);
         setGameInstance(null);
+        window.saveGameScore = undefined;
       }
     };
   }, [showGame]);
-
   if (!showGame) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-green-50 via-blue-50 to-green-50 py-8">
