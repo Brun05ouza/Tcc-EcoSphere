@@ -546,6 +546,13 @@ export default function EcoCatcher() {
               },
             }));
           }
+
+          const newBadges = response.data?.newBadges;
+          if (Array.isArray(newBadges) && newBadges.length > 0) {
+            window.dispatchEvent(new CustomEvent('badgesUnlocked', {
+              detail: { badges: newBadges },
+            }));
+          }
         } catch (err) {
           console.error('EcoCatcher: falha ao persistir pontos', err);
         } finally {

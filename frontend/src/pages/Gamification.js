@@ -8,12 +8,54 @@ import { AppIcon } from '../components/ui/AppIcon';
 import LoadingScreen from '../components/ui/LoadingScreen';
 import { useBodyScrollLock } from '../hooks/useBodyScrollLock';
 
+const BADGE_DESCRIPTIONS = {
+  'bem-vindo': 'Primeira ação registrada na plataforma',
+  'primeiro-passo': '1 classificação de resíduo',
+  'reciclador': '10 classificações de resíduo',
+  'eco-warrior': '50 classificações de resíduo',
+  'guardiao-verde': '100 classificações de resíduo',
+  'mestre-ambiental': '500 classificações de resíduo',
+  'gamer-ecologico': '100 pontos acumulados em jogos',
+};
+
+const badgeIcons = {
+  'Bem-vindo': 'sparkles',
+  'Primeiro Passo': 'leaf',
+  'Reciclador': 'recycle',
+  'Eco Warrior': 'trophy',
+  'Guardião Verde': 'tree',
+  'Mestre Ambiental': 'globe',
+  'Gamer Ecológico': 'gamepad',
+};
+
+function mapApiBadges(list) {
+  return (list || []).map((b) => ({
+    id: b.id,
+    name: b.name,
+    bonus: b.bonus,
+    points: b.bonus ?? b.points ?? 0,
+    earned: !!b.earned,
+    unlockedAt: b.unlockedAt || null,
+    description: BADGE_DESCRIPTIONS[b.id] || b.description || '',
+    iconName: badgeIcons[b.name] || 'award',
+  }));
+}
+
+function notifyBadgesUnlocked(newBadges) {
+  if (!Array.isArray(newBadges) || newBadges.length === 0) return;
+  window.dispatchEvent(new CustomEvent('badgesUnlocked', {
+    detail: { badges: newBadges },
+  }));
+}
+
 const Gamification = () => {
   const [user, setUser] = useState(null);
   const [selectedTab, setSelectedTab] = useState('overview');
   const [gamificationData, setGamificationData] = useState(null);
   const [ranking, setRanking] = useState([]);
   const [badges, setBadges] = useState([]);
+  const [badgesError, setBadgesError] = useState(false);
+  const [unlockedToast, setUnlockedToast] = useState(null);
   const [loading, setLoading] = useState(true);
   const { user: contextUser, addEcoPoints: addEcoPointsContext } = useUser();
 
@@ -65,6 +107,23 @@ const Gamification = () => {
       setUser(JSON.parse(userData));
     }
     loadGamificationData();
+  }, []);
+
+  useEffect(() => {
+    let dismissTimer;
+    const handleUnlocked = (event) => {
+      const list = event.detail?.badges || [];
+      if (!list.length) return;
+      setUnlockedToast(list);
+      loadGamificationData();
+      clearTimeout(dismissTimer);
+      dismissTimer = setTimeout(() => setUnlockedToast(null), 5000);
+    };
+    window.addEventListener('badgesUnlocked', handleUnlocked);
+    return () => {
+      window.removeEventListener('badgesUnlocked', handleUnlocked);
+      clearTimeout(dismissTimer);
+    };
   }, []);
 
   const keysPressed = React.useRef({ left: false, right: false });
@@ -199,10 +258,15 @@ const Gamification = () => {
   const loadGamificationData = async () => {
     const userData = JSON.parse(localStorage.getItem('user') || '{}');
     try {
-      const [profileRes, rankingRes, badgesRes] = await Promise.all([
+      const [profileRes, rankingRes, badgesOutcome] = await Promise.all([
         gamificationAPI.getProfile(),
         gamificationAPI.getRanking(),
-        gamificationAPI.getBadges(),
+        gamificationAPI.getBadges()
+          .then((res) => ({ ok: true, data: res.data }))
+          .catch((err) => {
+            console.error('Erro ao carregar badges:', err);
+            return { ok: false, data: [] };
+          }),
       ]);
       setGamificationData({
         ecoPoints: profileRes.data?.ecoPoints ?? userData.ecoPoints ?? 0,
@@ -217,34 +281,17 @@ const Gamification = () => {
         isCurrentUser: r.isCurrentUser,
         avatarIcon: r.isCurrentUser ? 'user' : ['sparkles', 'leaf', 'recycle', 'leafy', 'globe', 'trophy', 'tree', 'flame', 'gamepad', 'sparkle'][i] || 'user',
       })));
-      setBadges((badgesRes.data || []).map((b) => ({
-        ...b,
-        iconName: badgeIcons[b.name] || 'award',
-      })));
+      setBadgesError(!badgesOutcome.ok);
+      setBadges(badgesOutcome.ok ? mapApiBadges(badgesOutcome.data) : []);
     } catch {
       setGamificationData({
         ecoPoints: userData.ecoPoints || 0,
         level: userData.level || 'Iniciante',
         totalClassifications: 0,
       });
-      setRanking([
-        { position: 1, name: 'EcoMaster', points: 2500, avatarIcon: 'sparkles', level: 'Expert' },
-        { position: 2, name: 'GreenHero', points: 2100, avatarIcon: 'leaf', level: 'Avançado' },
-        { position: 3, name: userData.name || 'Você', points: userData.ecoPoints || 0, avatarIcon: 'user', level: userData.level || 'Iniciante', isCurrentUser: true },
-        { position: 4, name: 'EcoWarrior', points: 1500, avatarIcon: 'recycle', level: 'Intermediário' },
-        { position: 5, name: 'NatureLover', points: 1200, avatarIcon: 'leafy', level: 'Iniciante' },
-      ]);
-      setBadges([
-        { id: 1, name: 'Bem-vindo', description: 'Primeira vez no EcoSphere', earned: true, points: 50, iconName: 'sparkles' },
-        { id: 2, name: 'Primeiro Passo', description: 'Primeira classificação', earned: true, points: 100, iconName: 'leaf' },
-        { id: 3, name: 'Reciclador', description: '10 classificações', earned: false, points: 200, iconName: 'recycle' },
-        { id: 4, name: 'Eco Warrior', description: '100 EcoPoints', earned: false, points: 300, iconName: 'trophy' },
-        { id: 5, name: 'Guardião Verde', description: '500 EcoPoints', earned: false, points: 500, iconName: 'tree' },
-        { id: 6, name: 'Mestre Ambiental', description: '1000 EcoPoints', earned: false, points: 1000, iconName: 'globe' },
-        { id: 7, name: 'Sequenciador', description: '7 dias consecutivos', earned: false, points: 250, iconName: 'flame' },
-        { id: 8, name: 'Quiz Master', description: 'Complete 10 quizzes', earned: false, points: 300, iconName: 'brain' },
-        { id: 9, name: 'Gamer Eco', description: '1000 pontos no Eco Catcher', earned: false, points: 400, iconName: 'gamepad' },
-      ]);
+      setRanking([]);
+      setBadges([]);
+      setBadgesError(true);
     }
     setLoading(false);
   };
@@ -267,18 +314,6 @@ const Gamification = () => {
       console.error('Erro ao adicionar pontos:', error);
       return false;
     }
-  };
-
-  const badgeIcons = {
-    'Bem-vindo': 'sparkles',
-    'Primeiro Passo': 'leaf',
-    'Reciclador': 'recycle',
-    'Eco Warrior': 'trophy',
-    'Guardião Verde': 'tree',
-    'Mestre Ambiental': 'globe',
-    'Sequenciador': 'flame',
-    'Quiz Master': 'brain',
-    'Gamer Eco': 'gamepad'
   };
 
   if (loading) {
@@ -314,6 +349,29 @@ const Gamification = () => {
 
   return (
     <div className="min-h-screen bg-surface-50 py-8 md:py-12">
+      {unlockedToast && (
+        <div className="fixed top-6 left-1/2 -translate-x-1/2 z-50 w-full max-w-md px-4">
+          <div className="bg-white border border-amber-200 shadow-soft-lg rounded-2xl p-4 flex items-start gap-3">
+            <div className="w-10 h-10 rounded-xl bg-amber-50 flex items-center justify-center shrink-0">
+              <Award className="w-5 h-5 text-amber-600" />
+            </div>
+            <div className="flex-1">
+              <p className="text-sm font-bold text-stone-800">Nova conquista!</p>
+              <p className="text-sm text-stone-600 mt-0.5">
+                {unlockedToast.map((b) => b.name).join(', ')}
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => setUnlockedToast(null)}
+              className="text-stone-400 hover:text-stone-600"
+              aria-label="Fechar"
+            >
+              <X size={16} />
+            </button>
+          </div>
+        </div>
+      )}
       {/* Modal de Confirmação */}
       {showConfirmation && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
@@ -788,7 +846,28 @@ const Gamification = () => {
               animate={{ opacity: 1, y: 0 }}
               className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6"
             >
-              {badges.map((badge, index) => (
+              {badgesError && (
+                <div className="col-span-full bg-white border border-stone-100 rounded-3xl p-8 text-center shadow-soft">
+                  <Award className="w-10 h-10 text-stone-300 mx-auto mb-3" />
+                  <p className="font-bold text-stone-800 mb-1">Não foi possível carregar as badges</p>
+                  <p className="text-sm text-stone-500 mb-4">Tente novamente em instantes.</p>
+                  <button
+                    type="button"
+                    onClick={loadGamificationData}
+                    className="px-4 py-2 rounded-xl bg-amber-500 text-white text-sm font-bold hover:bg-amber-600 transition-colors"
+                  >
+                    Recarregar
+                  </button>
+                </div>
+              )}
+              {!badgesError && badges.length === 0 && (
+                <div className="col-span-full bg-white border border-stone-100 rounded-3xl p-8 text-center shadow-soft">
+                  <Award className="w-10 h-10 text-stone-300 mx-auto mb-3" />
+                  <p className="font-bold text-stone-800 mb-1">Catálogo de badges indisponível</p>
+                  <p className="text-sm text-stone-500">Nenhuma conquista retornada pela API.</p>
+                </div>
+              )}
+              {!badgesError && badges.map((badge, index) => (
                 <motion.div
                   key={badge.id}
                   initial={{ opacity: 0, y: 20 }}

@@ -54,21 +54,31 @@ export const useEcoPoints = () => {
       const newPoints = response.data.ecoPoints;
       
       console.log('useEcoPoints: Novos EcoPoints:', newPoints);
-      setEcoPoints(newPoints);
+      if (typeof newPoints === 'number') {
+        setEcoPoints(newPoints);
+      }
       
       // Atualizar localStorage
       const userData = localStorage.getItem('user');
-      if (userData) {
+      if (userData && typeof newPoints === 'number') {
         const user = JSON.parse(userData);
         user.ecoPoints = newPoints;
         localStorage.setItem('user', JSON.stringify(user));
       }
       
       // Disparar evento global
-      const event = new CustomEvent('ecoPointsUpdated', {
-        detail: { newPoints, addedPoints: points, type }
-      });
-      window.dispatchEvent(event);
+      if (typeof newPoints === 'number') {
+        const event = new CustomEvent('ecoPointsUpdated', {
+          detail: { newPoints, addedPoints: points, type }
+        });
+        window.dispatchEvent(event);
+      }
+
+      if (Array.isArray(response.data?.newBadges) && response.data.newBadges.length > 0) {
+        window.dispatchEvent(new CustomEvent('badgesUnlocked', {
+          detail: { badges: response.data.newBadges },
+        }));
+      }
       
       return response.data;
     } catch (err) {

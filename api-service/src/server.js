@@ -10,6 +10,7 @@ import {
   deriveImpactFromClassifications,
   fetchPlatformCounts,
 } from './platformStats.js';
+import { buildBadgesStatus, checkAndAwardBadges } from './badges.js';
 
 const app = express();
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 2 * 1024 * 1024 } });
@@ -197,16 +198,27 @@ app.post('/gamification/actions', requireAuth, async (req, res) => {
     'update profiles set eco_points = $1, level = $2, updated_at = now() where id = $3',
     [newPoints, nextLevel, req.user.id]
   );
+
+  const newBadges = await checkAndAwardBadges(req.user.id);
+  const { rows } = await query(
+    'select eco_points, level from profiles where id = $1',
+    [req.user.id]
+  );
+  const fresh = rows[0];
+  const finalPoints = fresh?.eco_points ?? newPoints;
+  const finalLevel = fresh?.level || nextLevel;
+
   res.json({
     totalPoints: points,
-    ecoPoints: newPoints,
-    newBadges: [],
-    levelChanged: previousLevel !== nextLevel,
+    ecoPoints: finalPoints,
+    newBadges,
+    levelChanged: previousLevel !== finalLevel,
   });
 });
 
-app.get('/gamification/badges', requireAuth, (req, res) => {
-  res.json(req.user.badges || []);
+app.get('/gamification/badges', requireAuth, async (req, res) => {
+  const { rows } = await query('select badges from profiles where id = $1', [req.user.id]);
+  res.json(buildBadgesStatus(rows[0]?.badges || []));
 });
 
 app.get('/platform/stats', requireAuth, async (_req, res) => {
@@ -232,7 +244,22 @@ app.post('/waste/classifications', requireAuth, async (req, res) => {
     'update profiles set eco_points = $1, level = $2, updated_at = now() where id = $3',
     [newPoints, getLevelForPoints(newPoints), req.user.id]
   );
-  res.json({ success: true, pointsEarned: pointValue, message: 'Classificacao salva com sucesso' });
+
+  const newBadges = await checkAndAwardBadges(req.user.id);
+  const { rows } = await query(
+    'select eco_points, level from profiles where id = $1',
+    [req.user.id]
+  );
+  const fresh = rows[0];
+
+  res.json({
+    success: true,
+    pointsEarned: pointValue,
+    ecoPoints: fresh?.eco_points ?? newPoints,
+    level: fresh?.level || getLevelForPoints(newPoints),
+    newBadges,
+    message: 'Classificacao salva com sucesso',
+  });
 });
 
 app.get('/waste/classifications', requireAuth, async (req, res) => {

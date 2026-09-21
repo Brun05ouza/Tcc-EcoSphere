@@ -201,13 +201,28 @@ const WasteClassifier = () => {
       
       // Salvar no Supabase
       try {
-        await wasteAPI.saveClassification({
+        const saveRes = await wasteAPI.saveClassification({
           category: result.class,
           confidence: result.confidence,
           points: points
         });
+        const newBadges = saveRes?.data?.newBadges;
+        if (Array.isArray(newBadges) && newBadges.length > 0) {
+          window.dispatchEvent(new CustomEvent('badgesUnlocked', {
+            detail: { badges: newBadges },
+          }));
+        }
+        if (typeof saveRes?.data?.ecoPoints === 'number') {
+          window.dispatchEvent(new CustomEvent('ecoPointsUpdated', {
+            detail: {
+              newPoints: saveRes.data.ecoPoints,
+              addedPoints: points,
+              type: 'classification',
+            },
+          }));
+        }
       } catch (err) {
-        console.log('Erro ao salvar no Supabase:', err);
+        console.log('Erro ao salvar classificação:', err);
       }
       
     } catch (error) {
