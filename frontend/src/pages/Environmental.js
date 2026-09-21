@@ -1,47 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Line, Doughnut } from 'react-chartjs-2';
+import { Line } from 'react-chartjs-2';
 import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend, ArcElement, Filler } from 'chart.js';
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend, ArcElement, Filler);
 import { Cloud, CloudRain, Sun, Wind, Droplets, Eye, Gauge, ThermometerSun, MapPin, Calendar, Clock, Sunrise, Sunset, Zap, AlertTriangle, Check } from 'lucide-react';
 import { AppIcon } from '../components/ui/AppIcon';
 import { useBodyScrollLock } from '../hooks/useBodyScrollLock';
-
-const weatherCodeDescription = {
-  0: 'Ceu limpo',
-  1: 'Principalmente limpo',
-  2: 'Parcialmente nublado',
-  3: 'Nublado',
-  45: 'Neblina',
-  48: 'Neblina com geada',
-  51: 'Garoa fraca',
-  53: 'Garoa moderada',
-  55: 'Garoa intensa',
-  61: 'Chuva fraca',
-  63: 'Chuva moderada',
-  65: 'Chuva forte',
-  80: 'Pancadas fracas',
-  81: 'Pancadas moderadas',
-  82: 'Pancadas fortes',
-  95: 'Trovoadas',
-  96: 'Trovoadas com granizo',
-  99: 'Trovoadas fortes',
-};
-
-const weatherCodeIcon = (code) => {
-  if ([61, 63, 65, 80, 81, 82, 95, 96, 99].includes(code)) return 'cloud-rain';
-  if ([2, 3, 45, 48, 51, 53, 55].includes(code)) return 'cloud';
-  return 'sun';
-};
-
-const getCurrentHourIndex = (times = []) => {
-  const now = Date.now();
-  return times.reduce((closest, time, index) => {
-    const currentDistance = Math.abs(new Date(time).getTime() - now);
-    const closestDistance = Math.abs(new Date(times[closest]).getTime() - now);
-    return currentDistance < closestDistance ? index : closest;
-  }, 0);
-};
+import { fetchWeatherData, SOURCE_LABELS } from '../services/weatherService';
 
 const Environmental = () => {
   const [selectedState, setSelectedState] = useState('RJ');
@@ -50,7 +15,7 @@ const Environmental = () => {
   const [environmentalData, setEnvironmentalData] = useState({
     temperatura: 28,
     umidade: 65,
-    qualidadeAr: { aqi: 75 },
+    qualidadeAr: { mode: 'eaqi', aqi: 75, label: null, note: null },
     visibilidade: 8.5,
     vento: 12,
     pressao: 1013,
@@ -65,6 +30,7 @@ const Environmental = () => {
   const [forecast, setForecast] = useState([]);
   const [temperatureHours, setTemperatureHours] = useState([]);
   const [lastUpdated, setLastUpdated] = useState(null);
+  const [dataSource, setDataSource] = useState('open-meteo');
   const [dataError, setDataError] = useState('');
   const [loading, setLoading] = useState(false);
   const [showStateModal, setShowStateModal] = useState(false);
@@ -98,216 +64,28 @@ const Environmental = () => {
 
   const estadoAtual = estados.find(e => e.sigla === selectedState);
 
-  const fetchWeatherData = async (city, bairro) => {
+  const loadWeather = async (city, bairro) => {
     setLoading(true);
     setDataError('');
-
     try {
-      const locationQuery = encodeURIComponent(city);
-      const geocodeResponse = await fetch(
-        `https://geocoding-api.open-meteo.com/v1/search?name=${locationQuery}&count=1&language=pt&format=json&country_code=BR`
-      );
-      if (!geocodeResponse.ok) throw new Error('Nao foi possivel localizar a cidade.');
-
-      const geocode = await geocodeResponse.json();
-      const place = geocode.results?.[0];
-      if (!place) throw new Error('Cidade nao encontrada na base meteorologica.');
-
-      const weatherParams = new URLSearchParams({
-        latitude: String(place.latitude),
-        longitude: String(place.longitude),
-        timezone: 'auto',
-        forecast_days: '7',
-        current: 'temperature_2m,relative_humidity_2m,apparent_temperature,weather_code,pressure_msl,wind_speed_10m,visibility',
-        hourly: 'temperature_2m',
-        daily: 'weather_code,temperature_2m_max,temperature_2m_min,sunrise,sunset,uv_index_max'
-      });
-      const airParams = new URLSearchParams({
-        latitude: String(place.latitude),
-        longitude: String(place.longitude),
-        timezone: 'auto',
-        current: 'european_aqi,pm10,pm2_5,uv_index'
-      });
-
-      const [weatherResponse, airResponse] = await Promise.all([
-        fetch(`https://api.open-meteo.com/v1/forecast?${weatherParams.toString()}`),
-        fetch(`https://air-quality-api.open-meteo.com/v1/air-quality?${airParams.toString()}`)
-      ]);
-      if (!weatherResponse.ok) throw new Error('Erro ao buscar dados climaticos.');
-
-      const weather = await weatherResponse.json();
-      const air = airResponse.ok ? await airResponse.json() : null;
-      const current = weather.current || {};
-      const daily = weather.daily || {};
-      const airCurrent = air?.current || {};
-      const days = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sab'];
-
-      setEnvironmentalData({
-        temperatura: Math.round(current.temperature_2m ?? 0),
-        umidade: Math.round(current.relative_humidity_2m ?? 0),
-        qualidadeAr: { aqi: Math.round(airCurrent.european_aqi ?? 0) },
-        visibilidade: Number(((current.visibility ?? 0) / 1000).toFixed(1)),
-        vento: Math.round(current.wind_speed_10m ?? 0),
-        pressao: Math.round(current.pressure_msl ?? 0),
-        sensacao: Math.round(current.apparent_temperature ?? current.temperature_2m ?? 0),
-        descricao: weatherCodeDescription[current.weather_code] || 'Condicao indisponivel',
-        uv: Math.round(airCurrent.uv_index ?? daily.uv_index_max?.[0] ?? 0),
-        nascerSol: daily.sunrise?.[0]
-          ? new Date(daily.sunrise[0]).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
-          : '--:--',
-        porSol: daily.sunset?.[0]
-          ? new Date(daily.sunset[0]).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
-          : '--:--',
-        pm25: airCurrent.pm2_5 ?? null,
-        pm10: airCurrent.pm10 ?? null
-      });
-
-      setForecast((daily.time || []).map((date, index) => ({
-        dia: days[new Date(`${date}T12:00:00`).getDay()],
-        tempMax: Math.round(daily.temperature_2m_max?.[index] ?? 0),
-        tempMin: Math.round(daily.temperature_2m_min?.[index] ?? 0),
-        condicao: weatherCodeIcon(daily.weather_code?.[index])
-      })));
-
-      const hourlyIndex = getCurrentHourIndex(weather.hourly?.time || []);
-      const start = Math.max(0, hourlyIndex - 3);
-      const samples = (weather.hourly?.time || [])
-        .slice(start, start + 6)
-        .map((time, index) => ({
-          label: new Date(time).toLocaleTimeString('pt-BR', { hour: '2-digit' }),
-          temp: Math.round(weather.hourly.temperature_2m[start + index] ?? 0)
-        }));
-
-      setTemperatureHours(samples);
+      const result = await fetchWeatherData(city, bairro);
+      setEnvironmentalData(result.environmentalData);
+      setForecast(result.forecast || []);
+      setTemperatureHours(result.temperatureHours || []);
+      setDataSource(result.source);
       setLastUpdated(new Date());
+      if (result.source === 'simulated') {
+        setDataError('Servicos meteorologicos indisponiveis; exibindo dados simulados.');
+      }
     } catch (error) {
-      setDataError(error.message || 'Nao foi possivel carregar dados reais agora.');
+      setDataError(error.message || 'Nao foi possivel carregar dados climaticos.');
     } finally {
       setLoading(false);
     }
-    return;
-    
-    const API_KEY = process.env.REACT_APP_OPENWEATHER_API_KEY;
-    
-    // Tentar API real primeiro
-    if (API_KEY && API_KEY !== 'sua_chave_openweathermap_aqui') {
-      try {
-        const query = `${city},BR`;
-        const response = await fetch(
-          `https://api.openweathermap.org/data/2.5/weather?q=${query}&appid=${API_KEY}&units=metric&lang=pt_br`
-        );
-        
-        if (response.ok) {
-          const weatherData = await response.json();
-          const data = {
-            temperatura: Math.round(weatherData.main.temp),
-            umidade: weatherData.main.humidity,
-            qualidadeAr: { aqi: Math.round(30 + Math.random() * 70) },
-            visibilidade: Math.round(weatherData.visibility / 1000),
-            vento: Math.round(weatherData.wind.speed * 3.6),
-            pressao: weatherData.main.pressure,
-            sensacao: Math.round(weatherData.main.feels_like),
-            descricao: weatherData.weather[0].description,
-            uv: Math.round(3 + Math.random() * 8),
-            nascerSol: new Date(weatherData.sys.sunrise * 1000).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
-            porSol: new Date(weatherData.sys.sunset * 1000).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
-          };
-          
-          setEnvironmentalData(data);
-          
-          const days = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
-          const newForecast = Array.from({ length: 7 }, (_, i) => ({
-            dia: days[(new Date().getDay() + i) % 7],
-            tempMax: data.temperatura + Math.round((Math.random() - 0.5) * 6),
-            tempMin: data.temperatura - Math.round(4 + Math.random() * 4),
-            condicao: ['sun', 'cloud', 'cloud-rain'][Math.floor(Math.random() * 3)]
-          }));
-          
-          setForecast(newForecast);
-          setLoading(false);
-          return;
-        }
-      } catch (error) {
-        // Continua para dados simulados
-      }
-    }
-    
-    // Fallback: Dados simulados realistas por cidade
-    const temperaturaBase = {
-      'Rio de Janeiro': 28,
-      'Niterói': 27,
-      'Petrópolis': 22,
-      'Teresópolis': 20,
-      'Cabo Frio': 26,
-      'São Paulo': 23,
-      'Campinas': 24,
-      'Santos': 26,
-      'Ribeirão Preto': 27,
-      'Belo Horizonte': 25,
-      'Uberlândia': 26,
-      'Juiz de Fora': 23,
-      'Ouro Preto': 21,
-      'Porto Alegre': 22,
-      'Caxias do Sul': 19,
-      'Pelotas': 21,
-      'Gramado': 18,
-      'Salvador': 29,
-      'Feira de Santana': 28,
-      'Vitória da Conquista': 24,
-      'Ilhéus': 27,
-      'Curitiba': 21,
-      'Londrina': 24,
-      'Maringá': 25,
-      'Foz do Iguaçu': 26,
-      'Florianópolis': 24,
-      'Joinville': 23,
-      'Blumenau': 23,
-      'Balneário Camboriú': 25,
-      'Recife': 29,
-      'Olinda': 29,
-      'Caruaru': 26,
-      'Petrolina': 31,
-      'Fortaleza': 30,
-      'Juazeiro do Norte': 28,
-      'Sobral': 29,
-      'Caucaia': 30,
-      'Brasília': 26
-    };
-
-    const baseTemp = temperaturaBase[city] || 25;
-    const variacao = Math.round((Math.random() - 0.5) * 4);
-    const temp = baseTemp + variacao;
-
-    const data = {
-      temperatura: temp,
-      umidade: Math.round(50 + Math.random() * 30),
-      qualidadeAr: { aqi: Math.round(30 + Math.random() * 70) },
-      visibilidade: Math.round(8 + Math.random() * 7),
-      vento: Math.round(8 + Math.random() * 15),
-      pressao: Math.round(1010 + Math.random() * 15),
-      sensacao: temp + Math.round((Math.random() - 0.5) * 4),
-      descricao: ['Ensolarado', 'Parcialmente nublado', 'Nublado', 'Céu limpo'][Math.floor(Math.random() * 4)],
-      uv: Math.round(4 + Math.random() * 6),
-      nascerSol: '06:15',
-      porSol: '18:45'
-    };
-
-    setEnvironmentalData(data);
-
-    const days = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
-    const newForecast = Array.from({ length: 7 }, (_, i) => ({
-      dia: days[(new Date().getDay() + i) % 7],
-      tempMax: temp + Math.round((Math.random() - 0.5) * 6),
-      tempMin: temp - Math.round(4 + Math.random() * 4),
-      condicao: ['sun', 'cloud', 'cloud-rain'][Math.floor(Math.random() * 3)]
-    }));
-
-    setForecast(newForecast);
-    setLoading(false);
   };
 
   useEffect(() => {
-    fetchWeatherData(selectedCity, selectedBairro);
+    loadWeather(selectedCity, selectedBairro);
   }, [selectedCity, selectedBairro, selectedState]);
 
   useEffect(() => {
@@ -315,7 +93,21 @@ const Environmental = () => {
     setSelectedBairro(bairros[0]);
   }, [selectedCity]);
 
-  const getAirQualityStatus = (aqi) => {
+  const getAirQualityStatus = (qualidadeAr) => {
+    if (qualidadeAr?.mode === 'qualitative') {
+      const label = qualidadeAr.label || 'Indisponivel';
+      const map = {
+        Boa: { status: 'Boa', color: 'text-green-600', bgColor: 'bg-green-100', iconName: 'success' },
+        Razoavel: { status: 'Razoavel', color: 'text-lime-600', bgColor: 'bg-lime-100', iconName: 'success' },
+        Moderada: { status: 'Moderada', color: 'text-yellow-600', bgColor: 'bg-yellow-100', iconName: 'warning' },
+        Ruim: { status: 'Ruim', color: 'text-orange-600', bgColor: 'bg-orange-100', iconName: 'warning' },
+        'Muito Ruim': { status: 'Muito Ruim', color: 'text-red-600', bgColor: 'bg-red-100', iconName: 'error' },
+        Indisponivel: { status: 'Indisponivel', color: 'text-stone-500', bgColor: 'bg-stone-100', iconName: 'warning' },
+      };
+      return map[label] || map.Indisponivel;
+    }
+
+    const aqi = qualidadeAr?.aqi ?? 0;
     if (aqi <= 20) return { status: 'Bom', color: 'text-green-600', bgColor: 'bg-green-100', iconName: 'success' };
     if (aqi <= 40) return { status: 'Razoavel', color: 'text-lime-600', bgColor: 'bg-lime-100', iconName: 'success' };
     if (aqi <= 60) return { status: 'Moderado', color: 'text-yellow-600', bgColor: 'bg-yellow-100', iconName: 'warning' };
@@ -330,8 +122,11 @@ const Environmental = () => {
     return { level: 'Muito Alto', color: 'text-red-600' };
   };
 
-  const airQuality = getAirQualityStatus(environmentalData.qualidadeAr.aqi);
-  const uvLevel = getUVLevel(environmentalData.uv);
+  const airQuality = getAirQualityStatus(environmentalData.qualidadeAr);
+  const uvAvailable = environmentalData.uv != null && !Number.isNaN(Number(environmentalData.uv));
+  const uvLevel = uvAvailable ? getUVLevel(environmentalData.uv) : null;
+  const isQualitativeAir = environmentalData.qualidadeAr?.mode === 'qualitative';
+  const sourceLabel = SOURCE_LABELS[dataSource] || SOURCE_LABELS['open-meteo'];
 
   const temperatureData = {
     labels: temperatureHours.length ? temperatureHours.map((item) => item.label) : ['Agora'],
@@ -365,8 +160,17 @@ const Environmental = () => {
             </div>
             <p className="text-stone-500 ml-13 flex items-center gap-2">
               <Zap size={16} className="text-blue-500" />
-              <span>Dados meteorologicos reais via Open-Meteo</span>
+              <span>
+                {dataSource === 'open-meteo' && 'Dados meteorologicos reais via Open-Meteo'}
+                {dataSource === 'openweathermap' && 'Dados meteorologicos via OpenWeatherMap (alternativa)'}
+                {dataSource === 'simulated' && 'Dados simulados — contingencia sem servicos externos'}
+              </span>
             </p>
+            {dataError && (
+              <p className="mt-2 text-sm text-amber-700 bg-amber-50 border border-amber-100 rounded-xl px-3 py-2 inline-block">
+                {dataError}
+              </p>
+            )}
           </div>
 
           <div className="flex items-center gap-3">
@@ -377,8 +181,10 @@ const Environmental = () => {
               </span>
             </div>
             <div className="bg-white px-5 py-2.5 rounded-2xl shadow-sm border border-stone-100 flex items-center gap-3">
-              <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-              <span className="text-sm font-medium text-stone-600">{loading ? 'Atualizando API' : 'Open-Meteo ativo'}</span>
+              <div className={`w-2 h-2 rounded-full animate-pulse ${dataSource === 'simulated' ? 'bg-amber-500' : 'bg-green-500'}`} />
+              <span className="text-sm font-medium text-stone-600">
+                {loading ? 'Atualizando API' : (dataSource === 'open-meteo' ? 'Open-Meteo ativo' : dataSource === 'openweathermap' ? 'OpenWeatherMap ativo' : 'Modo simulado')}
+              </span>
             </div>
           </div>
         </motion.div>
@@ -444,6 +250,21 @@ const Environmental = () => {
           animate={{ opacity: 1, scale: 1 }}
             className="bg-white p-6 sm:p-8 rounded-3xl shadow-soft border border-stone-100 mb-8 relative overflow-hidden"
         >
+          <div className="absolute top-3 right-3 z-20">
+            <span
+              title={environmentalData.qualidadeAr?.note || sourceLabel}
+              className={`inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-semibold border ${
+                dataSource === 'simulated'
+                  ? 'bg-amber-50 text-amber-700 border-amber-200'
+                  : dataSource === 'openweathermap'
+                    ? 'bg-indigo-50 text-indigo-700 border-indigo-200'
+                    : 'bg-emerald-50 text-emerald-700 border-emerald-200'
+              }`}
+            >
+              {sourceLabel}
+            </span>
+          </div>
+
           {/* Brilho decorativo no fundo claro */}
           <div className="absolute top-0 right-0 w-96 h-96 bg-gradient-to-bl from-blue-100/60 to-transparent rounded-full blur-3xl pointer-events-none translate-x-1/4 -translate-y-1/4" />
           <div className="absolute bottom-0 left-0 w-64 h-64 bg-gradient-to-tr from-cyan-100/40 to-transparent rounded-full blur-2xl pointer-events-none -translate-x-1/4 translate-y-1/4" />
@@ -457,7 +278,7 @@ const Environmental = () => {
               <div className="flex items-end gap-4 mb-2">
                 <div className="text-7xl md:text-8xl font-black text-stone-800 tracking-tighter leading-none">{environmentalData.temperatura}°</div>
                 <div className="pb-2">
-                  <div className="text-2xl font-bold text-stone-600">{environmentalData.descricao}</div>
+                  <div className="text-2xl font-bold text-stone-600 capitalize">{environmentalData.descricao}</div>
                   <div className="text-sm text-stone-400 mt-1 font-medium">Sensação térmica: <span className="text-stone-700">{environmentalData.sensacao}°C</span></div>
                 </div>
               </div>
@@ -533,28 +354,50 @@ const Environmental = () => {
               </h3>
               <div className="flex items-center justify-between mb-8">
                 <div>
-                  <div className="text-6xl font-black text-stone-800 mb-1 tracking-tighter">{environmentalData.qualidadeAr.aqi}</div>
-                  <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-lg bg-white/80 backdrop-blur border border-stone-100 text-sm font-bold ${airQuality.color} shadow-sm`}>
-                    <div className={`w-2 h-2 rounded-full ${airQuality.bgColor.replace('bg-', 'bg-').replace('100', '500')}`} />
-                    {airQuality.status}
-                  </div>
+                  {isQualitativeAir ? (
+                    <>
+                      <div className={`text-4xl md:text-5xl font-black tracking-tight mb-2 ${airQuality.color}`}>
+                        {environmentalData.qualidadeAr.label || '—'}
+                      </div>
+                      <p className="text-xs text-stone-500 max-w-xs leading-relaxed">
+                        {environmentalData.qualidadeAr.note || 'Escala qualitativa (fonte alternativa).'}
+                      </p>
+                    </>
+                  ) : (
+                    <>
+                      <div className="text-6xl font-black text-stone-800 mb-1 tracking-tighter">{environmentalData.qualidadeAr.aqi}</div>
+                      <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-lg bg-white/80 backdrop-blur border border-stone-100 text-sm font-bold ${airQuality.color} shadow-sm`}>
+                        <div className={`w-2 h-2 rounded-full ${airQuality.bgColor.replace('bg-', 'bg-').replace('100', '500')}`} />
+                        {airQuality.status}
+                      </div>
+                    </>
+                  )}
                 </div>
                 <div className="w-20 h-20 bg-stone-50 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform duration-500 shadow-inner">
                   <AppIcon name={airQuality.iconName} size={48} className={airQuality.color} />
                 </div>
               </div>
-              <div className="w-full bg-stone-100 h-2.5 rounded-full overflow-hidden">
-                <motion.div 
-                  initial={{ width: 0 }}
-                  animate={{ width: `${Math.min(environmentalData.qualidadeAr.aqi, 100)}%` }}
-                  transition={{ duration: 1, delay: 0.5 }}
-                  className={`h-full bg-gradient-to-r ${airQuality.bgColor.replace('100', '500')} ${airQuality.bgColor.replace('100', '400')}`}
-                />
-              </div>
-              <div className="flex justify-between text-xs text-stone-400 mt-2 font-medium">
-                <span>0 (Bom)</span>
-                <span>100 (Ruim)</span>
-              </div>
+              {!isQualitativeAir && (
+                <>
+                  <div className="w-full bg-stone-100 h-2.5 rounded-full overflow-hidden">
+                    <motion.div 
+                      initial={{ width: 0 }}
+                      animate={{ width: `${Math.min(environmentalData.qualidadeAr.aqi || 0, 100)}%` }}
+                      transition={{ duration: 1, delay: 0.5 }}
+                      className={`h-full bg-gradient-to-r ${airQuality.bgColor.replace('100', '500')} ${airQuality.bgColor.replace('100', '400')}`}
+                    />
+                  </div>
+                  <div className="flex justify-between text-xs text-stone-400 mt-2 font-medium">
+                    <span>0 (Bom)</span>
+                    <span>100 (Ruim)</span>
+                  </div>
+                </>
+              )}
+              {isQualitativeAir && (
+                <div className={`mt-2 inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-bold ${airQuality.color} ${airQuality.bgColor}`}>
+                  Escala qualitativa — nao comparavel ao EAQI europeu
+                </div>
+              )}
             </div>
           </motion.div>
 
@@ -573,17 +416,35 @@ const Environmental = () => {
               </h3>
               <div className="flex items-center justify-between mb-8">
                 <div>
-                  <div className="text-6xl font-black text-stone-800 mb-1 tracking-tighter">{environmentalData.uv}</div>
-                  <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-lg bg-white/80 backdrop-blur border border-stone-100 text-sm font-bold ${uvLevel.color} shadow-sm`}>
-                    {uvLevel.level}
-                  </div>
+                  {uvAvailable ? (
+                    <>
+                      <div className="text-6xl font-black text-stone-800 mb-1 tracking-tighter">{environmentalData.uv}</div>
+                      <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-lg bg-white/80 backdrop-blur border border-stone-100 text-sm font-bold ${uvLevel.color} shadow-sm`}>
+                        {uvLevel.level}
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <div className="text-5xl font-black text-stone-400 mb-1 tracking-tighter">—</div>
+                      <div className="inline-flex items-center gap-2 px-3 py-1 rounded-lg bg-stone-50 border border-stone-100 text-sm font-bold text-stone-500 shadow-sm">
+                        Indisponivel nesta fonte
+                      </div>
+                    </>
+                  )}
                 </div>
                 <div className="w-20 h-20 bg-stone-50 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform duration-500 shadow-inner">
-                  <Sun className="w-12 h-12 text-orange-500" />
+                  <Sun className={`w-12 h-12 ${uvAvailable ? 'text-orange-500' : 'text-stone-300'}`} />
                 </div>
               </div>
               <div className="mt-4 p-4 bg-stone-50 rounded-2xl border border-stone-100">
-                {environmentalData.uv > 7 ? (
+                {!uvAvailable ? (
+                  <div className="flex gap-3 items-center text-stone-600 font-medium text-sm">
+                    <div className="w-8 h-8 rounded-lg bg-stone-200 flex items-center justify-center shrink-0">
+                      <AlertTriangle size={18} className="text-stone-500" />
+                    </div>
+                    <span>Esta fonte nao fornece indice UV neste plano de API. Nao exibimos valor estimado.</span>
+                  </div>
+                ) : environmentalData.uv > 7 ? (
                   <div className="flex gap-3 items-center text-orange-700 font-medium text-sm">
                     <div className="w-8 h-8 rounded-lg bg-orange-100 flex items-center justify-center shrink-0">
                       <AlertTriangle size={18} className="text-orange-500" />
@@ -648,6 +509,13 @@ const Environmental = () => {
               Previsão (7 dias)
             </h3>
             <div className="flex-1 space-y-3">
+              {forecast.length === 0 && (
+                <div className="flex flex-col items-center justify-center text-center py-10 px-4">
+                  <Calendar className="w-8 h-8 text-stone-300 mb-3" />
+                  <p className="font-bold text-stone-700 mb-1">Previsao indisponivel</p>
+                  <p className="text-sm text-stone-500">Esta fonte nao retornou previsao detalhada para os proximos dias.</p>
+                </div>
+              )}
               {forecast.map((day, index) => (
                 <motion.div
                   key={index}
