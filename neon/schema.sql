@@ -37,3 +37,5 @@ create table if not exists user_game_actions (
 );
 
 create index if not exists user_game_actions_user_id_idx on user_game_actions(user_id);
+
+alter table profiles add column if not exists missions jsonb not null default '[]'::jsonb;

@@ -1,0 +1,5 @@
+test-images/
+.env
+.env.*
+!.env.example
+.validation-progress.json

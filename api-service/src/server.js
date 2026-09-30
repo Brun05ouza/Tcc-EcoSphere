@@ -11,6 +11,7 @@ import {
   fetchPlatformCounts,
 } from './platformStats.js';
 import { buildBadgesStatus, checkAndAwardBadges } from './badges.js';
+import { buildMissionsStatus, checkAndAwardMissions } from './missions.js';
 
 const app = express();
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 2 * 1024 * 1024 } });
@@ -166,7 +167,7 @@ app.get('/gamification/profile', requireAuth, async (req, res) => {
     badges: req.user.badges || [],
     streak: req.user.streak || { current: 0, longest: 0 },
     totalClassifications: classifications.rows[0]?.total ?? 0,
-    completedMissions: 0,
+    completedMissions: req.user.missions?.length ?? 0,
   });
 });
 
@@ -200,6 +201,7 @@ app.post('/gamification/actions', requireAuth, async (req, res) => {
   );
 
   const newBadges = await checkAndAwardBadges(req.user.id);
+  const newMissions = await checkAndAwardMissions(req.user.id);
   const { rows } = await query(
     'select eco_points, level from profiles where id = $1',
     [req.user.id]
@@ -212,6 +214,7 @@ app.post('/gamification/actions', requireAuth, async (req, res) => {
     totalPoints: points,
     ecoPoints: finalPoints,
     newBadges,
+    newMissions,
     levelChanged: previousLevel !== finalLevel,
   });
 });
@@ -219,6 +222,10 @@ app.post('/gamification/actions', requireAuth, async (req, res) => {
 app.get('/gamification/badges', requireAuth, async (req, res) => {
   const { rows } = await query('select badges from profiles where id = $1', [req.user.id]);
   res.json(buildBadgesStatus(rows[0]?.badges || []));
+});
+
+app.get('/gamification/missions', requireAuth, async (req, res) => {
+  res.json(await buildMissionsStatus(req.user.id));
 });
 
 app.get('/platform/stats', requireAuth, async (_req, res) => {
@@ -246,6 +253,7 @@ app.post('/waste/classifications', requireAuth, async (req, res) => {
   );
 
   const newBadges = await checkAndAwardBadges(req.user.id);
+  const newMissions = await checkAndAwardMissions(req.user.id);
   const { rows } = await query(
     'select eco_points, level from profiles where id = $1',
     [req.user.id]
@@ -258,6 +266,7 @@ app.post('/waste/classifications', requireAuth, async (req, res) => {
     ecoPoints: fresh?.eco_points ?? newPoints,
     level: fresh?.level || getLevelForPoints(newPoints),
     newBadges,
+    newMissions,
     message: 'Classificacao salva com sucesso',
   });
 });

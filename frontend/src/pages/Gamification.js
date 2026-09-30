@@ -54,6 +54,7 @@ const Gamification = () => {
   const [gamificationData, setGamificationData] = useState(null);
   const [ranking, setRanking] = useState([]);
   const [badges, setBadges] = useState([]);
+  const [missions, setMissions] = useState([]);
   const [badgesError, setBadgesError] = useState(false);
   const [unlockedToast, setUnlockedToast] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -258,7 +259,7 @@ const Gamification = () => {
   const loadGamificationData = async () => {
     const userData = JSON.parse(localStorage.getItem('user') || '{}');
     try {
-      const [profileRes, rankingRes, badgesOutcome] = await Promise.all([
+      const [profileRes, rankingRes, badgesOutcome, missionsRes] = await Promise.all([
         gamificationAPI.getProfile(),
         gamificationAPI.getRanking(),
         gamificationAPI.getBadges()
@@ -267,6 +268,7 @@ const Gamification = () => {
             console.error('Erro ao carregar badges:', err);
             return { ok: false, data: [] };
           }),
+        gamificationAPI.getMissions(),
       ]);
       setGamificationData({
         ecoPoints: profileRes.data?.ecoPoints ?? userData.ecoPoints ?? 0,
@@ -283,6 +285,7 @@ const Gamification = () => {
       })));
       setBadgesError(!badgesOutcome.ok);
       setBadges(badgesOutcome.ok ? mapApiBadges(badgesOutcome.data) : []);
+      setMissions(missionsRes.data || []);
     } catch {
       setGamificationData({
         ecoPoints: userData.ecoPoints || 0,
@@ -291,6 +294,7 @@ const Gamification = () => {
       });
       setRanking([]);
       setBadges([]);
+      setMissions([]);
       setBadgesError(true);
     }
     setLoading(false);
@@ -319,33 +323,6 @@ const Gamification = () => {
   if (loading) {
     return <LoadingScreen message="Carregando dados..." />;
   }
-
-  const missions = [
-    { 
-      id: 1, 
-      title: 'Classificar 5 resíduos hoje', 
-      progress: Math.min(gamificationData?.totalClassifications || 0, 5), 
-      total: 5, 
-      reward: 100, 
-      iconName: 'target' 
-    },
-    { 
-      id: 2, 
-      title: 'Ganhar 100 EcoPoints', 
-      progress: Math.min(contextUser?.ecoPoints || gamificationData?.ecoPoints || 0, 100), 
-      total: 100, 
-      reward: 50, 
-      iconName: 'star' 
-    },
-    { 
-      id: 3, 
-      title: 'Conquistar primeira badge', 
-      progress: badges.filter(b => b.earned).length > 0 ? 1 : 0, 
-      total: 1, 
-      reward: 25, 
-      iconName: 'award' 
-    }
-  ];
 
   return (
     <div className="min-h-screen bg-surface-50 py-8 md:py-12">
@@ -986,7 +963,7 @@ const Gamification = () => {
                   
                   <div className="flex items-start gap-4 mb-6 relative z-10">
                     <div className="w-14 h-14 rounded-2xl bg-green-50 flex items-center justify-center shrink-0">
-                      <AppIcon name={mission.iconName} size={28} className="text-green-600" />
+                      <Target size={28} className="text-green-600" />
                     </div>
                     <div className="flex-1 pt-1">
                       <h3 className="font-bold text-stone-800 text-lg leading-tight mb-1">{mission.title}</h3>
@@ -1015,15 +992,11 @@ const Gamification = () => {
                   </div>
                   
                   <div className="mt-auto">
-                    {mission.progress === mission.total ? (
-                      <button className="w-full bg-stone-100 text-stone-400 px-4 py-3.5 rounded-xl font-bold inline-flex items-center justify-center gap-2 cursor-default border border-stone-200">
+                    {mission.completed && (
+                      <div className="w-full bg-stone-100 text-stone-400 px-4 py-3.5 rounded-xl font-bold inline-flex items-center justify-center gap-2 border border-stone-200">
                         <Check size={18} className="text-green-500" />
                         Missão Concluída
-                      </button>
-                    ) : (
-                      <button className="w-full bg-green-500 hover:bg-green-600 text-white px-4 py-3.5 rounded-xl font-bold transition-all duration-300 shadow-sm shadow-green-500/20 active:scale-[0.98]">
-                        Continuar Missão
-                      </button>
+                      </div>
                     )}
                   </div>
                 </motion.div>

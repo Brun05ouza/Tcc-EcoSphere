@@ -86,6 +86,7 @@ export const gamificationAPI = {
     body: JSON.stringify(acao),
   }) }),
   getBadges: async () => ({ data: await request('/gamification/badges') }),
+  getMissions: async () => ({ data: await request('/gamification/missions') }),
 };
 
 export const platformAPI = {
