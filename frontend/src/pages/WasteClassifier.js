@@ -81,7 +81,6 @@ const WasteClassifier = () => {
     reload,
     classifyImageElement,
     calculatePoints,
-    isMock,
   } = useWasteClassifier();
 
   const fileInputRef = useRef(null);
@@ -340,12 +339,6 @@ const WasteClassifier = () => {
   return (
     <div className="min-h-screen bg-surface-50 py-8 md:py-12">
       <div className="container mx-auto px-4">
-        {isMock && (
-          <div className="mb-4 rounded-xl border border-amber-300 bg-amber-50 px-4 py-3 text-center text-sm font-semibold text-amber-950 shadow-sm">
-            Modo estimativa — sem rede neural treinada. A % de confiança mostra que o resultado não é preciso.
-          </div>
-        )}
-
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}

@@ -82,7 +82,6 @@ const Gamification = () => {
   const [badges, setBadges] = useState([]);
   const [missions, setMissions] = useState([]);
   const [badgesError, setBadgesError] = useState(false);
-  const [missions, setMissions] = useState([]);
   const [missionsError, setMissionsError] = useState(false);
   const [unlockedToast, setUnlockedToast] = useState(null);
   const [missionToast, setMissionToast] = useState(null);
