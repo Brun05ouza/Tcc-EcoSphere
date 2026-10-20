@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { Sparkles } from 'lucide-react';
 import { chatbotAPI } from '../services/api';
 import { fetchWeatherData, SOURCE_LABELS } from '../services/weatherService';
+import { getEcoBotSpecialResponse } from '../services/ecobotSpecialResponses';
 import { useBodyScrollLock } from '../hooks/useBodyScrollLock';
 
 const chatAvatarSrc = `${process.env.PUBLIC_URL || ''}/chat-tcc.svg`;
@@ -447,6 +448,12 @@ const ChatBot = () => {
 
     setMessages((prev) => [...prev, userMessage]);
     setInputText('');
+
+    const specialResponse = getEcoBotSpecialResponse(messageText);
+    if (specialResponse) {
+      await pushBotMessage(specialResponse, 650);
+      return;
+    }
 
     if (isOpenMonitoringIntent(messageText)) {
       await escortToMonitoring();
