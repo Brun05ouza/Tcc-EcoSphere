@@ -182,10 +182,7 @@ const Login = () => {
   };
 
   return (
-    <div
-      className="auth-page"
-      style={{ backgroundImage: "url('/fundo-login-tcc.svg')" }}
-    >
+    <div className="auth-page">
       {/* Notification */}
       <AnimatePresence>
         {notification && (

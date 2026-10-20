@@ -48,6 +48,32 @@ function notifyBadgesUnlocked(newBadges) {
   }));
 }
 
+function notifyMissionsCompleted(newMissions) {
+  if (!Array.isArray(newMissions) || newMissions.length === 0) return;
+  window.dispatchEvent(new CustomEvent('missionsCompleted', {
+    detail: { missions: newMissions },
+  }));
+}
+
+const MISSION_ICONS = {
+  'classificar-5': 'target',
+  'ganhar-100-ecopoints': 'star',
+  'primeira-badge': 'award',
+};
+
+function mapApiMissions(list) {
+  return (list || []).map((m) => ({
+    id: m.id,
+    title: m.title,
+    reward: m.reward,
+    progress: m.progress ?? 0,
+    total: m.total ?? m.threshold ?? 1,
+    completed: !!m.completed,
+    completedAt: m.completedAt || null,
+    iconName: MISSION_ICONS[m.id] || 'target',
+  }));
+}
+
 const Gamification = () => {
   const [user, setUser] = useState(null);
   const [selectedTab, setSelectedTab] = useState('overview');
@@ -56,7 +82,10 @@ const Gamification = () => {
   const [badges, setBadges] = useState([]);
   const [missions, setMissions] = useState([]);
   const [badgesError, setBadgesError] = useState(false);
+  const [missions, setMissions] = useState([]);
+  const [missionsError, setMissionsError] = useState(false);
   const [unlockedToast, setUnlockedToast] = useState(null);
+  const [missionToast, setMissionToast] = useState(null);
   const [loading, setLoading] = useState(true);
   const { user: contextUser, addEcoPoints: addEcoPointsContext } = useUser();
 
@@ -120,9 +149,19 @@ const Gamification = () => {
       clearTimeout(dismissTimer);
       dismissTimer = setTimeout(() => setUnlockedToast(null), 5000);
     };
+    const handleMissions = (event) => {
+      const list = event.detail?.missions || [];
+      if (!list.length) return;
+      setMissionToast(list);
+      loadGamificationData();
+      clearTimeout(dismissTimer);
+      dismissTimer = setTimeout(() => setMissionToast(null), 5000);
+    };
     window.addEventListener('badgesUnlocked', handleUnlocked);
+    window.addEventListener('missionsCompleted', handleMissions);
     return () => {
       window.removeEventListener('badgesUnlocked', handleUnlocked);
+      window.removeEventListener('missionsCompleted', handleMissions);
       clearTimeout(dismissTimer);
     };
   }, []);
@@ -259,7 +298,7 @@ const Gamification = () => {
   const loadGamificationData = async () => {
     const userData = JSON.parse(localStorage.getItem('user') || '{}');
     try {
-      const [profileRes, rankingRes, badgesOutcome, missionsRes] = await Promise.all([
+      const [profileRes, rankingRes, badgesOutcome, missionsOutcome] = await Promise.all([
         gamificationAPI.getProfile(),
         gamificationAPI.getRanking(),
         gamificationAPI.getBadges()
@@ -268,12 +307,18 @@ const Gamification = () => {
             console.error('Erro ao carregar badges:', err);
             return { ok: false, data: [] };
           }),
-        gamificationAPI.getMissions(),
+        gamificationAPI.getMissions()
+          .then((res) => ({ ok: true, data: res.data }))
+          .catch((err) => {
+            console.error('Erro ao carregar missões:', err);
+            return { ok: false, data: [] };
+          }),
       ]);
       setGamificationData({
         ecoPoints: profileRes.data?.ecoPoints ?? userData.ecoPoints ?? 0,
         level: profileRes.data?.level || userData.level || 'Iniciante',
         totalClassifications: profileRes.data?.totalClassifications ?? 0,
+        completedMissions: profileRes.data?.completedMissions ?? 0,
       });
       setRanking((rankingRes.data || []).map((r, i) => ({
         position: r.position,
@@ -285,19 +330,24 @@ const Gamification = () => {
       })));
       setBadgesError(!badgesOutcome.ok);
       setBadges(badgesOutcome.ok ? mapApiBadges(badgesOutcome.data) : []);
-      setMissions(missionsRes.data || []);
+      setMissionsError(!missionsOutcome.ok);
+      setMissions(missionsOutcome.ok ? mapApiMissions(missionsOutcome.data) : []);
     } catch {
       setGamificationData({
         ecoPoints: userData.ecoPoints || 0,
         level: userData.level || 'Iniciante',
         totalClassifications: 0,
+        completedMissions: 0,
       });
       setRanking([]);
       setBadges([]);
       setMissions([]);
       setBadgesError(true);
+      setMissions([]);
+      setMissionsError(true);
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
   
   const addEcoPoints = async (points, type = 'game') => {
@@ -341,6 +391,29 @@ const Gamification = () => {
             <button
               type="button"
               onClick={() => setUnlockedToast(null)}
+              className="text-stone-400 hover:text-stone-600"
+              aria-label="Fechar"
+            >
+              <X size={16} />
+            </button>
+          </div>
+        </div>
+      )}
+      {missionToast && (
+        <div className="fixed top-6 left-1/2 -translate-x-1/2 z-50 w-full max-w-md px-4" style={{ marginTop: unlockedToast ? '5.5rem' : 0 }}>
+          <div className="bg-white border border-green-200 shadow-soft-lg rounded-2xl p-4 flex items-start gap-3">
+            <div className="w-10 h-10 rounded-xl bg-green-50 flex items-center justify-center shrink-0">
+              <Target className="w-5 h-5 text-green-600" />
+            </div>
+            <div className="flex-1">
+              <p className="text-sm font-bold text-stone-800">Missão concluída!</p>
+              <p className="text-sm text-stone-600 mt-0.5">
+                {missionToast.map((m) => m.title).join(', ')}
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => setMissionToast(null)}
               className="text-stone-400 hover:text-stone-600"
               aria-label="Fechar"
             >
@@ -951,6 +1024,11 @@ const Gamification = () => {
               animate={{ opacity: 1, y: 0 }}
               className="grid lg:grid-cols-2 gap-6"
             >
+              {missionsError && (
+                <p className="lg:col-span-2 text-sm text-amber-700 bg-amber-50 border border-amber-100 rounded-xl px-4 py-3">
+                  Não foi possível carregar as missões. Tente novamente em instantes.
+                </p>
+              )}
               {missions.map((mission, index) => (
                 <motion.div
                   key={mission.id}
@@ -983,7 +1061,7 @@ const Gamification = () => {
                       <motion.div
                         className="bg-gradient-to-r from-green-400 to-emerald-500 h-full rounded-full relative"
                         initial={{ width: 0 }}
-                        animate={{ width: `${(mission.progress / mission.total) * 100}%` }}
+                        animate={{ width: `${mission.total ? (mission.progress / mission.total) * 100 : 0}%` }}
                         transition={{ duration: 1, delay: index * 0.2 }}
                       >
                         <div className="absolute inset-0 bg-white/20 w-full animate-pulse" />

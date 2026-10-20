@@ -1,215 +1,96 @@
-import { useState, useEffect, useCallback } from 'react';
-import * as tf from '@tensorflow/tfjs';
+import { useCallback, useEffect, useState } from 'react';
+import {
+  loadLocalModel,
+  unloadLocalModel,
+  classifyElement,
+  classifyByFileNameSimulated,
+  classifyByColorSimulated,
+  calculatePointsFromConfidence,
+  isMockModelEnabled,
+  isUsingMockModel,
+  isSimulatedEnabled,
+} from '../services/localClassifier';
+import { getWasteClass, getBinColor } from '../data/wasteKnowledge';
 
 export const useWasteClassifier = () => {
-  const [model, setModel] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [status, setStatus] = useState('loading'); // loading | ready | unavailable
   const [error, setError] = useState(null);
+  const [reloadToken, setReloadToken] = useState(0);
 
-  const classes = ['Plástico', 'Metal', 'Vidro', 'Papel', 'Orgânico', 'Eletrônico'];
-  
-  const wasteInfo = {
-    'Plástico': {
-      bin: 'Lixeira Vermelha',
-      tips: 'Lave e remova rótulos. Plástico pode ser reciclado múltiplas vezes.',
-      iconName: 'recycle',
-      color: 'from-red-500 to-pink-500',
-      bgColor: 'bg-red-50',
-      textColor: 'text-red-800'
-    },
-    'Metal': {
-      bin: 'Lixeira Amarela',
-      tips: 'Lave bem antes de descartar. Metais economizam muita energia na reciclagem.',
-      iconName: 'wine',
-      color: 'from-yellow-500 to-orange-500',
-      bgColor: 'bg-yellow-50',
-      textColor: 'text-yellow-800'
-    },
-    'Vidro': {
-      bin: 'Lixeira Verde',
-      tips: 'Remova tampas e rótulos. Vidro pode ser reciclado infinitamente.',
-      iconName: 'bottle',
-      color: 'from-green-500 to-emerald-500',
-      bgColor: 'bg-green-50',
-      textColor: 'text-green-800'
-    },
-    'Papel': {
-      bin: 'Lixeira Azul',
-      tips: 'Mantenha seco e limpo. Remova fitas adesivas e grampos.',
-      iconName: 'paper',
-      color: 'from-blue-500 to-cyan-500',
-      bgColor: 'bg-blue-50',
-      textColor: 'text-blue-800'
-    },
-    'Orgânico': {
-      bin: 'Lixeira Marrom',
-      tips: 'Pode virar adubo! Separe restos de alimentos e cascas.',
-      iconName: 'leaf',
-      color: 'from-amber-600 to-orange-600',
-      bgColor: 'bg-amber-50',
-      textColor: 'text-amber-800'
-    },
-    'Eletrônico': {
-      bin: 'Coleta Especial',
-      tips: 'Leve a pontos de coleta especializados. Contém materiais tóxicos.',
-      iconName: 'smartphone',
-      color: 'from-purple-500 to-indigo-500',
-      bgColor: 'bg-purple-50',
-      textColor: 'text-purple-800'
-    }
-  };
+  const reload = useCallback(() => {
+    unloadLocalModel();
+    setStatus('loading');
+    setError(null);
+    setReloadToken((n) => n + 1);
+  }, []);
 
   useEffect(() => {
-    const loadModel = async () => {
+    let cancelled = false;
+
+    const boot = async () => {
+      setStatus('loading');
+      setError(null);
       try {
-        setLoading(true);
-        
-        // Tentar carregar modelo do Teachable Machine
-        try {
-          const loadedModel = await tf.loadLayersModel('/models/waste-classifier/model.json');
-          setModel(loadedModel);
-          console.log('Modelo Teachable Machine carregado com sucesso');
-        } catch (err) {
-          console.log('⚠️ Modelo não encontrado, usando classificação simulada');
-          setModel('simulated');
+        const loaded = await loadLocalModel();
+        if (!cancelled) {
+          setStatus('ready');
+          if (loaded?.mock) {
+            // Esperado sem model.json — não poluir o console como erro
+            setError(null);
+          }
         }
-        
-        setLoading(false);
       } catch (err) {
-        console.error('Erro ao carregar modelo:', err);
-        setError(err.message);
-        setModel('simulated');
-        setLoading(false);
+        console.warn('[useWasteClassifier] modelo bloqueado:', err?.message || err);
+        if (!cancelled) {
+          setError(err?.message || 'Modelo indisponível');
+          setStatus('unavailable');
+        }
       }
     };
 
-    loadModel();
+    boot();
+    return () => {
+      cancelled = true;
+    };
+  }, [reloadToken]);
+
+  useEffect(() => () => {
+    // Não dispose no unmount do hook se a página só remonta — unload só no reload explícito
   }, []);
 
-  const classifyByFileName = (fileName) => {
-    if (!fileName) return null;
-    const name = fileName.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-    if (/plastico|plastic/.test(name)) return 'Plástico';
-    if (/metal|aluminio|lata|alumin/.test(name)) return 'Metal';
-    if (/vidro|glass|garrafa/.test(name)) return 'Vidro';
-    if (/papel|paper|papelao|caixa/.test(name)) return 'Papel';
-    if (/organico|organic|comida|alimento|casca/.test(name)) return 'Orgânico';
-    if (/eletronico|electronic|bateria|celular|pilha|computador|eletron/.test(name)) return 'Eletrônico';
-    return null;
-  };
-
-  const classifyImage = useCallback(async (imageElement, fileName) => {
-    if (!model) {
-      throw new Error('Modelo não carregado');
+  const classifyImageElement = useCallback(async (imageElement, fileName) => {
+    if (isSimulatedEnabled()) {
+      const byName = classifyByFileNameSimulated(fileName);
+      if (byName) return byName;
     }
 
     try {
-      // Classificação por nome do arquivo (prioridade máxima)
-      const classFromName = classifyByFileName(fileName);
-      if (classFromName) {
-        const confidence = 0.92 + Math.random() * 0.07;
-        return {
-          class: classFromName,
-          confidence,
-          allPredictions: null,
-          ...wasteInfo[classFromName]
-        };
-      }
-
-      // Se o modelo real estiver carregado
-      if (model !== 'simulated') {
-        const tensor = tf.browser.fromPixels(imageElement)
-          .resizeNearestNeighbor([224, 224])
-          .toFloat()
-          .div(tf.scalar(255.0))
-          .expandDims();
-        
-        const predictions = await model.predict(tensor).data();
-        tensor.dispose();
-        
-        const maxIndex = predictions.indexOf(Math.max(...predictions));
-        const confidence = predictions[maxIndex];
-        
-        return {
-          class: classes[maxIndex],
-          confidence: confidence,
-          allPredictions: Array.from(predictions),
-          ...wasteInfo[classes[maxIndex]]
-        };
-      }
-      
-      // Classificação simulada baseada em análise de cores dominantes
-      const canvas = document.createElement('canvas');
-      const ctx = canvas.getContext('2d');
-      canvas.width = imageElement.width;
-      canvas.height = imageElement.height;
-      ctx.drawImage(imageElement, 0, 0);
-      
-      const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-      const data = imageData.data;
-      
-      let r = 0, g = 0, b = 0;
-      for (let i = 0; i < data.length; i += 4) {
-        r += data[i];
-        g += data[i + 1];
-        b += data[i + 2];
-      }
-      
-      const pixels = data.length / 4;
-      r = Math.floor(r / pixels);
-      g = Math.floor(g / pixels);
-      b = Math.floor(b / pixels);
-      
-      // Lógica de classificação baseada em cor dominante
-      let classIndex;
-      let confidence;
-      
-      if (r > g && r > b && r > 150) {
-        classIndex = 0; // Plástico (vermelho)
-        confidence = 0.85 + Math.random() * 0.1;
-      } else if (g > r && g > b && g > 120) {
-        classIndex = 2; // Vidro (verde)
-        confidence = 0.88 + Math.random() * 0.08;
-      } else if (b > r && b > g) {
-        classIndex = 3; // Papel (azul)
-        confidence = 0.82 + Math.random() * 0.12;
-      } else if (r > 180 && g > 180 && b < 100) {
-        classIndex = 1; // Metal (amarelo/dourado)
-        confidence = 0.90 + Math.random() * 0.08;
-      } else if (r > 100 && g > 80 && b < 80) {
-        classIndex = 4; // Orgânico (marrom)
-        confidence = 0.78 + Math.random() * 0.15;
-      } else {
-        classIndex = Math.floor(Math.random() * 6);
-        confidence = 0.75 + Math.random() * 0.15;
-      }
-      
-      return {
-        class: classes[classIndex],
-        confidence: confidence,
-        allPredictions: null,
-        ...wasteInfo[classes[classIndex]]
-      };
-      
+      return await classifyElement(imageElement);
     } catch (err) {
-      console.error('Erro na classificação:', err);
+      if (isSimulatedEnabled()) {
+        const byColor = classifyByColorSimulated(imageElement);
+        if (byColor) return byColor;
+      }
       throw err;
     }
-  }, [model]);
+  }, []);
 
-  const calculatePoints = (confidence) => {
-    if (confidence >= 0.90) return 10;
-    if (confidence >= 0.70) return 5;
-    return 2;
-  };
+  const calculatePoints = useCallback((confidence, userCorrected = false) => {
+    if (userCorrected) return 2;
+    return calculatePointsFromConfidence(confidence);
+  }, []);
 
   return {
-    model,
-    loading,
+    status,
+    loading: status === 'loading',
+    modelReady: status === 'ready',
+    modelUnavailable: status === 'unavailable',
     error,
-    classifyImage,
+    reload,
+    classifyImageElement,
     calculatePoints,
-    classes,
-    wasteInfo
+    isMock: isMockModelEnabled() || isUsingMockModel(),
+    getWasteClass,
+    getBinColor,
   };
 };

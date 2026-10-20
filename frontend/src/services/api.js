@@ -1,3 +1,5 @@
+import { beginRequest } from './loadingActivity';
+
 const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:4000';
 const AUTH_TIMEOUT_MS = 60000; // 60s: o plano gratuito do Render pode levar ~50s para "acordar" apos inatividade
 
@@ -10,6 +12,7 @@ function getToken() {
 }
 
 async function request(path, options = {}) {
+  const finishLoading = beginRequest();
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), AUTH_TIMEOUT_MS);
   const token = getToken();
@@ -45,6 +48,7 @@ async function request(path, options = {}) {
     throw error;
   } finally {
     clearTimeout(timeout);
+    finishLoading();
   }
 }
 
@@ -91,6 +95,16 @@ export const gamificationAPI = {
 
 export const platformAPI = {
   getStats: async () => ({ data: await request('/platform/stats') }),
+};
+
+export const chatbotAPI = {
+  getStatus: async () => ({ data: await request('/chatbot/status') }),
+  ask: async (message, history = []) => ({
+    data: await request('/chatbot/ask', {
+      method: 'POST',
+      body: JSON.stringify({ message, history }),
+    }),
+  }),
 };
 
 export const userAPI = {
@@ -152,4 +166,4 @@ export const adminAPI = {
   getStats: async () => request('/admin/stats'),
 };
 
-export default { environmentalAPI, wasteAPI, gamificationAPI, platformAPI, userAPI, adminAPI };
+export default { environmentalAPI, wasteAPI, gamificationAPI, platformAPI, chatbotAPI, userAPI, adminAPI };

@@ -3,57 +3,38 @@ import { createPortal } from 'react-dom';
 import { useBodyScrollLock } from '../hooks/useBodyScrollLock';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Bell, Sparkles, User, ChevronDown, Menu, X, Clock } from 'lucide-react';
+import { Bell, Sparkles, User, X, ArrowRight } from 'lucide-react';
 import { useUser } from '../contexts/UserContext';
 import { AppIcon } from './ui/AppIcon';
 import EcoGlobeLogo from './ui/EcoGlobeLogo';
 
-const HERO_SCROLL_THRESHOLD = 420;
-
 const Navbar = () => {
-  const [isOpen, setIsOpen] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
   const [notifications] = useState(3);
   const [showNotifications, setShowNotifications] = useState(false);
-  const [showProfile, setShowProfile] = useState(false);
   const [showEcoPointsModal, setShowEcoPointsModal] = useState(false);
-  const [isHeroVisible, setIsHeroVisible] = useState(false);
-  const profileRef = React.useRef(null);
-
-  useEffect(() => {
-    const handleClickOutside = (e) => {
-      if (profileRef.current && !profileRef.current.contains(e.target)) {
-        setShowProfile(false);
-      }
-    };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
   const { user } = useUser();
   const location = useLocation();
   const navigate = useNavigate();
 
+  useBodyScrollLock(showEcoPointsModal || menuOpen);
+
   useEffect(() => {
-    const onScroll = () => {
-      const onHome = location.pathname === '/';
-      setIsHeroVisible(onHome && window.scrollY < HERO_SCROLL_THRESHOLD);
-    };
-    onScroll();
-    window.addEventListener('scroll', onScroll, { passive: true });
-    return () => window.removeEventListener('scroll', onScroll);
+    setMenuOpen(false);
+    setShowNotifications(false);
   }, [location.pathname]);
 
-  useBodyScrollLock(showEcoPointsModal);
-
   useEffect(() => {
-    if (!showEcoPointsModal) return undefined;
-
+    if (!showEcoPointsModal && !menuOpen) return undefined;
     const onKeyDown = (e) => {
-      if (e.key === 'Escape') setShowEcoPointsModal(false);
+      if (e.key === 'Escape') {
+        setShowEcoPointsModal(false);
+        setMenuOpen(false);
+      }
     };
-
     document.addEventListener('keydown', onKeyDown);
     return () => document.removeEventListener('keydown', onKeyDown);
-  }, [showEcoPointsModal]);
+  }, [showEcoPointsModal, menuOpen]);
 
   const ecoTips = [
     { iconName: 'leaf', text: 'Já plantou uma árvore hoje?', action: 'Plante uma muda!' },
@@ -61,22 +42,22 @@ const Navbar = () => {
     { iconName: 'droplets', text: 'Economizou água hoje?', action: 'Feche a torneira!' },
     { iconName: 'bike', text: 'Que tal usar a bike hoje?', action: 'Pedale mais!' },
     { iconName: 'lightbulb', text: 'Apagou as luzes desnecessárias?', action: 'Economize energia!' },
-    { iconName: 'globe', text: 'Fez sua parte pelo planeta?', action: 'Continue assim!' }
+    { iconName: 'globe', text: 'Fez sua parte pelo planeta?', action: 'Continue assim!' },
   ];
 
   const getPointsHistory = () => {
     try {
       const history = JSON.parse(localStorage.getItem('ecoPointsHistory') || '[]');
-      return history.slice(0, 5).map(item => ({
+      return history.slice(0, 5).map((item) => ({
         action: item.action,
         points: item.points,
         time: new Date(item.timestamp).toLocaleString('pt-BR', {
           day: '2-digit',
           month: '2-digit',
           hour: '2-digit',
-          minute: '2-digit'
+          minute: '2-digit',
         }),
-        iconName: item.points > 0 ? 'sparkles' : 'gift'
+        iconName: item.points > 0 ? 'sparkles' : 'gift',
       }));
     } catch {
       return [];
@@ -93,319 +74,300 @@ const Navbar = () => {
   };
 
   const navItems = [
-    { path: '/dashboard', label: 'Dashboard', icon: 'dashboard' },
-    { path: '/classificar-residuos', label: 'IA Resíduos', icon: 'IA' },
-    { path: '/monitoramento', label: 'Monitoramento', icon: 'monitoramento' },
-    { path: '/gamificacao', label: 'EcoPoints', icon: 'ecopoints', opensEcoPointsModal: true },
-    { path: '/educacao', label: 'Educação', icon: 'educacao' }
+    { path: '/dashboard', label: 'Dashboard' },
+    { path: '/classificar-residuos', label: 'IA Resíduos' },
+    { path: '/monitoramento', label: 'Monitoramento' },
+    { path: '/gamificacao', label: 'EcoPoints', opensEcoPointsModal: true },
+    { path: '/educacao', label: 'Educação' },
+  ];
+
+  const menuItems = [
+    ...navItems,
+    { path: '/perfil', label: 'Perfil' },
+    { path: '/historico', label: 'Histórico' },
   ];
 
   const isNavActive = (item) => {
     if (item.opensEcoPointsModal) {
       return location.pathname === item.path || location.pathname === '/recompensas';
     }
-    if (item.matchPrefix) {
-      return location.pathname.startsWith(item.matchPrefix);
-    }
     return location.pathname === item.path;
   };
 
-  const navLinkClass = (item) =>
-    isNavActive(item)
-      ? 'bg-eco-50 text-eco-700'
-      : 'text-stone-600 hover:bg-stone-100 hover:text-stone-900';
-
-  const Icon = ({ name, className = "w-5 h-5", active = false }) => {
-    const iconStyle = active ? { filter: 'invert(48%) sepia(79%) saturate(2476%) hue-rotate(86deg) brightness(118%) contrast(119%)' } : { filter: 'invert(40%) sepia(5%) saturate(500%) hue-rotate(180deg)' };
-    return (
-      <img
-        src={require(`../assets/icons/${name}.svg`)}
-        alt={name}
-        className={className}
-        style={iconStyle}
-      />
-    );
+  const goTo = (item) => {
+    setMenuOpen(false);
+    if (item.opensEcoPointsModal) {
+      setShowEcoPointsModal(true);
+      return;
+    }
+    navigate(item.path);
   };
 
-  const navBg = 'bg-white/90 backdrop-blur-lg border-b border-stone-200/60 shadow-sm';
-
   return (
-    <motion.header
-      initial={{ y: -100 }}
-      animate={{ y: 0 }}
-      className={`sticky top-0 z-50 transition-all duration-300 ${navBg}`}
-    >
-      <div className="relative flex items-center h-16 md:h-[72px] py-2 w-full px-6 md:px-10">
-        <Link to="/" className="flex items-center gap-2.5 group shrink-0">
-          <EcoGlobeLogo
-            size={48}
-            style={{ filter: 'invert(40%) sepia(93%) saturate(500%) hue-rotate(100deg)' }}
-          />
-          <span className={`text-xl font-bold font-display transition-colors duration-300 bg-gradient-to-r from-eco-700 via-teal-600 to-eco-700 bg-clip-text text-transparent`}>
-            EcoSphere
-          </span>
-        </Link>
-
-          <nav className="hidden lg:flex absolute left-1/2 -translate-x-1/2 items-center gap-2" aria-label="Menu principal">
-            {navItems.map((item) => (
-              item.opensEcoPointsModal ? (
-                <button
-                  key={item.path}
-                  type="button"
-                  onClick={() => setShowEcoPointsModal(true)}
-                  className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 whitespace-nowrap ${navLinkClass(item)}`}
-                >
-                  <Icon name={item.icon} className="w-4 h-4 shrink-0" active={isNavActive(item)} />
-                  <span>{item.label}</span>
-                </button>
-              ) : (
-                <Link
-                  key={item.path}
-                  to={item.path}
-                  className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 whitespace-nowrap ${navLinkClass(item)}`}
-                >
-                  <Icon name={item.icon} className="w-4 h-4 shrink-0" active={isNavActive(item)} />
-                  <span>{item.label}</span>
-                </Link>
-              )
-            ))}
-          </nav>
-
-          <div className="flex items-center gap-3 ml-auto">
-            <div className="hidden lg:flex relative">
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                onClick={() => setShowNotifications(!showNotifications)}
-                className={`relative p-2.5 rounded-xl transition-colors hover:bg-stone-100 text-stone-600`}
-              >
-                <Bell size={20} />
-                {notifications > 0 && (
-                  <span className="absolute top-1.5 right-1.5 bg-amber-500 text-white text-[10px] font-bold rounded-full w-4 h-4 flex items-center justify-center">
-                    {notifications}
-                  </span>
-                )}
-              </motion.button>
-
-              {showNotifications && (
-                <motion.div
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="absolute right-0 mt-2 w-80 bg-white rounded-2xl shadow-soft-lg border border-stone-100 z-50 overflow-hidden"
-                >
-                  <div className="p-4 border-b border-stone-100">
-                    <div className="flex items-center justify-between">
-                      <h3 className="font-semibold text-stone-800">Notificações</h3>
-                      <button onClick={() => setShowNotifications(false)} className="text-stone-400 hover:text-stone-600">
-                        <X size={18} />
-                      </button>
-                    </div>
-                  </div>
-                  <div className="p-4">
-                    <div className="bg-gradient-to-br from-eco-50 to-teal-50 p-4 rounded-xl mb-4 border border-eco-100">
-                      <div className="flex items-center gap-2 mb-2">
-                        <AppIcon name={todayTip.iconName} size={18} className="text-eco-600" />
-                        <span className="font-semibold text-eco-700 text-sm">Dica Ecológica</span>
-                      </div>
-                      <p className="text-sm text-stone-700 mb-2">{todayTip.text}</p>
-                      <div className="text-xs text-eco-600 font-medium">{todayTip.action}</div>
-                    </div>
-                    <h4 className="font-semibold text-stone-700 text-sm mb-3">Histórico EcoPoints</h4>
-                    <div className="space-y-2 max-h-48 overflow-y-auto">
-                      {pointsHistory.length > 0 ? pointsHistory.map((item, index) => (
-                        <div key={index} className="flex items-center justify-between p-3 bg-stone-50 rounded-xl">
-                          <div className="flex items-center gap-2">
-                            <AppIcon name={item.iconName} size={16} className="text-stone-600" />
-                            <div>
-                              <div className="text-xs font-medium text-stone-800">{item.action}</div>
-                              <div className="text-xs text-stone-500">{item.time}</div>
-                            </div>
-                          </div>
-                          <div className={`text-sm font-bold ${item.points > 0 ? 'text-eco-600' : 'text-red-500'}`}>
-                            {item.points > 0 ? '+' : ''}{item.points}
-                          </div>
-                        </div>
-                      )) : (
-                        <div className="text-center text-stone-500 text-sm py-6">Nenhuma atividade recente</div>
-                      )}
-                    </div>
-                  </div>
-                </motion.div>
-              )}
+    <>
+      <header className="sticky top-0 z-50 pt-3 md:pt-4 px-3 md:px-6 pointer-events-none">
+        <motion.div
+          initial={{ y: -16, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          className="pointer-events-auto relative mx-auto max-w-6xl flex items-center justify-between gap-3 rounded-full bg-white/95 backdrop-blur-md shadow-[0_10px_40px_rgba(15,23,42,0.08)] border border-stone-200/80 px-3 sm:px-4 md:px-5 py-2 md:py-2.5"
+        >
+          <Link to="/" className="flex items-center gap-2.5 shrink-0 pl-1">
+            <div className="w-10 h-10 rounded-full bg-eco-50 border border-eco-100 flex items-center justify-center overflow-hidden">
+              <EcoGlobeLogo
+                size={28}
+                style={{ filter: 'invert(40%) sepia(70%) saturate(500%) hue-rotate(110deg)' }}
+              />
             </div>
-
-            <div className={`hidden lg:flex items-center gap-2 px-4 py-2 rounded-xl border transition-all duration-300 bg-gradient-to-r from-eco-50 to-teal-50 border-eco-100`}>
-              <Sparkles size={18} className="text-amber-500" />
-              <span className={`font-bold transition-colors duration-300 text-stone-800`}>{user?.ecoPoints || 0}</span>
+            <div className="leading-none hidden xs:block sm:block">
+              <span className="block text-[15px] md:text-base font-bold tracking-wide text-eco-700 uppercase">
+                EcoSphere
+              </span>
+              <span className="hidden md:block text-[9px] uppercase tracking-[0.16em] text-stone-400 mt-0.5">
+                Plataforma verde
+              </span>
             </div>
+          </Link>
 
-            <div className="hidden lg:flex relative" ref={profileRef}>
-              <button
-                onClick={() => setShowProfile(!showProfile)}
-                className={`flex items-center gap-2 p-2 rounded-xl transition-all duration-200 ${
-                  showProfile ? 'bg-stone-100' : 'hover:bg-stone-100'
-                }`}
-              >
-                <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-eco-400 to-teal-500 flex items-center justify-center shadow-sm overflow-hidden border border-white">
-                  {(user?.avatar_url || user?.picture || user?.avatar) ? (
-                    <img src={user.avatar_url || user.picture || user.avatar} alt="Profile" className="w-full h-full object-cover" />
-                  ) : (
-                    <User size={17} className="text-white" />
-                  )}
-                </div>
-                <motion.div
-                  animate={{ rotate: showProfile ? 180 : 0 }}
-                  transition={{ duration: 0.2 }}
-                >
-                  <ChevronDown size={14} className="text-stone-500" />
-                </motion.div>
-              </button>
-
-              {showProfile && (
-                <motion.div
-                  initial={{ opacity: 0, y: 8, scale: 0.96 }}
-                  animate={{ opacity: 1, y: 0, scale: 1 }}
-                  exit={{ opacity: 0, y: 8, scale: 0.96 }}
-                  transition={{ duration: 0.15 }}
-                  className="absolute right-0 top-full mt-2 w-64 bg-white rounded-2xl shadow-xl border border-stone-100 z-50 overflow-hidden"
-                >
-                  <div className="bg-gradient-to-br from-eco-500 to-teal-500 p-4">
-                    <div className="flex items-center gap-3">
-                      <div className="w-11 h-11 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center ring-2 ring-white/30 overflow-hidden">
-                        {(user?.avatar_url || user?.picture || user?.avatar) ? (
-                          <img src={user.avatar_url || user.picture || user.avatar} alt="Profile" className="w-full h-full object-cover" />
-                        ) : (
-                          <User size={20} className="text-white" />
-                        )}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="font-semibold text-white truncate leading-tight">{user?.name}</div>
-                        <div className="text-xs text-white/70 truncate mt-0.5">{user?.email}</div>
-                      </div>
-                    </div>
-                    <div className="mt-3 flex items-center gap-2 bg-white/15 rounded-lg px-3 py-1.5">
-                      <Sparkles size={13} className="text-amber-300 shrink-0" />
-                      <span className="text-white/80 text-xs">EcoPoints:</span>
-                      <span className="text-white font-bold text-sm ml-auto">{user?.ecoPoints || 0}</span>
-                    </div>
-                  </div>
-
-                  <div className="p-2">
-                    <button
-                      onClick={() => { navigate('/perfil'); setShowProfile(false); }}
-                      className="w-full text-left px-3 py-2.5 text-sm text-stone-700 hover:bg-eco-50 hover:text-eco-700 rounded-xl flex items-center gap-3 transition-colors group/item"
-                    >
-                      <div className="w-8 h-8 rounded-lg bg-stone-100 group-hover/item:bg-eco-100 flex items-center justify-center transition-colors">
-                        <User size={15} className="text-stone-500 group-hover/item:text-eco-600" />
-                      </div>
-                      <span className="font-medium">Meu Perfil</span>
-                    </button>
-
-                    <button
-                      onClick={() => { navigate('/historico'); setShowProfile(false); }}
-                      className="w-full text-left px-3 py-2.5 text-sm text-stone-700 hover:bg-eco-50 hover:text-eco-700 rounded-xl flex items-center gap-3 transition-colors group/item"
-                    >
-                      <div className="w-8 h-8 rounded-lg bg-stone-100 group-hover/item:bg-eco-100 flex items-center justify-center transition-colors">
-                        <Clock size={15} className="text-stone-500 group-hover/item:text-eco-600" />
-                      </div>
-                      <span className="font-medium">Histórico</span>
-                    </button>
-
-                    <div className="my-1.5 border-t border-stone-100" />
-
-                    <button
-                      onClick={() => { handleLogout(); setShowProfile(false); }}
-                      className="w-full text-left px-3 py-2.5 text-sm text-red-600 hover:bg-red-50 rounded-xl flex items-center gap-3 transition-colors group/item"
-                    >
-                      <div className="w-8 h-8 rounded-lg bg-stone-100 group-hover/item:bg-red-100 flex items-center justify-center transition-colors">
-                        <X size={15} className="text-stone-500 group-hover/item:text-red-500" />
-                      </div>
-                      <span className="font-medium">Sair</span>
-                    </button>
-                  </div>
-                </motion.div>
-              )}
-            </div>
-
-          <button
-            onClick={() => setIsOpen(!isOpen)}
-            className={`lg:hidden p-2.5 rounded-xl transition-colors hover:bg-stone-100 text-stone-600`}
+          <nav
+            className="hidden lg:flex items-center gap-1 absolute left-1/2 -translate-x-1/2"
+            aria-label="Menu principal"
           >
-            {isOpen ? <X size={24} /> : <Menu size={24} />}
-          </button>
-          </div>
-      </div>
-
-        {isOpen && (
-          <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: 'auto' }}
-            exit={{ opacity: 0, height: 0 }}
-            className={`lg:hidden py-4 border-t transition-colors duration-300 border-stone-200`}
-          >
-            <div className="space-y-1">
-              {navItems.map((item) => (
-                item.opensEcoPointsModal ? (
+            {navItems.map((item) => {
+              const active = isNavActive(item);
+              const className = `px-3 py-2 text-[13px] font-medium whitespace-nowrap transition-colors ${
+                active ? 'text-eco-700' : 'text-stone-600 hover:text-eco-700'
+              }`;
+              if (item.opensEcoPointsModal) {
+                return (
                   <button
                     key={item.path}
                     type="button"
-                    onClick={() => { setIsOpen(false); setShowEcoPointsModal(true); }}
-                    className={`block w-full text-left px-4 py-3 rounded-xl text-sm font-medium ${navLinkClass(item)}`}
+                    onClick={() => setShowEcoPointsModal(true)}
+                    className={className}
                   >
                     {item.label}
                   </button>
-                ) : (
-                  <Link
-                    key={item.path}
-                    to={item.path}
-                    onClick={() => setIsOpen(false)}
-                    className={`block px-4 py-3 rounded-xl text-sm font-medium ${navLinkClass(item)}`}
+                );
+              }
+              return (
+                <Link key={item.path} to={item.path} className={className}>
+                  {item.label}
+                </Link>
+              );
+            })}
+          </nav>
+
+          <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+            <div className="relative hidden sm:block">
+              <button
+                type="button"
+                onClick={() => setShowNotifications((v) => !v)}
+                className="relative p-2 rounded-full text-stone-500 hover:bg-stone-50 hover:text-stone-800 transition-colors"
+                aria-label="Notificações"
+              >
+                <Bell size={17} strokeWidth={1.75} />
+                {notifications > 0 && (
+                  <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 rounded-full bg-amber-500" />
+                )}
+              </button>
+
+              <AnimatePresence>
+                {showNotifications && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: 8 }}
+                    className="absolute right-0 mt-3 w-80 bg-white rounded-2xl shadow-2xl border border-stone-100 z-50 overflow-hidden"
                   >
-                    {item.label}
-                  </Link>
-                )
-              ))}
-              <div className="border-t border-stone-200 pt-4 mt-4 px-4 space-y-2">
-                <Link
-                  to="/perfil"
-                  onClick={() => setIsOpen(false)}
-                  className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-stone-600 hover:bg-stone-50"
-                >
-                  <div className="w-6 h-6 rounded-md bg-stone-100 flex items-center justify-center">
-                    <User size={14} className="text-stone-500" />
-                  </div>
-                  Meu Perfil
-                </Link>
-
-                <Link
-                  to="/historico"
-                  onClick={() => setIsOpen(false)}
-                  className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-stone-600 hover:bg-stone-50"
-                >
-                  <div className="w-6 h-6 rounded-md bg-stone-100 flex items-center justify-center">
-                    <Clock size={14} className="text-stone-500" />
-                  </div>
-                  Histórico
-                </Link>
-
-                <div className="flex items-center justify-between px-4 py-2">
-                  <span className="text-sm font-medium text-stone-600">Saldo:</span>
-                  <div className="flex items-center gap-1.5 bg-amber-50 text-amber-600 px-2.5 py-1 rounded-lg text-xs font-bold">
-                    <Sparkles size={12} />
-                    {user?.ecoPoints || 0} pts
-                  </div>
-                </div>
-
-                <button
-                  onClick={handleLogout}
-                  className="w-full flex items-center justify-center gap-2 bg-red-50 text-red-600 px-4 py-3 mt-2 rounded-xl text-sm font-medium hover:bg-red-100"
-                >
-                  <X size={16} />
-                  Sair da conta
-                </button>
-              </div>
+                    <div className="p-4 border-b border-stone-100 flex items-center justify-between">
+                      <h3 className="font-semibold text-stone-800">Notificações</h3>
+                      <button
+                        type="button"
+                        onClick={() => setShowNotifications(false)}
+                        className="text-stone-400 hover:text-stone-600"
+                      >
+                        <X size={16} />
+                      </button>
+                    </div>
+                    <div className="p-4">
+                      <div className="bg-eco-50/80 p-4 rounded-xl mb-3 border border-eco-100">
+                        <div className="flex items-center gap-2 mb-2">
+                          <AppIcon name={todayTip.iconName} size={16} className="text-eco-700" />
+                          <span className="font-semibold text-eco-800 text-sm">Dica ecológica</span>
+                        </div>
+                        <p className="text-sm text-stone-700 mb-1">{todayTip.text}</p>
+                        <div className="text-xs text-eco-700 font-medium">{todayTip.action}</div>
+                      </div>
+                      <div className="space-y-2 max-h-40 overflow-y-auto">
+                        {pointsHistory.length > 0 ? (
+                          pointsHistory.map((item, index) => (
+                            <div
+                              key={index}
+                              className="flex items-center justify-between p-2.5 bg-stone-50 rounded-xl"
+                            >
+                              <div>
+                                <div className="text-xs font-medium text-stone-800">{item.action}</div>
+                                <div className="text-[11px] text-stone-500">{item.time}</div>
+                              </div>
+                              <div
+                                className={`text-sm font-bold ${
+                                  item.points > 0 ? 'text-eco-700' : 'text-red-500'
+                                }`}
+                              >
+                                {item.points > 0 ? '+' : ''}
+                                {item.points}
+                              </div>
+                            </div>
+                          ))
+                        ) : (
+                          <div className="text-center text-stone-500 text-sm py-4">
+                            Nenhuma atividade recente
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
-          </motion.div>
+
+            <button
+              type="button"
+              onClick={() => setShowEcoPointsModal(true)}
+              className="hidden sm:inline-flex items-center gap-2 rounded-full bg-eco-600 hover:bg-eco-700 text-white text-sm font-semibold pl-3.5 pr-3 py-2 md:pl-4 md:pr-3.5 md:py-2.5 shadow-sm shadow-eco-600/25 transition-colors"
+            >
+              <span className="hidden md:inline">EcoPoints</span>
+              <span className="md:hidden tabular-nums">{user?.ecoPoints || 0}</span>
+              <ArrowRight size={16} />
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setMenuOpen(true)}
+              className="inline-flex items-center gap-2 rounded-full border border-stone-200 text-stone-700 text-sm font-medium px-3 py-2 md:px-3.5 hover:bg-stone-50 transition-colors"
+              aria-label="Abrir conta e menu"
+            >
+              <User size={15} />
+              <span>Conta</span>
+            </button>
+          </div>
+        </motion.div>
+      </header>
+
+      {typeof document !== 'undefined' &&
+        createPortal(
+          <AnimatePresence>
+            {menuOpen && (
+              <motion.div
+                key="conta-drawer"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="fixed inset-0 z-[180] flex justify-end"
+              >
+                <button
+                  type="button"
+                  aria-label="Fechar menu"
+                  className="absolute inset-0 bg-stone-900/30 backdrop-blur-[2px]"
+                  onClick={() => setMenuOpen(false)}
+                />
+
+                <motion.aside
+                  initial={{ x: '100%' }}
+                  animate={{ x: 0 }}
+                  exit={{ x: '100%' }}
+                  transition={{ type: 'spring', stiffness: 320, damping: 32 }}
+                  className="relative h-full w-full max-w-[22rem] sm:max-w-[24rem] bg-white shadow-2xl border-l border-stone-100 flex flex-col rounded-l-3xl overflow-hidden"
+                  role="dialog"
+                  aria-modal="true"
+                  aria-label="Menu da conta"
+                >
+                  <div className="flex items-center justify-between px-5 py-4 border-b border-stone-100">
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      <div className="w-9 h-9 rounded-full bg-eco-50 border border-eco-100 flex items-center justify-center shrink-0">
+                        <EcoGlobeLogo
+                          size={22}
+                          style={{ filter: 'invert(40%) sepia(70%) saturate(500%) hue-rotate(110deg)' }}
+                        />
+                      </div>
+                      <span className="font-bold text-eco-700 tracking-wide uppercase text-sm truncate">
+                        Conta
+                      </span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setMenuOpen(false)}
+                      className="w-9 h-9 rounded-full border border-stone-200 flex items-center justify-center text-stone-600 hover:bg-stone-50"
+                    >
+                      <X size={16} />
+                    </button>
+                  </div>
+
+                  <div className="flex-1 overflow-y-auto px-5 py-4">
+                    <div className="rounded-2xl border border-stone-100 bg-stone-50 p-4 mb-5">
+                      <div className="flex items-center gap-3 mb-3">
+                        <div className="w-11 h-11 rounded-full bg-white border border-stone-100 overflow-hidden flex items-center justify-center shrink-0">
+                          {user?.avatar_url || user?.picture || user?.avatar ? (
+                            <img
+                              src={user.avatar_url || user.picture || user.avatar}
+                              alt=""
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <User size={18} className="text-stone-500" />
+                          )}
+                        </div>
+                        <div className="min-w-0">
+                          <p className="font-semibold text-stone-800 truncate">{user?.name || 'Usuário'}</p>
+                          <p className="text-sm text-stone-500 truncate">{user?.email}</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center justify-between rounded-xl bg-white px-3.5 py-2.5 border border-stone-100">
+                        <span className="text-sm text-stone-500 inline-flex items-center gap-1.5">
+                          <Sparkles size={14} className="text-amber-500" />
+                          EcoPoints
+                        </span>
+                        <span className="font-bold text-stone-800">{user?.ecoPoints || 0}</span>
+                      </div>
+                    </div>
+
+                    <p className="text-[11px] font-semibold uppercase tracking-wider text-stone-400 mb-2 px-1">
+                      Navegação
+                    </p>
+                    <ul className="space-y-0.5 mb-6">
+                      {menuItems.map((item) => (
+                        <li key={item.path}>
+                          <button
+                            type="button"
+                            onClick={() => goTo(item)}
+                            className={`w-full text-left px-3 py-3 rounded-xl text-[15px] font-medium transition-colors ${
+                              isNavActive(item)
+                                ? 'bg-eco-50 text-eco-700'
+                                : 'text-stone-700 hover:bg-stone-50'
+                            }`}
+                          >
+                            {item.label}
+                          </button>
+                        </li>
+                      ))}
+                    </ul>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setMenuOpen(false);
+                        handleLogout();
+                      }}
+                      className="w-full text-left px-3 py-3 rounded-xl text-sm font-medium text-red-600 hover:bg-red-50"
+                    >
+                      Sair da conta
+                    </button>
+                  </div>
+                </motion.aside>
+              </motion.div>
+            )}
+          </AnimatePresence>,
+          document.body
         )}
 
       <EcoPointsModal
@@ -421,7 +383,7 @@ const Navbar = () => {
           navigate('/recompensas');
         }}
       />
-    </motion.header>
+    </>
   );
 };
 
@@ -459,12 +421,14 @@ const EcoPointsModal = ({ open, onClose, user, onNavigateGamificacao, onNavigate
             aria-modal="true"
             aria-labelledby="ecopoints-modal-title"
           >
-            <div className="bg-gradient-to-br from-eco-500 to-teal-500 p-5 text-white">
+            <div className="bg-gradient-to-br from-eco-600 to-teal-600 p-5 text-white">
               <div className="flex items-start justify-between gap-4">
                 <div>
                   <div className="flex items-center gap-2 mb-2">
-                    <Sparkles size={20} className="text-amber-200" />
-                    <h2 id="ecopoints-modal-title" className="text-xl font-bold">EcoPoints</h2>
+                    <Sparkles size={18} className="text-amber-200" />
+                    <h2 id="ecopoints-modal-title" className="text-xl font-bold">
+                      EcoPoints
+                    </h2>
                   </div>
                   <p className="text-sm text-white/80">
                     Acompanhe seus pontos ou use o saldo na área de recompensas.
@@ -473,7 +437,7 @@ const EcoPointsModal = ({ open, onClose, user, onNavigateGamificacao, onNavigate
                 <button
                   type="button"
                   onClick={onClose}
-                  className="p-2 rounded-xl bg-white/10 hover:bg-white/20 transition-colors shrink-0"
+                  className="p-2 rounded-full bg-white/10 hover:bg-white/20 transition-colors shrink-0"
                   aria-label="Fechar modal EcoPoints"
                 >
                   <X size={18} />

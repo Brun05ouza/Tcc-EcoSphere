@@ -1,645 +1,745 @@
-import React, { useState, useRef } from 'react';
+import React, { useCallback, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { useEnterKey } from '../hooks/useEnterKey';
 import { useUser } from '../contexts/UserContext';
 import { wasteAPI } from '../services/api';
 import { useWasteClassifier } from '../hooks/useWasteClassifier';
-import { Check, Camera, Sparkles } from 'lucide-react';
-import { AppIcon } from '../components/ui/AppIcon';
+import LiveCameraClassifier from '../components/LiveCameraClassifier';
+import { Check, Camera, Sparkles, AlertTriangle, Upload, MapPin, ExternalLink } from 'lucide-react';
 import LoadingScreen from '../components/ui/LoadingScreen';
 import { classifyWasteWithGemini, isGeminiConfigured } from '../services/geminiService';
+import {
+  OBJECT_CLASSES,
+  NO_OBJECT_ID,
+  getWasteClass,
+  getBinColor,
+} from '../data/wasteKnowledge';
+import {
+  getCollectionPoints,
+  COLLECTION_POINTS_DISCLAIMER,
+} from '../data/collectionPoints';
+import { CONFIDENCE_THRESHOLD } from '../services/localClassifier';
+
+const CLASSIFY_MIN_MS = 1100;
+
+const BIN_STYLES = {
+  Vermelha: { bg: 'bg-red-50', text: 'text-red-800', border: 'border-red-100' },
+  Amarela: { bg: 'bg-yellow-50', text: 'text-yellow-800', border: 'border-yellow-100' },
+  Verde: { bg: 'bg-green-50', text: 'text-green-800', border: 'border-green-100' },
+  Azul: { bg: 'bg-blue-50', text: 'text-blue-800', border: 'border-blue-100' },
+  Marrom: { bg: 'bg-amber-50', text: 'text-amber-900', border: 'border-amber-100' },
+  Laranja: { bg: 'bg-orange-50', text: 'text-orange-800', border: 'border-orange-100' },
+};
+
+const geminiSecondOpinionEnabled =
+  process.env.REACT_APP_ENABLE_GEMINI_SECOND_OPINION === 'true' && isGeminiConfigured();
+
+/** Destaque da % de confiança — deixa explícito que é estimativa. */
+function ConfidenceMeter({ value, compact = false }) {
+  const pct = Math.max(0, Math.min(100, Math.round((value || 0) * 100)));
+  const barColor =
+    pct >= 80 ? 'bg-amber-500' : pct >= 55 ? 'bg-orange-500' : 'bg-red-500';
+
+  return (
+    <div className={compact ? 'mt-2' : 'mt-4 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3'}>
+      <div className="flex items-end justify-between gap-3">
+        <div>
+          <p className="text-[11px] font-bold uppercase tracking-wider text-amber-800/80">
+            Confiança estimada
+          </p>
+          <p className={`font-black tabular-nums text-amber-950 ${compact ? 'text-2xl' : 'text-4xl'}`}>
+            {pct}%
+          </p>
+        </div>
+        {!compact && (
+          <p className="max-w-[12rem] text-right text-xs font-medium leading-snug text-amber-900/80">
+            Não é um resultado preciso — confirme ou corrija.
+          </p>
+        )}
+      </div>
+      <div className="mt-2 h-2 overflow-hidden rounded-full bg-amber-100">
+        <div className={`h-full rounded-full transition-all ${barColor}`} style={{ width: `${pct}%` }} />
+      </div>
+      {compact && (
+        <p className="mt-1.5 text-[11px] font-medium text-amber-900/70">
+          Estimativa — não é precisa
+        </p>
+      )}
+    </div>
+  );
+}
 
 const WasteClassifier = () => {
-  const [selectedFile, setSelectedFile] = useState(null);
-  const [preview, setPreview] = useState(null);
-  const [classification, setClassification] = useState(null);
-  const [loading, setLoading] = useState(false);
-  const [dragActive, setDragActive] = useState(false);
-  const [showSuccess, setShowSuccess] = useState(false);
-  const [useCamera, setUseCamera] = useState(false);
-  const [stream, setStream] = useState(null);
-  const fileInputRef = useRef(null);
-  const videoRef = useRef(null);
-  const canvasRef = useRef(null);
-  const { addEcoPoints } = useUser();
   const navigate = useNavigate();
-  const { model, loading: modelLoading, classifyImage, calculatePoints, wasteInfo } = useWasteClassifier();
-  const [aiSource, setAiSource] = useState(null); // 'gemini' | 'tensorflow' | 'filename'
+  const { addEcoPoints } = useUser();
+  const {
+    status,
+    loading: modelLoading,
+    modelReady,
+    modelUnavailable,
+    error: modelError,
+    reload,
+    classifyImageElement,
+    calculatePoints,
+    isMock,
+  } = useWasteClassifier();
 
-  const Icon = ({ name, className = "w-5 h-5", white = false }) => {
-    const iconStyle = white ? { filter: 'brightness(0) invert(1)' } : { filter: 'invert(40%) sepia(93%) saturate(500%) hue-rotate(100deg)' };
-    return (
-      <img 
-        src={require(`../assets/icons/${name}.svg`)} 
-        alt={name} 
-        className={className}
-        style={iconStyle}
-      />
-    );
+  const fileInputRef = useRef(null);
+  const [mode, setMode] = useState('camera'); // camera | upload
+  const [step, setStep] = useState('idle'); // idle | classifying | confirm | pick | result
+  const [preview, setPreview] = useState(null);
+  const [topPredictions, setTopPredictions] = useState([]);
+  const [predictedLabel, setPredictedLabel] = useState(null);
+  const [finalLabel, setFinalLabel] = useState(null);
+  const [userCorrected, setUserCorrected] = useState(false);
+  const [forceCorrected, setForceCorrected] = useState(false);
+  const [confidence, setConfidence] = useState(0);
+  const [points, setPoints] = useState(0);
+  const [registered, setRegistered] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [geminiBusy, setGeminiBusy] = useState(false);
+  const [geminiNote, setGeminiNote] = useState(null);
+
+  const resetFlow = () => {
+    setStep('idle');
+    setPreview(null);
+    setTopPredictions([]);
+    setPredictedLabel(null);
+    setFinalLabel(null);
+    setUserCorrected(false);
+    setForceCorrected(false);
+    setConfidence(0);
+    setPoints(0);
+    setRegistered(false);
+    setGeminiNote(null);
+    if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
-  // Classificar com Enter quando há imagem
-  useEnterKey(() => {
-    if (selectedFile && !loading) {
-      classifyWaste();
+  const openConfirmation = useCallback((predictions, imagePreview) => {
+    const top = predictions[0] || { id: NO_OBJECT_ID, confidence: 0 };
+    setPreview(imagePreview);
+    setTopPredictions(predictions);
+    setPredictedLabel(top.id);
+    setConfidence(top.confidence || 0);
+    setFinalLabel(null);
+    setUserCorrected(false);
+    setForceCorrected(false);
+    setRegistered(false);
+    setPoints(0);
+    setGeminiNote(null);
+
+    const confident =
+      top.id !== NO_OBJECT_ID && (top.confidence || 0) >= CONFIDENCE_THRESHOLD;
+
+    if (confident) {
+      setStep('confirm');
+    } else {
+      setStep('pick');
     }
-  }, [selectedFile, loading]);
+  }, []);
 
-  const handleFiles = (files) => {
-    const file = files[0];
-    if (file && file.type.startsWith('image/')) {
-      setSelectedFile(file);
-      const reader = new FileReader();
-      reader.onload = (e) => setPreview(e.target.result);
-      reader.readAsDataURL(file);
-      setClassification(null);
+  const persistClassification = async ({
+    classId,
+    corrected,
+    conf,
+    source = 'local',
+  }) => {
+    const info = getWasteClass(classId);
+    if (!info || !info.categoria) {
+      throw new Error('Classe inválida para registro');
     }
-  };
 
-  const handleFileSelect = (event) => {
-    handleFiles(event.target.files);
-  };
+    const pts = calculatePoints(conf, corrected);
+    setPoints(pts);
+    setFinalLabel(classId);
+    setUserCorrected(corrected);
+    setSaving(true);
 
-  const handleDrag = (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    if (e.type === "dragenter" || e.type === "dragover") {
-      setDragActive(true);
-    } else if (e.type === "dragleave") {
-      setDragActive(false);
-    }
-  };
+    addEcoPoints(pts, `Classificação: ${info.nome}`);
 
-  const handleDrop = (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setDragActive(false);
-    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-      handleFiles(e.dataTransfer.files);
-    }
-  };
-
-  const startCamera = async () => {
     try {
-      const mediaStream = await navigator.mediaDevices.getUserMedia({ 
-        video: { facingMode: 'environment' } 
+      const saveRes = await wasteAPI.saveClassification({
+        category: info.categoria,
+        confidence: conf,
+        points: pts,
+        predicted_label: predictedLabel,
+        final_label: classId,
+        source,
+        user_corrected: corrected,
       });
-      setStream(mediaStream);
-      if (videoRef.current) {
-        videoRef.current.srcObject = mediaStream;
+
+      const newBadges = saveRes?.data?.newBadges;
+      if (Array.isArray(newBadges) && newBadges.length > 0) {
+        window.dispatchEvent(new CustomEvent('badgesUnlocked', { detail: { badges: newBadges } }));
       }
-      setUseCamera(true);
-    } catch (error) {
-      console.error('Erro ao acessar câmera:', error);
-      alert('Não foi possível acessar a câmera. Use upload de arquivo.');
+      const newMissions = saveRes?.data?.newMissions;
+      if (Array.isArray(newMissions) && newMissions.length > 0) {
+        window.dispatchEvent(new CustomEvent('missionsCompleted', { detail: { missions: newMissions } }));
+      }
+      if (typeof saveRes?.data?.ecoPoints === 'number') {
+        window.dispatchEvent(new CustomEvent('ecoPointsUpdated', {
+          detail: {
+            newPoints: saveRes.data.ecoPoints,
+            addedPoints: pts,
+            type: 'classification',
+          },
+        }));
+      }
+      setRegistered(true);
+      setStep('result');
+    } catch (err) {
+      console.error('Erro ao salvar classificação:', err);
+      alert('Não foi possível registrar a classificação. Tente novamente.');
+    } finally {
+      setSaving(false);
     }
   };
 
-  const stopCamera = () => {
-    if (stream) {
-      stream.getTracks().forEach(track => track.stop());
-      setStream(null);
-    }
-    setUseCamera(false);
+  const handleConfirmYes = async () => {
+    if (!predictedLabel || predictedLabel === NO_OBJECT_ID) return;
+    await persistClassification({
+      classId: predictedLabel,
+      corrected: false,
+      conf: confidence,
+      source: 'local',
+    });
   };
 
-  const capturePhoto = () => {
-    if (videoRef.current && canvasRef.current) {
-      const canvas = canvasRef.current;
-      const video = videoRef.current;
-      canvas.width = video.videoWidth;
-      canvas.height = video.videoHeight;
-      canvas.getContext('2d').drawImage(video, 0, 0);
-      
-      canvas.toBlob((blob) => {
-        const file = new File([blob], 'camera-capture.jpg', { type: 'image/jpeg' });
-        setSelectedFile(file);
-        setPreview(canvas.toDataURL('image/jpeg'));
-        stopCamera();
-      }, 'image/jpeg');
-    }
+  const handleConfirmNo = () => {
+    setForceCorrected(true);
+    setStep('pick');
   };
 
-  // Converte preview (dataURL) para base64 puro + mimeType
-  const getBase64FromPreview = (dataUrl) => {
-    const [header, data] = dataUrl.split(',');
-    const mimeType = header.match(/:(.*?);/)?.[1] || 'image/jpeg';
-    return { base64: data, mimeType };
+  const handlePickClass = async (classId) => {
+    const wasCorrected =
+      forceCorrected ||
+      !predictedLabel ||
+      predictedLabel === NO_OBJECT_ID ||
+      classId !== predictedLabel ||
+      confidence < CONFIDENCE_THRESHOLD;
+    await persistClassification({
+      classId,
+      corrected: wasCorrected,
+      conf: confidence,
+      source: 'local',
+    });
   };
 
-  const classifyWaste = async () => {
-    if (!selectedFile || !preview) return;
-    
-    setLoading(true);
-    
+  const runWithClassifyingScreen = async (imagePreview, classifyFn) => {
+    setPreview(imagePreview);
+    setStep('classifying');
+    const started = Date.now();
     try {
-      let result = null;
+      const predictions = await classifyFn();
+      const elapsed = Date.now() - started;
+      if (elapsed < CLASSIFY_MIN_MS) {
+        await new Promise((r) => setTimeout(r, CLASSIFY_MIN_MS - elapsed));
+      }
+      openConfirmation(predictions, imagePreview);
+    } catch (err) {
+      console.error(err);
+      setStep('idle');
+      alert('Erro ao classificar o resíduo. Tente novamente.');
+    }
+  };
 
-      // 1. Tenta Gemini (visão computacional real)
-      if (isGeminiConfigured()) {
-        const { base64, mimeType } = getBase64FromPreview(preview);
-        const geminiResult = await classifyWasteWithGemini(base64, mimeType);
-        if (geminiResult) {
-          const info = wasteInfo[geminiResult.class] || {};
-          result = {
-            class: geminiResult.class,
-            confidence: geminiResult.confidence,
-            tips: geminiResult.tips || info.tips,
-            bin: info.bin,
-            iconName: info.iconName,
-            color: info.color,
-            bgColor: info.bgColor,
-            textColor: info.textColor,
-            description: geminiResult.description,
-            source: 'gemini',
-          };
+  const handleCapture = ({ preview: imagePreview, predictions, canvas }) => {
+    runWithClassifyingScreen(imagePreview, async () => {
+      // Reclassifica o quadro congelado para o loading fazer sentido
+      if (canvas) {
+        try {
+          return await classifyImageElement(canvas);
+        } catch (_) {
+          /* usa predição ao vivo */
         }
       }
+      return predictions;
+    });
+  };
 
-      // 2. Fallback: nome do arquivo ou TensorFlow/simulado
-      if (!result) {
+  const handleFile = async (file) => {
+    if (!file || !file.type.startsWith('image/') || !modelReady) return;
+    try {
+      const dataUrl = await new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+
+      await runWithClassifyingScreen(dataUrl, async () => {
         const img = new Image();
         img.crossOrigin = 'anonymous';
         await new Promise((resolve, reject) => {
           img.onload = resolve;
           img.onerror = reject;
-          img.src = preview;
+          img.src = dataUrl;
         });
-        // Garante que a imagem tem dimensões antes de classificar
-        if (!img.width || !img.height) {
-          img.width = 224;
-          img.height = 224;
-        }
-        result = await classifyImage(img, selectedFile?.name);
-      }
-      const points = calculatePoints(result.confidence);
-      
-      // Adicionar EcoPoints
-      const newTotal = addEcoPoints(points, `Classificação: ${result.class}`);
-
-      setAiSource(result.source || 'tensorflow');
-      
-      setClassification({
-        type: result.class,
-        confidence: result.confidence,
-        points: points,
-        tips: result.tips,
-        bin: result.bin,
-        iconName: result.iconName,
-        color: result.color,
-        bgColor: result.bgColor,
-        textColor: result.textColor,
-        description: result.description || null,
-        source: result.source || 'tensorflow',
-        locations: ['Supermercado Central - 0.5km', 'Ponto de Coleta Norte - 1.2km', 'Cooperativa Sul - 2.1km'],
-        totalEcoPoints: newTotal
+        return classifyImageElement(img, file.name);
       });
-      
-      setShowSuccess(true);
-      setTimeout(() => setShowSuccess(false), 3000);
-      
-      // Salvar no Supabase
-      try {
-        const saveRes = await wasteAPI.saveClassification({
-          category: result.class,
-          confidence: result.confidence,
-          points: points
-        });
-        const newBadges = saveRes?.data?.newBadges;
-        if (Array.isArray(newBadges) && newBadges.length > 0) {
-          window.dispatchEvent(new CustomEvent('badgesUnlocked', {
-            detail: { badges: newBadges },
-          }));
-        }
-        if (typeof saveRes?.data?.ecoPoints === 'number') {
-          window.dispatchEvent(new CustomEvent('ecoPointsUpdated', {
-            detail: {
-              newPoints: saveRes.data.ecoPoints,
-              addedPoints: points,
-              type: 'classification',
-            },
-          }));
-        }
-      } catch (err) {
-        console.log('Erro ao salvar classificação:', err);
-      }
-      
-    } catch (error) {
-      console.error('Erro na classificação:', error);
-      alert('Erro ao classificar resíduo. Tente novamente.');
-    } finally {
-      setLoading(false);
+    } catch (err) {
+      console.error(err);
+      alert('Erro ao ler a imagem. Tente novamente.');
     }
   };
 
+  const askGeminiSecondOpinion = async () => {
+    if (!preview || !geminiSecondOpinionEnabled) return;
+    setGeminiBusy(true);
+    setGeminiNote(null);
+    try {
+      const [header, data] = preview.split(',');
+      const mimeType = header.match(/:(.*?);/)?.[1] || 'image/jpeg';
+      const result = await classifyWasteWithGemini(data, mimeType);
+      if (!result) {
+        setGeminiNote('Não foi possível obter a segunda opinião (rede ou limite da API).');
+        return;
+      }
+      // Mapeia categoria CONAMA → primeira classe OBJECT com essa categoria
+      const match = OBJECT_CLASSES.find((c) => c.categoria === result.class);
+      if (!match) {
+        setGeminiNote(`Gemini sugeriu "${result.class}", sem correspondência local.`);
+        return;
+      }
+      await persistClassification({
+        classId: match.id,
+        corrected: true,
+        conf: result.confidence,
+        source: 'legacy',
+      });
+      setGeminiNote(`Segunda opinião (Gemini): ${match.nome}`);
+    } catch (err) {
+      const msg = String(err?.message || err);
+      setGeminiNote(
+        msg.includes('429') || msg.toLowerCase().includes('quota')
+          ? 'Limite da API atingido. Tente mais tarde.'
+          : 'Erro de rede na segunda opinião.'
+      );
+    } finally {
+      setGeminiBusy(false);
+    }
+  };
 
+  const finalInfo = finalLabel ? getWasteClass(finalLabel) : null;
+  const predictedInfo = predictedLabel ? getWasteClass(predictedLabel) : null;
+  const binColor = finalInfo?.categoria ? getBinColor(finalInfo.categoria) : null;
+  const styles = BIN_STYLES[binColor] || { bg: 'bg-stone-50', text: 'text-stone-800', border: 'border-stone-100' };
+  const nearbyPoints = finalInfo?.categoria
+    ? getCollectionPoints(finalInfo.categoria, 4)
+    : [];
+
+  const Icon = ({ name, className = 'w-5 h-5' }) => (
+    <img
+      src={require(`../assets/icons/${name}.svg`)}
+      alt={name}
+      className={className}
+      style={{ filter: 'invert(40%) sepia(93%) saturate(500%) hue-rotate(100deg)' }}
+    />
+  );
 
   return (
     <div className="min-h-screen bg-surface-50 py-8 md:py-12">
       <div className="container mx-auto px-4">
+        {isMock && (
+          <div className="mb-4 rounded-xl border border-amber-300 bg-amber-50 px-4 py-3 text-center text-sm font-semibold text-amber-950 shadow-sm">
+            Modo estimativa — sem rede neural treinada. A % de confiança mostra que o resultado não é preciso.
+          </div>
+        )}
+
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="text-center mb-12"
+          className="mb-10 text-center"
         >
-          <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-4">
-            <span className="bg-gradient-to-r from-eco-700 via-teal-600 to-eco-700 bg-clip-text text-transparent flex items-center justify-center gap-3 pb-2">
-              <div className="w-12 h-12 flex-shrink-0">
-                <Icon name="IA" className="w-full h-full" />
+          <h1 className="mb-4 text-3xl font-bold sm:text-4xl lg:text-5xl">
+            <span className="flex items-center justify-center gap-3 bg-gradient-to-r from-eco-700 via-teal-600 to-eco-700 bg-clip-text pb-2 text-transparent">
+              <div className="h-12 w-12 flex-shrink-0">
+                <Icon name="IA" className="h-full w-full" />
               </div>
               <span>Classificador Inteligente</span>
             </span>
           </h1>
-          <p className="text-lg sm:text-xl text-gray-600">Identifique resíduos com IA e ganhe EcoPoints!</p>
+          <p className="text-lg text-gray-600 sm:text-xl">
+            Aponte a câmera, confirme o objeto e ganhe EcoPoints
+          </p>
           {modelLoading && (
-            <motion.div 
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              className="mt-4 flex items-center justify-center gap-2 text-blue-600"
-            >
+            <div className="mt-4 flex items-center justify-center gap-2 text-blue-600">
               <LoadingScreen fullScreen={false} size={24} />
-              <span className="text-sm">Carregando modelo de IA...</span>
-            </motion.div>
+              <span className="text-sm">Carregando modelo local…</span>
+            </div>
           )}
-          {!modelLoading && model && (
-            <motion.div 
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 1, scale: 1 }}
-              className="mt-4 flex items-center justify-center gap-2 text-green-600"
-            >
-              <i className="bi bi-check-circle-fill"></i>
-              <span className="text-sm">Modelo de IA pronto!</span>
-            </motion.div>
+          {modelReady && (
+            <div className="mt-4 flex items-center justify-center gap-2 text-green-600">
+              <i className="bi bi-check-circle-fill" />
+              <span className="text-sm">Modelo local pronto</span>
+            </div>
           )}
         </motion.div>
 
-        <div className="max-w-4xl mx-auto">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8">
-            {/* Upload Area */}
+        {modelUnavailable && (
+          <div className="mx-auto max-w-lg rounded-3xl border border-stone-200 bg-white p-8 text-center shadow-soft">
+            <AlertTriangle className="mx-auto mb-3 text-amber-500" size={40} />
+            <h2 className="text-xl font-bold text-stone-800">Modelo indisponível</h2>
+            <p className="mt-2 text-sm text-stone-500">
+              {modelError ||
+                'O modelo Teachable Machine ainda não foi publicado em /models/waste-classifier/.'}
+            </p>
+            <p className="mt-3 text-xs text-stone-400">
+              Exporte o modelo do Teachable Machine (TensorFlow.js) para{' '}
+              <code className="rounded bg-stone-100 px-1">public/models/waste-classifier/</code>
+              {' '}ou, só em desenvolvimento, use{' '}
+              <code className="rounded bg-stone-100 px-1">REACT_APP_USE_MOCK_MODEL=true</code>.
+            </p>
+            <button
+              type="button"
+              onClick={reload}
+              className="mt-6 rounded-xl bg-stone-900 px-6 py-3 text-sm font-semibold text-white hover:bg-stone-800"
+            >
+              Tentar novamente
+            </button>
+          </div>
+        )}
+
+        {modelReady && (
+          <div className="mx-auto grid max-w-4xl grid-cols-1 gap-6 lg:grid-cols-2 lg:gap-8">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              className="bg-white rounded-3xl shadow-soft-lg border border-stone-100 p-5 sm:p-6 lg:p-8 relative overflow-hidden flex flex-col"
+              className="relative flex flex-col overflow-hidden rounded-3xl border border-stone-100 bg-white p-5 shadow-soft-lg sm:p-6 lg:p-8"
             >
-              <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-eco-500 to-teal-500" />
-              
-              <div className="mb-6">
-                <h2 className="text-xl font-bold text-stone-800">Enviar Imagem</h2>
-                <p className="text-sm text-stone-500 mt-1">Faça upload ou tire uma foto do resíduo para análise</p>
-              </div>
+              <div className="absolute left-0 top-0 h-1.5 w-full bg-gradient-to-r from-eco-500 to-teal-500" />
 
-              <div 
-                className={`flex-1 flex flex-col justify-center border-2 border-dashed rounded-2xl p-8 text-center transition-all duration-300 relative ${
-                  dragActive 
-                    ? 'border-eco-500 bg-eco-50/50' 
-                    : preview 
-                      ? 'border-stone-200 bg-white' 
-                      : 'border-stone-200 bg-stone-50/50 hover:bg-stone-50 hover:border-eco-300 cursor-pointer'
-                }`}
-                onDragEnter={handleDrag}
-                onDragLeave={handleDrag}
-                onDragOver={handleDrag}
-                onDrop={handleDrop}
-                onClick={(e) => {
-                  // Só abre o file picker se não tiver preview nem câmera aberta
-                  if (!useCamera && !preview && e.target === e.currentTarget) {
-                    fileInputRef.current?.click();
-                  }
-                }}
-              >
-                <AnimatePresence mode="wait">
-                  {preview ? (
-                    <motion.div
-                      key="preview"
-                      initial={{ opacity: 0, scale: 0.95 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      exit={{ opacity: 0, scale: 0.95 }}
-                      className="w-full flex flex-col items-center"
-                    >
-                      <div className="relative group w-full max-w-sm mx-auto">
-                        <img 
-                          src={preview} 
-                          alt="Preview" 
-                          className="w-full h-56 sm:h-64 object-cover rounded-xl shadow-sm border border-stone-200" 
-                        />
-                        <button 
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setPreview(null);
-                            setSelectedFile(null);
-                            if (fileInputRef.current) fileInputRef.current.value = '';
-                          }}
-                          className="absolute top-3 right-3 bg-white/90 backdrop-blur-sm text-stone-700 p-2 rounded-lg shadow-sm hover:bg-red-50 hover:text-red-600 transition-colors opacity-0 group-hover:opacity-100"
-                          title="Remover imagem"
-                        >
-                          <i className="bi bi-trash-fill"></i>
-                        </button>
-                      </div>
-                      <div className="mt-4 flex items-center justify-center gap-2 text-sm text-eco-700 bg-eco-50 px-4 py-2 rounded-full font-medium">
-                        <Check size={16} />
-                        Imagem pronta para análise
-                      </div>
-                    </motion.div>
-                  ) : (
-                    <motion.div
-                      key="upload"
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      exit={{ opacity: 0 }}
-                      className="text-stone-500 flex flex-col items-center pointer-events-none"
-                    >
-                      <div className="w-20 h-20 bg-white rounded-full shadow-sm border border-stone-100 flex items-center justify-center mb-5 text-eco-500">
-                        <motion.div 
-                          animate={{ y: [0, -6, 0] }}
-                          transition={{ repeat: Infinity, duration: 2, ease: "easeInOut" }}
-                        >
-                          <i className="bi bi-cloud-arrow-up-fill text-4xl"></i>
-                        </motion.div>
-                      </div>
-                      <p className="text-lg font-medium text-stone-700 mb-1">Arraste uma imagem aqui</p>
-                      <p className="text-sm text-stone-400 mb-6">PNG, JPG ou WEBP (Max. 5MB)</p>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-                
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept="image/*"
-                  onChange={handleFileSelect}
-                  className="hidden"
-                  id="file-input"
-                />
-                
-                {!useCamera && !preview && (
-                  <div className="flex flex-col sm:flex-row gap-3 justify-center mt-auto">
-                    <label
-                      htmlFor="file-input"
-                      className="inline-flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl font-medium bg-white border-2 border-stone-200 text-stone-700 hover:border-eco-500 hover:text-eco-600 hover:bg-eco-50 cursor-pointer w-full sm:w-auto transition-all shadow-sm"
-                    >
-                      <i className="bi bi-folder2-open text-lg"></i>
-                      Procurar Arquivo
-                    </label>
-                    
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        startCamera();
-                      }}
-                      className="inline-flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl font-medium bg-white border-2 border-stone-200 text-stone-700 hover:border-teal-500 hover:text-teal-600 hover:bg-teal-50 w-full sm:w-auto transition-all shadow-sm"
-                    >
-                      <Camera size={18} />
-                      Abrir Câmera
-                    </button>
-                  </div>
-                )}
-                
-                {useCamera && !preview && (
-                  <div className="space-y-4 w-full mt-4" onClick={(e) => e.stopPropagation()}>
-                    <div className="relative rounded-xl overflow-hidden shadow-inner bg-black">
-                      <video 
-                        ref={videoRef} 
-                        autoPlay 
-                        playsInline
-                        className="w-full h-56 sm:h-64 object-cover"
-                      />
-                      {/* Borda de foco da câmera animada (UI) */}
-                      <div className="absolute inset-0 pointer-events-none border-2 border-white/20 m-4 rounded-lg flex items-center justify-center">
-                         <div className="w-16 h-16 border-2 border-white/50 rounded-full flex items-center justify-center">
-                            <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse" />
-                         </div>
-                      </div>
-                    </div>
-                    <canvas ref={canvasRef} className="hidden" />
-                    
-                    <div className="flex flex-col sm:flex-row gap-3 justify-center">
-                      <button
-                        onClick={capturePhoto}
-                        className="flex-1 sm:flex-none bg-eco-600 hover:bg-eco-700 text-white px-6 py-3 rounded-xl flex items-center justify-center gap-2 transform active:scale-95 transition-all shadow-md font-medium"
-                      >
-                        <i className="bi bi-camera-fill text-lg"></i>
-                        Tirar Foto
-                      </button>
-                      <button
-                        onClick={stopCamera}
-                        className="flex-1 sm:flex-none bg-white border-2 border-stone-200 hover:bg-red-50 text-stone-600 hover:text-red-600 hover:border-red-200 px-6 py-3 rounded-xl flex items-center justify-center gap-2 transition-all font-medium"
-                      >
-                        <X size={18} />
-                        Cancelar
-                      </button>
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              {selectedFile && (
-                <div className="mt-6 pt-6 border-t border-stone-100">
-                  <motion.button
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    onClick={classifyWaste}
-                    disabled={loading}
-                    className="w-full relative overflow-hidden group bg-stone-900 text-white py-4 rounded-xl font-semibold disabled:opacity-70 flex items-center justify-center gap-3 transition-all duration-300 hover:shadow-lg hover:-translate-y-0.5"
+              <div className="mb-5 flex items-center justify-between gap-3">
+                <div>
+                  <h2 className="text-xl font-bold text-stone-800">Captura</h2>
+                  <p className="mt-1 text-sm text-stone-500">Câmera ao vivo ou envio de imagem</p>
+                </div>
+                <div className="flex rounded-full border border-stone-200 p-1 text-xs font-semibold">
+                  <button
+                    type="button"
+                    onClick={() => { setMode('camera'); if (step !== 'idle') resetFlow(); }}
+                    className={`rounded-full px-3 py-1.5 ${mode === 'camera' ? 'bg-stone-900 text-white' : 'text-stone-600'}`}
                   >
-                    {/* Efeito de brilho de fundo no botão */}
-                    <div className="absolute inset-0 bg-gradient-to-r from-eco-500 via-teal-500 to-eco-500 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-                    
-                    <div className="relative flex items-center gap-2 z-10">
-                      {loading ? (
-                        <>
-                          <LoadingScreen fullScreen={false} size={20} color="white" />
-                          <span>Analisando com IA...</span>
-                        </>
-                      ) : (
-                        <>
-                          <Sparkles size={20} className="text-amber-300" />
-                          <span>Identificar Resíduo</span>
-                          <i className="bi bi-arrow-right ml-1 opacity-70 group-hover:translate-x-1 transition-transform"></i>
-                        </>
-                      )}
-                    </div>
-                  </motion.button>
-                  
-                  {!loading && (
-                    <motion.div 
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      transition={{ delay: 0.3 }}
-                      className="text-center mt-3"
+                    Câmera
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => { setMode('upload'); if (step !== 'idle') resetFlow(); }}
+                    className={`rounded-full px-3 py-1.5 ${mode === 'upload' ? 'bg-stone-900 text-white' : 'text-stone-600'}`}
+                  >
+                    Arquivo
+                  </button>
+                </div>
+              </div>
+
+              {step === 'idle' && mode === 'camera' && (
+                <LiveCameraClassifier enabled={status === 'ready' && step === 'idle'} onCapture={handleCapture} />
+              )}
+
+              {step === 'idle' && mode === 'upload' && (
+                <div className="flex flex-1 flex-col items-center justify-center rounded-2xl border-2 border-dashed border-stone-200 bg-stone-50/50 px-6 py-10 text-center">
+                  <Upload className="mb-3 text-eco-500" size={36} />
+                  <p className="mb-4 text-sm text-stone-500">PNG, JPG ou WEBP</p>
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={(e) => handleFile(e.target.files?.[0])}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    className="inline-flex items-center gap-2 rounded-xl border-2 border-stone-200 bg-white px-5 py-2.5 font-medium text-stone-700 hover:border-eco-500 hover:text-eco-600"
+                  >
+                    <Camera size={18} />
+                    Escolher imagem
+                  </button>
+                </div>
+              )}
+
+              {(step === 'classifying' || (step !== 'idle' && preview)) && preview && (
+                <div className="space-y-4">
+                  <div className="relative">
+                    <img
+                      src={preview}
+                      alt="Captura"
+                      className={`h-56 w-full rounded-xl border border-stone-200 object-cover sm:h-64 ${
+                        step === 'classifying' ? 'opacity-60' : ''
+                      }`}
+                    />
+                    {step === 'classifying' && (
+                      <div className="absolute inset-0 flex flex-col items-center justify-center rounded-xl bg-stone-950/45 backdrop-blur-[2px]">
+                        <LoadingScreen fullScreen={false} size={40} color="white" />
+                        <p className="mt-3 text-sm font-bold text-white">IA classificando…</p>
+                        <p className="mt-1 text-xs text-white/80">Analisando o resíduo</p>
+                      </div>
+                    )}
+                  </div>
+                  {step !== 'classifying' && (
+                    <button
+                      type="button"
+                      onClick={resetFlow}
+                      className="w-full rounded-xl border border-stone-200 py-2.5 text-sm font-medium text-stone-600 hover:bg-stone-50"
                     >
-                      <span className="text-xs text-stone-400 flex items-center justify-center gap-1.5">
-                        Pressione <kbd className="px-1.5 py-0.5 bg-stone-100 border border-stone-200 rounded-md text-[10px] font-sans text-stone-600 font-bold shadow-sm">Enter</kbd> para classificar
-                      </span>
-                    </motion.div>
+                      Nova captura
+                    </button>
                   )}
                 </div>
               )}
             </motion.div>
 
-            {/* Results */}
-            <AnimatePresence>
-              {classification && (
+            <AnimatePresence mode="wait">
+              {step === 'classifying' && (
                 <motion.div
-                  initial={{ opacity: 0, x: 20 }}
+                  key="classifying"
+                  initial={{ opacity: 0, x: 16 }}
                   animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: 20 }}
-                  className="bg-white rounded-3xl shadow-soft-lg border border-stone-100 p-5 sm:p-6 lg:p-8 relative overflow-hidden flex flex-col h-full"
+                  exit={{ opacity: 0, x: 16 }}
+                  className="flex flex-col items-center justify-center rounded-3xl border border-stone-100 bg-white p-10 text-center shadow-soft-lg"
                 >
-                  <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-violet-500 to-purple-500" />
-                  
-                  <div className="flex items-center justify-between mb-6">
-                    <div>
-                      <h2 className="text-xl font-bold text-stone-800">Resultado da Análise</h2>
-                      <p className="text-sm text-stone-500 mt-1">Classificação feita por Inteligência Artificial</p>
+                  <LoadingScreen fullScreen={false} size={56} />
+                  <h2 className="mt-5 text-xl font-bold text-stone-800">IA classificando</h2>
+                  <p className="mt-2 max-w-xs text-sm text-stone-500">
+                    Estamos analisando a imagem. Em seguida você confirma ou corrige o resultado.
+                  </p>
+                  <div className="mt-6 h-1.5 w-48 overflow-hidden rounded-full bg-stone-100">
+                    <motion.div
+                      className="h-full rounded-full bg-gradient-to-r from-eco-500 to-teal-500"
+                      initial={{ x: '-100%' }}
+                      animate={{ x: '100%' }}
+                      transition={{ repeat: Infinity, duration: 1.2, ease: 'easeInOut' }}
+                      style={{ width: '55%' }}
+                    />
+                  </div>
+                </motion.div>
+              )}
+
+              {step === 'confirm' && (
+                <motion.div
+                  key="confirm"
+                  initial={{ opacity: 0, x: 16 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: 16 }}
+                  className="rounded-3xl border border-stone-100 bg-white p-6 shadow-soft-lg"
+                >
+                  <h2 className="text-xl font-bold text-stone-800">Confirmação</h2>
+                  <p className="mt-3 text-lg text-stone-700">
+                    É <strong>{predictedInfo?.nome || predictedLabel}</strong>?
+                  </p>
+                  <ConfidenceMeter value={confidence} />
+                  <div className="mt-6 flex flex-col gap-3 sm:flex-row">
+                    <button
+                      type="button"
+                      disabled={saving}
+                      onClick={handleConfirmYes}
+                      className="flex-1 rounded-xl bg-eco-600 py-3 font-semibold text-white hover:bg-eco-700 disabled:opacity-60"
+                    >
+                      {saving ? 'Registrando…' : 'Sim, é isso'}
+                    </button>
+                    <button
+                      type="button"
+                      disabled={saving}
+                      onClick={handleConfirmNo}
+                      className="flex-1 rounded-xl border-2 border-stone-200 py-3 font-semibold text-stone-700 hover:bg-stone-50"
+                    >
+                      Não é isso
+                    </button>
+                  </div>
+                  {geminiSecondOpinionEnabled && (
+                    <button
+                      type="button"
+                      disabled={geminiBusy || saving}
+                      onClick={askGeminiSecondOpinion}
+                      className="mt-4 w-full rounded-xl border border-purple-200 bg-purple-50 py-2.5 text-sm font-semibold text-purple-700 hover:bg-purple-100 disabled:opacity-60"
+                    >
+                      {geminiBusy ? 'Consultando Gemini…' : 'Pedir segunda opinião'}
+                    </button>
+                  )}
+                  {geminiNote && (
+                    <p className="mt-2 text-center text-xs text-stone-500">{geminiNote}</p>
+                  )}
+                </motion.div>
+              )}
+
+              {step === 'pick' && (
+                <motion.div
+                  key="pick"
+                  initial={{ opacity: 0, x: 16 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: 16 }}
+                  className="rounded-3xl border border-stone-100 bg-white p-6 shadow-soft-lg"
+                >
+                  <h2 className="text-xl font-bold text-stone-800">
+                    {confidence < CONFIDENCE_THRESHOLD || predictedLabel === NO_OBJECT_ID
+                      ? 'Não tenho certeza'
+                      : 'Qual é o objeto?'}
+                  </h2>
+                  <ConfidenceMeter value={confidence} />
+
+                  {topPredictions.filter((p) => p.id !== NO_OBJECT_ID).length > 0 && (
+                    <div className="mt-4 space-y-2">
+                      <p className="text-xs font-semibold uppercase tracking-wide text-stone-400">
+                        Melhores hipóteses
+                      </p>
+                      {topPredictions
+                        .filter((p) => p.id !== NO_OBJECT_ID)
+                        .map((p) => {
+                          const info = getWasteClass(p.id);
+                          const pct = Math.round(p.confidence * 100);
+                          return (
+                            <button
+                              key={p.id}
+                              type="button"
+                              disabled={saving}
+                              onClick={() => handlePickClass(p.id)}
+                              className="flex w-full items-center justify-between rounded-xl border border-stone-200 px-4 py-3 text-left hover:border-eco-400 hover:bg-eco-50"
+                            >
+                              <span className="font-medium text-stone-800">{info?.nome || p.id}</span>
+                              <span className="text-sm font-bold tabular-nums text-amber-700">{pct}%</span>
+                            </button>
+                          );
+                        })}
                     </div>
-                    {showSuccess && (
-                      <motion.div
-                        initial={{ scale: 0, rotate: -45 }}
-                        animate={{ scale: 1, rotate: 0 }}
-                        className="text-green-500 bg-green-50 w-10 h-10 rounded-full flex items-center justify-center shadow-sm"
-                      >
-                        <i className="bi bi-check-lg text-xl"></i>
-                      </motion.div>
+                  )}
+
+                  <div className="mt-5 space-y-2">
+                    <p className="text-xs font-semibold uppercase tracking-wide text-stone-400">
+                      Todas as classes
+                    </p>
+                    <div className="max-h-64 space-y-1.5 overflow-y-auto pr-1">
+                      {OBJECT_CLASSES.map((c) => (
+                        <button
+                          key={c.id}
+                          type="button"
+                          disabled={saving}
+                          onClick={() => handlePickClass(c.id)}
+                          className="flex w-full items-center justify-between rounded-lg px-3 py-2.5 text-left text-sm text-stone-700 hover:bg-stone-50"
+                        >
+                          <span>{c.nome}</span>
+                          <span className="text-xs text-stone-400">{c.categoria}</span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                  {geminiSecondOpinionEnabled && (
+                    <button
+                      type="button"
+                      disabled={geminiBusy || saving}
+                      onClick={askGeminiSecondOpinion}
+                      className="mt-4 w-full rounded-xl border border-purple-200 bg-purple-50 py-2.5 text-sm font-semibold text-purple-700 hover:bg-purple-100 disabled:opacity-60"
+                    >
+                      {geminiBusy ? 'Consultando Gemini…' : 'Pedir segunda opinião'}
+                    </button>
+                  )}
+                  {geminiNote && (
+                    <p className="mt-2 text-center text-xs text-stone-500">{geminiNote}</p>
+                  )}
+                </motion.div>
+              )}
+
+              {step === 'result' && finalInfo && (
+                <motion.div
+                  key="result"
+                  initial={{ opacity: 0, x: 16 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: 16 }}
+                  className="rounded-3xl border border-stone-100 bg-white p-6 shadow-soft-lg"
+                >
+                  {registered && (
+                    <div className="mb-4 flex items-center gap-2 rounded-xl bg-green-50 px-3 py-2 text-sm font-semibold text-green-700">
+                      <Check size={16} />
+                      Registrado
+                    </div>
+                  )}
+                  <h2 className="text-xl font-bold text-stone-800">Resultado</h2>
+                  <div className={`mt-4 rounded-2xl border p-5 ${styles.bg} ${styles.border}`}>
+                    <div className={`text-2xl font-black ${styles.text}`}>{finalInfo.nome}</div>
+                    <div className="mt-2 text-sm font-medium text-stone-700">
+                      Categoria: {finalInfo.categoria}
+                    </div>
+                    <div className="mt-1 text-sm font-medium text-stone-700">
+                      Lixeira: {binColor}
+                    </div>
+                    <ConfidenceMeter value={confidence} compact />
+                    <div className="mt-3 inline-flex items-center gap-1.5 rounded-xl border border-stone-100 bg-white px-3 py-1.5 shadow-sm">
+                      <Sparkles size={16} className="text-amber-500" />
+                      <span className="text-sm font-bold text-green-600">+{points} pts</span>
+                    </div>
+                    {userCorrected && (
+                      <p className="mt-2 text-xs text-stone-500">Corrigido pelo usuário</p>
                     )}
                   </div>
-                  
-                  <motion.div
-                    initial={{ scale: 0.95 }}
-                    animate={{ scale: 1 }}
-                    className={`p-6 rounded-2xl ${classification.bgColor} mb-6 border border-black/5 relative overflow-hidden group`}
-                  >
-                    {/* Efeito de brilho sutil no fundo */}
-                    <div className="absolute -right-10 -top-10 w-32 h-32 bg-white/20 rounded-full blur-2xl group-hover:scale-150 transition-transform duration-700" />
-                    
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between relative z-10 gap-4">
-                      <div className="flex items-center gap-4">
-                        <motion.div 
-                          animate={{ rotate: [0, 5, -5, 0] }}
-                          transition={{ repeat: 3, duration: 0.6, delay: 0.2 }}
-                          className="flex items-center justify-center w-14 h-14 shrink-0 rounded-2xl bg-white/40 shadow-sm backdrop-blur-md"
-                        >
-                          <AppIcon name={classification.iconName} size={32} className={classification.textColor} />
-                        </motion.div>
-                        <div>
-                          <div className="flex items-center gap-2 flex-wrap mb-1">
-                            <div className={`text-2xl font-black ${classification.textColor} tracking-tight leading-tight`}>
-                              {classification.type}
-                            </div>
-                            {classification.source === 'gemini' && (
-                              <span className="inline-flex items-center gap-1 bg-white/70 backdrop-blur px-2 py-0.5 rounded-lg text-[10px] font-bold text-purple-700 border border-purple-200/60 shadow-sm">
-                                <Sparkles size={10} className="text-purple-500" />
-                                Gemini AI
-                              </span>
-                            )}
-                          </div>
-                          {classification.description && (
-                            <p className="text-xs text-stone-600 font-medium mb-1">{classification.description}</p>
-                          )}
-                          <div className="flex items-center mt-1">
-                            <span className="text-xs font-semibold bg-white/50 px-2 py-1 rounded-md text-stone-700 shadow-sm border border-white/40">
-                              Confiança: {(classification.confidence * 100).toFixed(1)}%
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-                      
-                      <div className="text-left sm:text-right flex flex-row sm:flex-col items-center sm:items-end justify-between sm:justify-center">
-                        <div className={`text-sm font-bold uppercase tracking-wider opacity-80 ${classification.textColor} mb-0 sm:mb-1.5`}>
-                          {classification.bin}
-                        </div>
-                        <motion.div 
-                          initial={{ scale: 0, y: 10 }}
-                          animate={{ scale: 1, y: 0 }}
-                          transition={{ delay: 0.4, type: "spring" }}
-                          className="inline-flex items-center gap-1.5 bg-white shadow-sm px-3 py-1.5 rounded-xl border border-stone-100"
-                        >
-                          <Sparkles size={16} className="text-amber-500" />
-                          <span className="font-bold text-green-600 text-sm">+{classification.points} pts</span>
-                        </motion.div>
-                      </div>
-                    </div>
-                  </motion.div>
+                  <div className="mt-4 rounded-2xl border border-stone-100 bg-stone-50 p-4">
+                    <h3 className="mb-1 font-semibold text-stone-800">Orientação de descarte</h3>
+                    <p className="text-sm leading-relaxed text-stone-600">{finalInfo.dica}</p>
+                  </div>
 
-                  <div className="grid grid-cols-1 gap-4 flex-1">
-                    <div className="bg-stone-50 border border-stone-100 p-5 rounded-2xl hover:border-eco-200 hover:bg-white transition-colors duration-300">
-                      <h3 className="font-semibold mb-2 flex items-center gap-2 text-stone-800">
-                        <div className="w-8 h-8 rounded-lg bg-eco-100 flex items-center justify-center">
-                          <i className="bi bi-recycle text-eco-600"></i>
-                        </div>
-                        Dicas de Descarte
+                  {nearbyPoints.length > 0 && (
+                    <div className="mt-4 rounded-2xl border border-stone-100 bg-white p-4">
+                      <h3 className="mb-1 flex items-center gap-2 font-semibold text-stone-800">
+                        <MapPin size={18} className="text-blue-600" />
+                        Pontos de coleta reais
                       </h3>
-                      <p className="text-stone-600 text-sm leading-relaxed sm:pl-10">{classification.tips}</p>
-                    </div>
-                    
-                    <div className="bg-stone-50 border border-stone-100 p-5 rounded-2xl hover:border-blue-200 hover:bg-white transition-colors duration-300">
-                      <h3 className="font-semibold mb-3 flex items-center gap-2 text-stone-800">
-                        <div className="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center">
-                          <i className="bi bi-geo-alt-fill text-blue-600"></i>
-                        </div>
-                        Pontos de Coleta
-                      </h3>
-                      <div className="space-y-2.5 sm:pl-10">
-                        {classification.locations?.map((location, index) => (
-                          <motion.div
-                            key={index}
-                            initial={{ opacity: 0, x: -10 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            transition={{ delay: index * 0.1 + 0.3 }}
-                            className="flex items-center gap-3 text-sm text-stone-600 bg-white p-2.5 rounded-xl border border-stone-100 shadow-sm"
+                      <p className="mb-3 text-[11px] leading-snug text-stone-400">
+                        {COLLECTION_POINTS_DISCLAIMER}
+                      </p>
+                      <div className="space-y-2.5">
+                        {nearbyPoints.map((place) => (
+                          <a
+                            key={`${place.name}-${place.address}`}
+                            href={place.mapsUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="block rounded-xl border border-stone-100 bg-stone-50 p-3 transition-colors hover:border-blue-200 hover:bg-blue-50/40"
                           >
-                            <div className="w-1.5 h-1.5 rounded-full bg-blue-400" />
-                            {location}
-                          </motion.div>
+                            <div className="flex items-start justify-between gap-2">
+                              <div>
+                                <p className="text-sm font-bold text-stone-800">{place.name}</p>
+                                <p className="mt-0.5 text-xs leading-relaxed text-stone-600">
+                                  {place.address}
+                                </p>
+                                <p className="mt-1 text-[11px] text-stone-400">
+                                  {place.city}
+                                  {place.cep ? ` · CEP ${place.cep}` : ''}
+                                  {' · '}
+                                  {place.source}
+                                </p>
+                              </div>
+                              <ExternalLink size={14} className="mt-0.5 shrink-0 text-blue-500" />
+                            </div>
+                          </a>
                         ))}
                       </div>
                     </div>
-                    
-                    <div className="mt-2 text-center">
-                      <motion.button
-                        onClick={() => navigate('/guia')}
-                        className="w-full sm:w-auto bg-white border-2 border-stone-200 text-stone-700 hover:border-eco-500 hover:text-eco-600 hover:bg-eco-50 px-6 py-3 rounded-xl font-medium flex items-center justify-center gap-2 transition-all shadow-sm mx-auto"
-                      >
-                        <i className="bi bi-book text-lg"></i>
-                        Ver Guia Sustentável
-                      </motion.button>
-                    </div>
-                  </div>
+                  )}
+
+                  <button
+                    type="button"
+                    onClick={() => navigate('/guia')}
+                    className="mt-4 w-full rounded-xl border-2 border-stone-200 py-3 text-sm font-medium text-stone-700 hover:border-eco-500 hover:text-eco-600"
+                  >
+                    Ver Guia Sustentável
+                  </button>
+                </motion.div>
+              )}
+
+              {step === 'idle' && (
+                <motion.div
+                  key="hint"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  className="flex flex-col justify-center rounded-3xl border border-dashed border-stone-200 bg-white/60 p-8 text-center text-stone-500"
+                >
+                  <p className="text-sm">
+                    Capture um resíduo ou envie uma foto. Você confirma o resultado antes de
+                    registrar os pontos.
+                  </p>
                 </motion.div>
               )}
             </AnimatePresence>
           </div>
-        </div>
-        
-        {/* Info Cards */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.4 }}
-          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-6 mt-8 sm:mt-12 max-w-5xl mx-auto"
-        >
-          {[
-            { iconName: "lightbulb", title: "Como Funciona", desc: "Nossa inteligência identifica o tipo de material instantaneamente usando visão computacional.", bg: "bg-blue-50", iconColor: "text-blue-500" },
-            { iconName: "trophy", title: "Ganhe Pontos", desc: "Cada classificação correta gera EcoPoints que podem ser trocados por recompensas exclusivas.", bg: "bg-amber-50", iconColor: "text-amber-500" },
-            { iconName: "globe", title: "Impacto Real", desc: "Suas ações do dia a dia contribuem para um planeta muito mais sustentável e consciente.", bg: "bg-eco-50", iconColor: "text-eco-600" }
-          ].map((card, index) => (
-            <motion.div
-              key={index}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.5 + index * 0.1 }}
-              className="flex items-start gap-4 p-5 rounded-3xl bg-transparent hover:bg-white hover:shadow-soft-lg border border-transparent hover:border-stone-100 transition-all duration-300"
-            >
-              <div className={`w-12 h-12 shrink-0 rounded-2xl ${card.bg} flex items-center justify-center`}>
-                <AppIcon name={card.iconName} size={24} className={card.iconColor} />
-              </div>
-              <div>
-                <h3 className="text-base font-bold text-stone-800 mb-1">{card.title}</h3>
-                <p className="text-stone-500 text-sm leading-relaxed">{card.desc}</p>
-              </div>
-            </motion.div>
-          ))}
-        </motion.div>
+        )}
       </div>
     </div>
   );

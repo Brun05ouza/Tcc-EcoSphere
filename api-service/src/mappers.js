@@ -9,6 +9,7 @@ export function profileToApp(row) {
     ecoPoints: row.eco_points ?? 0,
     level: row.level || 'Iniciante',
     badges: row.badges || [],
+    missions: row.missions || [],
     streak: row.streak || { current: 0, longest: 0 },
     isAdmin: !!row.is_admin,
     createdAt: row.created_at,

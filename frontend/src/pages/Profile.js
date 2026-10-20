@@ -4,6 +4,7 @@ import { useUser } from '../contexts/UserContext';
 import { gamificationAPI, userAPI } from '../services/api';
 import { FileText, Settings, Lock, Save, Camera, Loader2 } from 'lucide-react';
 import { AppIcon } from '../components/ui/AppIcon';
+import LoadingScreen from '../components/ui/LoadingScreen';
 
 const Profile = () => {
   const [user, setUser] = useState(null);
@@ -18,6 +19,7 @@ const Profile = () => {
     interests: []
   });
   const [stats, setStats] = useState({});
+  const [loadingProfile, setLoadingProfile] = useState(true);
   const [activeTab, setActiveTab] = useState('personal');
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef(null);
@@ -60,6 +62,8 @@ const Profile = () => {
         badges: 0,
         classifications: 0,
       });
+    } finally {
+      setLoadingProfile(false);
     }
   };
 
@@ -134,6 +138,8 @@ const Profile = () => {
     'Reciclagem', 'Energia Solar', 'Compostagem', 'Mobilidade Sustentável',
     'Agricultura Orgânica', 'Conservação da Água', 'Vida Selvagem', 'Mudanças Climáticas'
   ];
+
+  if (loadingProfile) return <LoadingScreen message="Carregando perfil…" />;
 
   return (
     <div className="min-h-screen bg-surface-50 py-8 md:py-12">

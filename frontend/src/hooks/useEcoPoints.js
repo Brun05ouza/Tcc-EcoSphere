@@ -79,6 +79,12 @@ export const useEcoPoints = () => {
           detail: { badges: response.data.newBadges },
         }));
       }
+
+      if (Array.isArray(response.data?.newMissions) && response.data.newMissions.length > 0) {
+        window.dispatchEvent(new CustomEvent('missionsCompleted', {
+          detail: { missions: response.data.newMissions },
+        }));
+      }
       
       return response.data;
     } catch (err) {

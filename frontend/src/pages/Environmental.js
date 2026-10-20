@@ -1,38 +1,25 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Line } from 'react-chartjs-2';
-import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend, ArcElement, Filler } from 'chart.js';
-ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend, ArcElement, Filler);
-import { Cloud, CloudRain, Sun, Wind, Droplets, Eye, Gauge, ThermometerSun, MapPin, Calendar, Clock, Sunrise, Sunset, Zap, AlertTriangle, Check } from 'lucide-react';
-import { AppIcon } from '../components/ui/AppIcon';
+import { Cloud, MapPin, Clock, Zap, RefreshCw, ChevronDown, Building2 } from 'lucide-react';
 import { useBodyScrollLock } from '../hooks/useBodyScrollLock';
-import { fetchWeatherData, SOURCE_LABELS } from '../services/weatherService';
+import { fetchWeatherData } from '../services/weatherService';
+import WeatherBanner from '../components/WeatherBanner';
+import WeatherMetrics from '../components/WeatherMetrics';
+import WeatherForecast from '../components/WeatherForecast';
+import LoadingScreen from '../components/ui/LoadingScreen';
 
 const Environmental = () => {
   const [selectedState, setSelectedState] = useState('RJ');
   const [selectedCity, setSelectedCity] = useState('Rio de Janeiro');
   const [selectedBairro, setSelectedBairro] = useState('Centro');
-  const [environmentalData, setEnvironmentalData] = useState({
-    temperatura: 28,
-    umidade: 65,
-    qualidadeAr: { mode: 'eaqi', aqi: 75, label: null, note: null },
-    visibilidade: 8.5,
-    vento: 12,
-    pressao: 1013,
-    sensacao: 31,
-    descricao: 'Parcialmente nublado',
-    uv: 7,
-    nascerSol: '06:15',
-    porSol: '18:45',
-    pm25: null,
-    pm10: null
-  });
+  const [environmentalData, setEnvironmentalData] = useState(null);
   const [forecast, setForecast] = useState([]);
   const [temperatureHours, setTemperatureHours] = useState([]);
   const [lastUpdated, setLastUpdated] = useState(null);
-  const [dataSource, setDataSource] = useState('open-meteo');
   const [dataError, setDataError] = useState('');
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const requestId = useRef(0);
+  const [displayLocation, setDisplayLocation] = useState(null);
   const [showStateModal, setShowStateModal] = useState(false);
 
   useBodyScrollLock(showStateModal);
@@ -65,33 +52,34 @@ const Environmental = () => {
   const estadoAtual = estados.find(e => e.sigla === selectedState);
 
   const loadWeather = async (city, bairro) => {
+    const currentRequest = ++requestId.current;
     setLoading(true);
     setDataError('');
     try {
       const result = await fetchWeatherData(city, bairro);
+      if (currentRequest !== requestId.current) return;
       setEnvironmentalData(result.environmentalData);
+      setDisplayLocation({ city, district: bairro, state: selectedState });
       setForecast(result.forecast || []);
       setTemperatureHours(result.temperatureHours || []);
-      setDataSource(result.source);
       setLastUpdated(new Date());
       if (result.source === 'simulated') {
         setDataError('Servicos meteorologicos indisponiveis; exibindo dados simulados.');
+      } else {
+        setDataError('');
       }
     } catch (error) {
+      if (currentRequest !== requestId.current) return;
       setDataError(error.message || 'Nao foi possivel carregar dados climaticos.');
     } finally {
-      setLoading(false);
+      if (currentRequest === requestId.current) setLoading(false);
     }
   };
 
   useEffect(() => {
     loadWeather(selectedCity, selectedBairro);
+    return () => { requestId.current += 1; };
   }, [selectedCity, selectedBairro, selectedState]);
-
-  useEffect(() => {
-    const bairros = bairrosPorCidade[selectedCity] || ['Centro'];
-    setSelectedBairro(bairros[0]);
-  }, [selectedCity]);
 
   const getAirQualityStatus = (qualidadeAr) => {
     if (qualidadeAr?.mode === 'qualitative') {
@@ -119,26 +107,21 @@ const Environmental = () => {
     if (uv <= 2) return { level: 'Baixo', color: 'text-green-600' };
     if (uv <= 5) return { level: 'Moderado', color: 'text-yellow-600' };
     if (uv <= 7) return { level: 'Alto', color: 'text-orange-600' };
-    return { level: 'Muito Alto', color: 'text-red-600' };
+    if (uv <= 10) return { level: 'Muito alto', color: 'text-red-600' };
+    return { level: 'Extremo', color: 'text-purple-600' };
   };
 
-  const airQuality = getAirQualityStatus(environmentalData.qualidadeAr);
-  const uvAvailable = environmentalData.uv != null && !Number.isNaN(Number(environmentalData.uv));
+  const airQuality = getAirQualityStatus(environmentalData?.qualidadeAr);
+  const uvAvailable = environmentalData?.uv != null && !Number.isNaN(Number(environmentalData.uv));
   const uvLevel = uvAvailable ? getUVLevel(environmentalData.uv) : null;
-  const isQualitativeAir = environmentalData.qualidadeAr?.mode === 'qualitative';
-  const sourceLabel = SOURCE_LABELS[dataSource] || SOURCE_LABELS['open-meteo'];
 
-  const temperatureData = {
-    labels: temperatureHours.length ? temperatureHours.map((item) => item.label) : ['Agora'],
-    datasets: [{
-      label: 'Temperatura (°C)',
-      data: temperatureHours.length ? temperatureHours.map((item) => item.temp) : [environmentalData.temperatura],
-      borderColor: 'rgb(239, 68, 68)',
-      backgroundColor: 'rgba(239, 68, 68, 0.1)',
-      tension: 0.4,
-      fill: true
-    }]
-  };
+  if (!environmentalData) {
+    if (loading) return <LoadingScreen message="Carregando dados ambientais…" />;
+    return <div className="app-loading" role="alert">
+      <p>{dataError || 'Não foi possível carregar os dados ambientais.'}</p>
+      <button className="px-5 py-3 rounded-xl bg-eco-600 text-white font-semibold" onClick={() => loadWeather(selectedCity, selectedBairro)}>Tentar novamente</button>
+    </div>;
+  }
 
   return (
     <div className="min-h-screen bg-surface-50 py-8 md:py-12">
@@ -160,11 +143,7 @@ const Environmental = () => {
             </div>
             <p className="text-stone-500 ml-13 flex items-center gap-2">
               <Zap size={16} className="text-blue-500" />
-              <span>
-                {dataSource === 'open-meteo' && 'Dados meteorologicos reais via Open-Meteo'}
-                {dataSource === 'openweathermap' && 'Dados meteorologicos via OpenWeatherMap (alternativa)'}
-                {dataSource === 'simulated' && 'Dados simulados — contingencia sem servicos externos'}
-              </span>
+              <span>Monitoramento ambiental em tempo real</span>
             </p>
             {dataError && (
               <p className="mt-2 text-sm text-amber-700 bg-amber-50 border border-amber-100 rounded-xl px-3 py-2 inline-block">
@@ -180,365 +159,112 @@ const Environmental = () => {
                 {lastUpdated ? `Atualizado ${lastUpdated.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}` : 'Carregando dados'}
               </span>
             </div>
-            <div className="bg-white px-5 py-2.5 rounded-2xl shadow-sm border border-stone-100 flex items-center gap-3">
-              <div className={`w-2 h-2 rounded-full animate-pulse ${dataSource === 'simulated' ? 'bg-amber-500' : 'bg-green-500'}`} />
-              <span className="text-sm font-medium text-stone-600">
-                {loading ? 'Atualizando API' : (dataSource === 'open-meteo' ? 'Open-Meteo ativo' : dataSource === 'openweathermap' ? 'OpenWeatherMap ativo' : 'Modo simulado')}
-              </span>
-            </div>
           </div>
         </motion.div>
 
         {/* Seletor de Localização */}
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
-          className="bg-white p-4 rounded-3xl shadow-soft border border-stone-100 mb-8 flex flex-wrap gap-4 items-center"
+          className="bg-white p-4 sm:p-5 rounded-3xl shadow-soft border border-stone-100 mb-8"
         >
-          <button
-            onClick={() => setShowStateModal(true)}
-            className="group flex items-center gap-3 px-4 py-2 rounded-2xl hover:bg-blue-50 transition-colors"
-          >
-            <div className="w-10 h-10 rounded-xl bg-blue-100 flex items-center justify-center text-blue-600 group-hover:scale-110 transition-transform">
-              <MapPin className="w-5 h-5" />
-            </div>
-            <div className="text-left">
-              <div className="text-xs font-semibold text-stone-400 uppercase tracking-wider">Estado</div>
-              <div className="font-bold text-stone-700">{estadoAtual.nome}</div>
-            </div>
-          </button>
-
-          <div className="h-8 w-px bg-stone-100 hidden sm:block" />
-
-          <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div className="relative">
-              <select
-                value={selectedCity}
-                onChange={(e) => setSelectedCity(e.target.value)}
-                className="w-full appearance-none bg-stone-50 border border-stone-200 text-stone-700 font-semibold px-4 py-3 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all cursor-pointer"
-              >
-                {estadoAtual.cidades.map(city => (
-                  <option key={city} value={city}>{city}</option>
-                ))}
-              </select>
-              <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-stone-400">
-                <i className="bi bi-chevron-down"></i>
-              </div>
-            </div>
-
-            <div className="relative">
-              <select
-                value={selectedBairro}
-                onChange={(e) => setSelectedBairro(e.target.value)}
-                className="w-full appearance-none bg-stone-50 border border-stone-200 text-stone-700 font-semibold px-4 py-3 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all cursor-pointer"
-              >
-                {(bairrosPorCidade[selectedCity] || ['Centro']).map(bairro => (
-                  <option key={bairro} value={bairro}>{bairro}</option>
-                ))}
-              </select>
-              <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-stone-400">
-                <i className="bi bi-chevron-down"></i>
-              </div>
-            </div>
-          </div>
-        </motion.div>
-
-        {/* Card Principal - Temperatura */}
-        <motion.div
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
-            className="bg-white p-6 sm:p-8 rounded-3xl shadow-soft border border-stone-100 mb-8 relative overflow-hidden"
-        >
-          <div className="absolute top-3 right-3 z-20">
-            <span
-              title={environmentalData.qualidadeAr?.note || sourceLabel}
-              className={`inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-semibold border ${
-                dataSource === 'simulated'
-                  ? 'bg-amber-50 text-amber-700 border-amber-200'
-                  : dataSource === 'openweathermap'
-                    ? 'bg-indigo-50 text-indigo-700 border-indigo-200'
-                    : 'bg-emerald-50 text-emerald-700 border-emerald-200'
-              }`}
+          <div className="flex flex-col xl:flex-row xl:items-end gap-4">
+            <button
+              type="button"
+              onClick={() => setShowStateModal(true)}
+              className="group flex items-center gap-3 px-3.5 py-3 rounded-2xl border border-stone-100 bg-gradient-to-br from-blue-50 to-indigo-50 hover:border-blue-200 transition-all shrink-0"
             >
-              {sourceLabel}
-            </span>
-          </div>
-
-          {/* Brilho decorativo no fundo claro */}
-          <div className="absolute top-0 right-0 w-96 h-96 bg-gradient-to-bl from-blue-100/60 to-transparent rounded-full blur-3xl pointer-events-none translate-x-1/4 -translate-y-1/4" />
-          <div className="absolute bottom-0 left-0 w-64 h-64 bg-gradient-to-tr from-cyan-100/40 to-transparent rounded-full blur-2xl pointer-events-none -translate-x-1/4 translate-y-1/4" />
-
-          <div className="relative z-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
-            <div>
-              <div className="flex items-center gap-2 mb-4 text-blue-600">
+              <div className="w-11 h-11 rounded-xl bg-white shadow-sm flex items-center justify-center text-blue-600 group-hover:scale-105 transition-transform">
                 <MapPin className="w-5 h-5" />
-                <span className="text-sm font-bold tracking-wide uppercase">{selectedBairro}, {selectedCity} - {selectedState}</span>
               </div>
-              <div className="flex items-end gap-4 mb-2">
-                <div className="text-7xl md:text-8xl font-black text-stone-800 tracking-tighter leading-none">{environmentalData.temperatura}°</div>
-                <div className="pb-2">
-                  <div className="text-2xl font-bold text-stone-600 capitalize">{environmentalData.descricao}</div>
-                  <div className="text-sm text-stone-400 mt-1 font-medium">Sensação térmica: <span className="text-stone-700">{environmentalData.sensacao}°C</span></div>
+              <div className="text-left pr-1">
+                <div className="text-[11px] font-semibold text-blue-500/80 uppercase tracking-wider">Estado</div>
+                <div className="font-bold text-stone-800 leading-tight">{estadoAtual.nome}</div>
+              </div>
+              <ChevronDown className="w-4 h-4 text-stone-400 ml-auto" />
+            </button>
+
+            <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <label className="block">
+                <span className="flex items-center gap-1.5 text-[11px] font-semibold text-stone-400 uppercase tracking-wider mb-1.5 px-1">
+                  <Building2 className="w-3.5 h-3.5" />
+                  Cidade
+                </span>
+                <div className="relative group">
+                  <select
+                    value={selectedCity}
+                    onChange={(e) => {
+                      setSelectedCity(e.target.value);
+                      setSelectedBairro((bairrosPorCidade[e.target.value] || ['Centro'])[0]);
+                    }}
+                    disabled={loading}
+                    className="w-full appearance-none bg-stone-50/80 border border-stone-200 text-stone-800 font-semibold pl-4 pr-11 py-3.5 rounded-2xl focus:outline-none focus:ring-4 focus:ring-eco-500/15 focus:border-eco-500 hover:border-stone-300 transition-all cursor-pointer disabled:opacity-60 shadow-sm"
+                  >
+                    {estadoAtual.cidades.map((city) => (
+                      <option key={city} value={city}>{city}</option>
+                    ))}
+                  </select>
+                  <div className="absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none w-7 h-7 rounded-lg bg-white border border-stone-100 flex items-center justify-center text-stone-500 group-focus-within:text-eco-600">
+                    <ChevronDown className="w-4 h-4" />
+                  </div>
                 </div>
-              </div>
+              </label>
+
+              <label className="block">
+                <span className="flex items-center gap-1.5 text-[11px] font-semibold text-stone-400 uppercase tracking-wider mb-1.5 px-1">
+                  <MapPin className="w-3.5 h-3.5" />
+                  Bairro
+                </span>
+                <div className="relative group">
+                  <select
+                    value={selectedBairro}
+                    onChange={(e) => setSelectedBairro(e.target.value)}
+                    disabled={loading}
+                    className="w-full appearance-none bg-stone-50/80 border border-stone-200 text-stone-800 font-semibold pl-4 pr-11 py-3.5 rounded-2xl focus:outline-none focus:ring-4 focus:ring-eco-500/15 focus:border-eco-500 hover:border-stone-300 transition-all cursor-pointer disabled:opacity-60 shadow-sm"
+                  >
+                    {(bairrosPorCidade[selectedCity] || ['Centro']).map((bairro) => (
+                      <option key={bairro} value={bairro}>{bairro}</option>
+                    ))}
+                  </select>
+                  <div className="absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none w-7 h-7 rounded-lg bg-white border border-stone-100 flex items-center justify-center text-stone-500 group-focus-within:text-eco-600">
+                    <ChevronDown className="w-4 h-4" />
+                  </div>
+                </div>
+              </label>
             </div>
-            
-            <div className="bg-stone-50 border border-stone-100 p-6 rounded-2xl flex flex-col sm:flex-row items-center gap-6 shadow-sm w-full md:w-auto">
-              <Sun className="w-16 h-16 text-yellow-500 shrink-0" />
-              <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-6 w-full sm:w-auto">
-                <div className="flex items-center gap-3 w-full sm:w-auto justify-center sm:justify-start">
-                  <div className="w-8 h-8 rounded-lg bg-white shadow-sm flex items-center justify-center">
-                    <Sunrise className="w-4 h-4 text-orange-500" />
-                  </div>
-                  <div>
-                    <div className="text-xs text-stone-500 font-medium">Nascer do Sol</div>
-                    <div className="text-sm font-bold text-stone-800">{environmentalData.nascerSol}</div>
-                  </div>
-                </div>
-                <div className="hidden sm:block w-px h-8 bg-stone-200" />
-                <div className="flex items-center gap-3 w-full sm:w-auto justify-center sm:justify-start">
-                  <div className="w-8 h-8 rounded-lg bg-white shadow-sm flex items-center justify-center">
-                    <Sunset className="w-4 h-4 text-orange-600" />
-                  </div>
-                  <div>
-                    <div className="text-xs text-stone-500 font-medium">Pôr do Sol</div>
-                    <div className="text-sm font-bold text-stone-800">{environmentalData.porSol}</div>
-                  </div>
-                </div>
-              </div>
-            </div>
+
+            <button
+              type="button"
+              onClick={() => loadWeather(selectedCity, selectedBairro)}
+              disabled={loading}
+              className="inline-flex items-center justify-center gap-2.5 px-5 py-3.5 rounded-2xl font-bold text-white bg-gradient-to-r from-eco-600 to-teal-600 hover:from-eco-700 hover:to-teal-700 shadow-sm shadow-eco-600/20 disabled:opacity-60 disabled:cursor-not-allowed transition-all active:scale-[0.98] xl:min-w-[12.5rem]"
+            >
+              <RefreshCw className={`w-4.5 h-4.5 w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+              {loading ? 'Atualizando...' : 'Consultar novamente'}
+            </button>
           </div>
         </motion.div>
 
-        {/* Cards de Métricas */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-8">
-          {[
-            { icon: Droplets, label: 'Umidade Relativa', value: `${environmentalData.umidade}%`, color: 'text-blue-600', bg: 'bg-blue-50', border: 'hover:border-blue-200' },
-            { icon: Wind, label: 'Velocidade do Vento', value: `${environmentalData.vento} km/h`, color: 'text-cyan-600', bg: 'bg-cyan-50', border: 'hover:border-cyan-200' },
-            { icon: Eye, label: 'Visibilidade', value: `${environmentalData.visibilidade} km`, color: 'text-purple-600', bg: 'bg-purple-50', border: 'hover:border-purple-200' },
-            { icon: Gauge, label: 'Pressão Atmosférica', value: `${environmentalData.pressao} hPa`, color: 'text-orange-600', bg: 'bg-orange-50', border: 'hover:border-orange-200' }
-          ].map((metric, index) => (
-            <motion.div
-              key={index}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: index * 0.1 }}
-              className={`bg-white p-6 rounded-3xl shadow-soft border border-stone-100 transition-all duration-300 ${metric.border} hover:shadow-lg group`}
-            >
-              <div className="flex items-start justify-between mb-4">
-                <div className={`w-12 h-12 rounded-2xl ${metric.bg} flex items-center justify-center transition-transform group-hover:scale-110 duration-300`}>
-                  <metric.icon className={`w-6 h-6 ${metric.color}`} />
-                </div>
-              </div>
-              <h3 className="text-sm font-semibold text-stone-500 mb-1">{metric.label}</h3>
-              <div className="text-2xl font-black text-stone-800 tracking-tight">{metric.value}</div>
-            </motion.div>
-          ))}
-        </div>
-
-        {/* Qualidade do Ar e Índice UV */}
-        <div className="grid lg:grid-cols-2 gap-6 mb-8">
-          <motion.div
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            className="group bg-white p-6 md:p-8 rounded-3xl shadow-soft border border-stone-100 relative overflow-hidden transition-all duration-300 hover:shadow-xl hover:border-blue-200"
-          >
-            <div className="absolute inset-0 bg-gradient-to-br from-blue-50/50 to-cyan-50/50 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-            <div className="relative z-10">
-              <h3 className="text-lg font-bold text-stone-800 mb-6 flex items-center gap-2">
-                <div className="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center">
-                  <Cloud className="w-5 h-5 text-blue-600" />
-                </div>
-                Qualidade do Ar
-              </h3>
-              <div className="flex items-center justify-between mb-8">
-                <div>
-                  {isQualitativeAir ? (
-                    <>
-                      <div className={`text-4xl md:text-5xl font-black tracking-tight mb-2 ${airQuality.color}`}>
-                        {environmentalData.qualidadeAr.label || '—'}
-                      </div>
-                      <p className="text-xs text-stone-500 max-w-xs leading-relaxed">
-                        {environmentalData.qualidadeAr.note || 'Escala qualitativa (fonte alternativa).'}
-                      </p>
-                    </>
-                  ) : (
-                    <>
-                      <div className="text-6xl font-black text-stone-800 mb-1 tracking-tighter">{environmentalData.qualidadeAr.aqi}</div>
-                      <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-lg bg-white/80 backdrop-blur border border-stone-100 text-sm font-bold ${airQuality.color} shadow-sm`}>
-                        <div className={`w-2 h-2 rounded-full ${airQuality.bgColor.replace('bg-', 'bg-').replace('100', '500')}`} />
-                        {airQuality.status}
-                      </div>
-                    </>
-                  )}
-                </div>
-                <div className="w-20 h-20 bg-stone-50 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform duration-500 shadow-inner">
-                  <AppIcon name={airQuality.iconName} size={48} className={airQuality.color} />
-                </div>
-              </div>
-              {!isQualitativeAir && (
-                <>
-                  <div className="w-full bg-stone-100 h-2.5 rounded-full overflow-hidden">
-                    <motion.div 
-                      initial={{ width: 0 }}
-                      animate={{ width: `${Math.min(environmentalData.qualidadeAr.aqi || 0, 100)}%` }}
-                      transition={{ duration: 1, delay: 0.5 }}
-                      className={`h-full bg-gradient-to-r ${airQuality.bgColor.replace('100', '500')} ${airQuality.bgColor.replace('100', '400')}`}
-                    />
-                  </div>
-                  <div className="flex justify-between text-xs text-stone-400 mt-2 font-medium">
-                    <span>0 (Bom)</span>
-                    <span>100 (Ruim)</span>
-                  </div>
-                </>
-              )}
-              {isQualitativeAir && (
-                <div className={`mt-2 inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-bold ${airQuality.color} ${airQuality.bgColor}`}>
-                  Escala qualitativa — nao comparavel ao EAQI europeu
-                </div>
-              )}
-            </div>
-          </motion.div>
-
-          <motion.div
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            className="group bg-white p-6 md:p-8 rounded-3xl shadow-soft border border-stone-100 relative overflow-hidden transition-all duration-300 hover:shadow-xl hover:border-orange-200"
-          >
-            <div className="absolute inset-0 bg-gradient-to-br from-orange-50/50 to-red-50/50 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-            <div className="relative z-10">
-              <h3 className="text-lg font-bold text-stone-800 mb-6 flex items-center gap-2">
-                <div className="w-8 h-8 rounded-lg bg-orange-50 flex items-center justify-center">
-                  <Zap className="w-5 h-5 text-orange-600" />
-                </div>
-                Índice UV
-              </h3>
-              <div className="flex items-center justify-between mb-8">
-                <div>
-                  {uvAvailable ? (
-                    <>
-                      <div className="text-6xl font-black text-stone-800 mb-1 tracking-tighter">{environmentalData.uv}</div>
-                      <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-lg bg-white/80 backdrop-blur border border-stone-100 text-sm font-bold ${uvLevel.color} shadow-sm`}>
-                        {uvLevel.level}
-                      </div>
-                    </>
-                  ) : (
-                    <>
-                      <div className="text-5xl font-black text-stone-400 mb-1 tracking-tighter">—</div>
-                      <div className="inline-flex items-center gap-2 px-3 py-1 rounded-lg bg-stone-50 border border-stone-100 text-sm font-bold text-stone-500 shadow-sm">
-                        Indisponivel nesta fonte
-                      </div>
-                    </>
-                  )}
-                </div>
-                <div className="w-20 h-20 bg-stone-50 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform duration-500 shadow-inner">
-                  <Sun className={`w-12 h-12 ${uvAvailable ? 'text-orange-500' : 'text-stone-300'}`} />
-                </div>
-              </div>
-              <div className="mt-4 p-4 bg-stone-50 rounded-2xl border border-stone-100">
-                {!uvAvailable ? (
-                  <div className="flex gap-3 items-center text-stone-600 font-medium text-sm">
-                    <div className="w-8 h-8 rounded-lg bg-stone-200 flex items-center justify-center shrink-0">
-                      <AlertTriangle size={18} className="text-stone-500" />
-                    </div>
-                    <span>Esta fonte nao fornece indice UV neste plano de API. Nao exibimos valor estimado.</span>
-                  </div>
-                ) : environmentalData.uv > 7 ? (
-                  <div className="flex gap-3 items-center text-orange-700 font-medium text-sm">
-                    <div className="w-8 h-8 rounded-lg bg-orange-100 flex items-center justify-center shrink-0">
-                      <AlertTriangle size={18} className="text-orange-500" />
-                    </div>
-                    <span>Índice extremo! Evite exposição direta e use protetor solar forte.</span>
-                  </div>
-                ) : (
-                  <div className="flex gap-3 items-center text-green-700 font-medium text-sm">
-                    <div className="w-8 h-8 rounded-lg bg-green-100 flex items-center justify-center shrink-0">
-                      <Check size={18} className="text-green-500" />
-                    </div>
-                    <span>Índice seguro no momento. Níveis de proteção básicos recomendados.</span>
-                  </div>
-                )}
-              </div>
-            </div>
-          </motion.div>
-        </div>
-
-        <div className="grid lg:grid-cols-3 gap-6 lg:gap-8 mb-8">
-          {/* Gráfico de Temperatura */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="bg-white p-6 md:p-8 rounded-3xl shadow-soft border border-stone-100 lg:col-span-2"
-          >
-            <div className="flex items-center justify-between mb-6">
-              <h3 className="text-lg font-bold text-stone-800 flex items-center gap-2">
-                <div className="w-8 h-8 rounded-lg bg-red-50 flex items-center justify-center">
-                  <ThermometerSun className="w-5 h-5 text-red-600" />
-                </div>
-                Temperatura Diária
-              </h3>
-              <div className="text-xs font-medium bg-stone-100 text-stone-500 px-3 py-1.5 rounded-lg border border-stone-200">Últimas 24h</div>
-            </div>
-            <div className="h-64">
-              <Line 
-                data={temperatureData} 
-                options={{ 
-                  responsive: true,
-                  maintainAspectRatio: false,
-                  plugins: { legend: { display: false } },
-                  scales: {
-                    y: { border: { dash: [4, 4] }, grid: { color: '#f5f5f4' } },
-                    x: { grid: { display: false } }
-                  }
-                }} 
-              />
-            </div>
-          </motion.div>
-
-          {/* Previsão 7 Dias */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="bg-white p-6 md:p-8 rounded-3xl shadow-soft border border-stone-100 flex flex-col"
-          >
-            <h3 className="text-lg font-bold text-stone-800 mb-6 flex items-center gap-2">
-              <div className="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center">
-                <Calendar className="w-5 h-5 text-blue-600" />
-              </div>
-              Previsão (7 dias)
-            </h3>
-            <div className="flex-1 space-y-3">
-              {forecast.length === 0 && (
-                <div className="flex flex-col items-center justify-center text-center py-10 px-4">
-                  <Calendar className="w-8 h-8 text-stone-300 mb-3" />
-                  <p className="font-bold text-stone-700 mb-1">Previsao indisponivel</p>
-                  <p className="text-sm text-stone-500">Esta fonte nao retornou previsao detalhada para os proximos dias.</p>
-                </div>
-              )}
-              {forecast.map((day, index) => (
-                <motion.div
-                  key={index}
-                  initial={{ opacity: 0, x: 20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: index * 0.05 }}
-                  className="flex items-center justify-between p-3 rounded-2xl hover:bg-stone-50 transition-colors group cursor-pointer border border-transparent hover:border-stone-100"
-                >
-                  <div className="w-12 font-bold text-stone-600">{day.dia}</div>
-                  <div className="w-10 h-10 rounded-xl bg-stone-50 flex items-center justify-center group-hover:scale-110 transition-transform">
-                    {day.condicao === 'sun' && <Sun className="w-5 h-5 text-yellow-500" />}
-                    {day.condicao === 'cloud' && <Cloud className="w-5 h-5 text-stone-400" />}
-                    {day.condicao === 'cloud-rain' && <CloudRain className="w-5 h-5 text-blue-500" />}
-                  </div>
-                  <div className="flex items-center gap-3 w-24 justify-end font-medium">
-                    <span className="text-stone-800">{day.tempMax}°</span>
-                    <span className="text-stone-400">{day.tempMin}°</span>
-                  </div>
-                </motion.div>
-              ))}
-            </div>
-          </motion.div>
-        </div>
+        <WeatherBanner
+          data={environmentalData}
+          city={displayLocation.city}
+          district={displayLocation.district}
+          state={displayLocation.state}
+          loading={loading}
+        />
+        <WeatherMetrics
+          data={environmentalData}
+          airQuality={airQuality}
+          uvLevel={uvLevel}
+          loading={loading}
+        />
+        <WeatherForecast
+          hours={temperatureHours}
+          forecast={forecast}
+          temperature={environmentalData.temperatura}
+          loading={loading}
+        />
       </div>
 
       {/* Modal de Seleção de Estado */}
@@ -571,6 +297,7 @@ const Environmental = () => {
                     onClick={() => {
                       setSelectedState(estado.sigla);
                       setSelectedCity(estado.cidades[0]);
+                      setSelectedBairro((bairrosPorCidade[estado.cidades[0]] || ['Centro'])[0]);
                       setShowStateModal(false);
                     }}
                     className={`p-4 rounded-xl border-2 transition-all text-left ${

@@ -9,6 +9,7 @@ create table if not exists profiles (
   eco_points int not null default 0 check (eco_points >= 0),
   level text not null default 'Iniciante',
   badges jsonb not null default '[]'::jsonb,
+  missions jsonb not null default '[]'::jsonb,
   streak jsonb not null default '{"current":0,"longest":0}'::jsonb,
   is_admin boolean not null default false,
   created_at timestamptz not null default now(),
@@ -21,8 +22,18 @@ create table if not exists waste_classifications (
   category text not null,
   confidence float not null,
   points int not null,
+  predicted_label text,
+  final_label text,
+  source text not null default 'legacy',
+  user_corrected boolean not null default false,
   created_at timestamptz not null default now()
 );
+
+-- Migração incremental (bancos já existentes)
+alter table waste_classifications add column if not exists predicted_label text;
+alter table waste_classifications add column if not exists final_label text;
+alter table waste_classifications add column if not exists source text not null default 'legacy';
+alter table waste_classifications add column if not exists user_corrected boolean not null default false;
 
 create index if not exists waste_classifications_user_id_idx on waste_classifications(user_id);
 create index if not exists waste_classifications_created_at_idx on waste_classifications(created_at desc);

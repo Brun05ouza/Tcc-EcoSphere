@@ -553,6 +553,13 @@ export default function EcoCatcher() {
               detail: { badges: newBadges },
             }));
           }
+
+          const newMissions = response.data?.newMissions;
+          if (Array.isArray(newMissions) && newMissions.length > 0) {
+            window.dispatchEvent(new CustomEvent('missionsCompleted', {
+              detail: { missions: newMissions },
+            }));
+          }
         } catch (err) {
           console.error('EcoCatcher: falha ao persistir pontos', err);
         } finally {

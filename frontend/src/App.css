@@ -129,6 +129,8 @@ html.lenis body {
   justify-content: center;
   position: relative;
   overflow: hidden;
+  background-color: #0b1f14;
+  background-image: url('./assets/images/fundo-login-tcc.webp');
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
@@ -153,6 +155,7 @@ html.lenis body {
   }
 
   .auth-page {
+    background-image: url('./assets/images/fundo-login-tcc-sm.webp');
     background-position: 35% center;
   }
 }

@@ -5,6 +5,7 @@ import { wasteAPI } from '../services/api';
 import { BarChart3, Database, Target, Leaf, Award, Sparkles, Clock } from 'lucide-react';
 import { AppIcon } from '../components/ui/AppIcon';
 import LoadingScreen from '../components/ui/LoadingScreen';
+import { getWasteClass } from '../data/wasteKnowledge';
 
 const TYPE_ICON = { Plástico: 'plastic', Papel: 'paper', Vidro: 'glass', Metal: 'metal', Orgânico: 'organico', Eletrônico: 'eletronico' };
 
@@ -14,14 +15,19 @@ const History = () => {
 
   useEffect(() => {
     wasteAPI.getHistorico().then((res) => {
-      const list = (res.data || []).map((c) => ({
-        id: c.id,
-        type: c.category,
-        confidence: c.confidence,
-        points: c.points,
-        date: c.timestamp ? new Date(c.timestamp).toLocaleString('pt-BR') : '-',
-        iconName: TYPE_ICON[c.category] || 'recycle',
-      }));
+      const list = (res.data || []).map((c) => {
+        const objectInfo = c.final_label ? getWasteClass(c.final_label) : null;
+        const objectName = objectInfo?.nome || null;
+        return {
+          id: c.id,
+          type: c.category,
+          objectName,
+          confidence: c.confidence,
+          points: c.points,
+          date: c.timestamp ? new Date(c.timestamp).toLocaleString('pt-BR') : '-',
+          iconName: TYPE_ICON[c.category] || 'recycle',
+        };
+      });
       setClassifications(list);
     }).catch(() => setClassifications([])).finally(() => setLoading(false));
   }, []);
@@ -47,6 +53,8 @@ const History = () => {
       backgroundColor: ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#6366f1']
     }]
   };
+
+  if (loading) return <LoadingScreen message="Carregando histórico…" />;
 
   return (
     <div className="min-h-screen bg-surface-50 py-8 md:py-12">
@@ -183,7 +191,16 @@ const History = () => {
                       <AppIcon name={item.iconName} size={24} className="text-stone-600" />
                     </div>
                     <div>
-                      <div className="font-bold text-stone-800">{item.type}</div>
+                      <div className="font-bold text-stone-800">
+                        {item.objectName ? (
+                          <>
+                            {item.objectName}
+                            <span className="ml-2 text-sm font-semibold text-stone-500">{item.type}</span>
+                          </>
+                        ) : (
+                          item.type
+                        )}
+                      </div>
                       <div className="text-sm text-stone-500 font-medium mt-0.5">{item.date}</div>
                     </div>
                   </div>

@@ -12,6 +12,11 @@ import {
 } from './platformStats.js';
 import { buildBadgesStatus, checkAndAwardBadges } from './badges.js';
 import { buildMissionsStatus, checkAndAwardMissions } from './missions.js';
+import {
+  askOpenRouter,
+  buildChatMessages,
+  isOpenRouterConfigured,
+} from './openrouter.js';
 
 const app = express();
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 2 * 1024 * 1024 } });
@@ -167,7 +172,7 @@ app.get('/gamification/profile', requireAuth, async (req, res) => {
     badges: req.user.badges || [],
     streak: req.user.streak || { current: 0, longest: 0 },
     totalClassifications: classifications.rows[0]?.total ?? 0,
-    completedMissions: req.user.missions?.length ?? 0,
+    completedMissions: Array.isArray(req.user.missions) ? req.user.missions.length : 0,
   });
 });
 
@@ -240,11 +245,45 @@ app.get('/platform/stats', requireAuth, async (_req, res) => {
 });
 
 app.post('/waste/classifications', requireAuth, async (req, res) => {
-  const { category, confidence, points } = req.body || {};
-  const pointValue = Number(points) || 0;
+  const body = req.body || {};
+  const category = String(body.category || 'Plastico').slice(0, 64);
+  const confidenceRaw = Number(body.confidence);
+  const confidence = Number.isFinite(confidenceRaw) ? confidenceRaw : 0;
+  const pointValue = Number(body.points) || 0;
+  const predictedLabel = body.predicted_label == null
+    ? null
+    : String(body.predicted_label).slice(0, 128);
+  const finalLabel = body.final_label == null
+    ? null
+    : String(body.final_label).slice(0, 128);
+  const sourceRaw = body.source == null ? 'legacy' : String(body.source);
+  const source = sourceRaw === 'local' || sourceRaw === 'legacy' ? sourceRaw : null;
+  const userCorrected = Boolean(body.user_corrected);
+
+  if (confidence < 0 || confidence > 1) {
+    return res.status(400).json({ error: 'confidence deve ser um numero entre 0 e 1' });
+  }
+  if (source == null) {
+    return res.status(400).json({ error: "source deve ser 'local' ou 'legacy'" });
+  }
+  if (typeof body.user_corrected !== 'undefined' && typeof body.user_corrected !== 'boolean') {
+    return res.status(400).json({ error: 'user_corrected deve ser boolean' });
+  }
+
   await query(
-    'insert into waste_classifications (user_id, category, confidence, points) values ($1, $2, $3, $4)',
-    [req.user.id, category || 'Plastico', Number(confidence) || 0, pointValue]
+    `insert into waste_classifications
+      (user_id, category, confidence, points, predicted_label, final_label, source, user_corrected)
+     values ($1, $2, $3, $4, $5, $6, $7, $8)`,
+    [
+      req.user.id,
+      category,
+      confidence,
+      pointValue,
+      predictedLabel,
+      finalLabel,
+      source,
+      userCorrected,
+    ]
   );
   const newPoints = (req.user.eco_points || 0) + pointValue;
   await query(
@@ -273,7 +312,7 @@ app.post('/waste/classifications', requireAuth, async (req, res) => {
 
 app.get('/waste/classifications', requireAuth, async (req, res) => {
   const { rows } = await query(
-    `select id, category, confidence, points, created_at
+    `select id, category, confidence, points, predicted_label, final_label, source, user_corrected, created_at
      from waste_classifications
      where user_id = $1
      order by created_at desc
@@ -285,6 +324,10 @@ app.get('/waste/classifications', requireAuth, async (req, res) => {
     category: row.category,
     confidence: row.confidence,
     points: row.points,
+    predicted_label: row.predicted_label,
+    final_label: row.final_label,
+    source: row.source,
+    user_corrected: row.user_corrected,
     timestamp: row.created_at,
   })));
 });
@@ -329,6 +372,35 @@ app.delete('/admin/users/:id', requireAuth, requireAdmin, async (req, res) => {
 app.get('/admin/stats', requireAuth, requireAdmin, async (_req, res) => {
   const counts = await fetchPlatformCounts(query);
   res.json(counts);
+});
+
+app.get('/chatbot/status', requireAuth, (_req, res) => {
+  res.json({
+    configured: isOpenRouterConfigured(),
+    provider: 'openrouter',
+    model: process.env.OPENROUTER_MODEL || 'openai/gpt-4o-mini',
+  });
+});
+
+app.post('/chatbot/ask', requireAuth, async (req, res) => {
+  if (!isOpenRouterConfigured()) {
+    return res.status(503).json({ message: 'Chat IA nao configurado', reply: null });
+  }
+
+  const message = String(req.body?.message || '').trim();
+  if (!message) {
+    return res.status(400).json({ message: 'Mensagem obrigatoria', reply: null });
+  }
+  if (message.length > 2000) {
+    return res.status(400).json({ message: 'Mensagem muito longa', reply: null });
+  }
+
+  const history = Array.isArray(req.body?.history) ? req.body.history : [];
+  const reply = await askOpenRouter(buildChatMessages(message, history));
+  if (!reply) {
+    return res.status(502).json({ message: 'Falha ao obter resposta da IA', reply: null });
+  }
+  return res.json({ reply, provider: 'openrouter' });
 });
 
 app.use((err, _req, res, _next) => {

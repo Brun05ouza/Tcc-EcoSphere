@@ -5,14 +5,18 @@
   "packageName": "@teachablemachine/image",
   "timeStamp": "2024-01-15T10:00:00.000Z",
   "userMetadata": {},
-  "modelName": "tm-my-image-model",
+  "modelName": "tm-ecosphere-waste",
   "labels": [
-    "Plástico",
-    "Metal",
-    "Vidro",
-    "Papel",
-    "Orgânico",
-    "Eletrônico"
+    "garrafa_pet",
+    "embalagem_plastica",
+    "lata_aluminio",
+    "garrafa_vidro",
+    "papel",
+    "papelao",
+    "organico",
+    "pilha_bateria",
+    "eletronico",
+    "sem_objeto"
   ],
   "imageSize": 224
 }

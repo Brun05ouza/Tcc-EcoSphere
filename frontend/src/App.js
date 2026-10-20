@@ -8,6 +8,7 @@ import ProtectedRoute from './components/ProtectedRoute';
 import AdminProtectedRoute from './components/AdminProtectedRoute';
 import AdminLoginPanel from './components/AdminLoginPanel';
 import SmoothScrollProvider from './components/SmoothScrollProvider';
+import RequestLoading from './components/ui/RequestLoading';
 import Login from './pages/Login';
 import AdminDashboard from './pages/AdminDashboard';
 import Home from './pages/Home';
@@ -31,6 +32,7 @@ function App() {
       <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
         <SmoothScrollProvider>
           <div className="App">
+            <RequestLoading />
             <AdminLoginPanel />
             <Routes>
               <Route path="/login" element={<Login />} />

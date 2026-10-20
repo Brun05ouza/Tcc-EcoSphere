@@ -1,0 +1,9 @@
+.request-loading { position: fixed; z-index: 10000; bottom: 24px; left: 50%; transform: translateX(-50%); display: flex; align-items: center; gap: 10px; padding: 12px 18px; border: 1px solid #dce8e6; border-radius: 30px; background: #fff; box-shadow: 0 5px 22px #254a6020; color: #315c60; font-size: 14px; font-weight: 500; pointer-events: none; white-space: nowrap; }
+.request-loading svg, .app-loading__ring { animation: app-loading-spin 1s linear infinite; }
+.app-loading { min-height: 65vh; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 18px; padding: 32px 20px; background: #fafaf9; color: #647780; }
+.app-loading p { margin: 0; font-size: 16px; font-weight: 500; text-align: center; }
+.app-loading__symbol { display: inline-flex; position: relative; align-items: center; justify-content: center; flex-shrink: 0; color: #3b8b7c; }
+.app-loading__ring { position: absolute; inset: 0; border: 2px solid #e0ece8; border-top-color: #439484; border-radius: 50%; }
+@keyframes app-loading-spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .request-loading svg, .app-loading__ring { animation: none; } }
+@media (max-width: 600px) { .request-loading { bottom: 18px; padding: 10px 16px; font-size: 13px; } }

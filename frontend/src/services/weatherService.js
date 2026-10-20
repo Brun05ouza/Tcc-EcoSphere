@@ -1,4 +1,6 @@
-const REQUEST_TIMEOUT_MS = 5000;
+import { beginRequest } from './loadingActivity';
+
+const REQUEST_TIMEOUT_MS = 15000;
 
 const weatherCodeDescription = {
   0: 'Ceu limpo',
@@ -69,16 +71,66 @@ function getOpenWeatherKey() {
   return key;
 }
 
-async function fetchFromOpenMeteo(city) {
-  const locationQuery = encodeURIComponent(city);
-  const geocodeResponse = await fetchWithTimeout(
-    `${OPEN_METEO.geocodeBase}?name=${locationQuery}&count=1&language=pt&format=json&country_code=BR`
-  );
-  if (!geocodeResponse.ok) throw new Error('Nao foi possivel localizar a cidade.');
+function eaqiToLabel(aqi) {
+  if (aqi == null || Number.isNaN(Number(aqi))) return null;
+  const value = Number(aqi);
+  if (value <= 20) return 'Boa';
+  if (value <= 40) return 'Razoavel';
+  if (value <= 60) return 'Moderada';
+  if (value <= 80) return 'Ruim';
+  return 'Muito Ruim';
+}
 
-  const geocode = await geocodeResponse.json();
-  const place = geocode.results?.[0];
-  if (!place) throw new Error('Cidade nao encontrada na base meteorologica.');
+async function geocodeOpenMeteo(city, bairro) {
+  const queries = [];
+  const cityName = String(city || '').trim();
+  const neighborhood = String(bairro || '').trim();
+  if (neighborhood && cityName) queries.push(`${neighborhood}, ${cityName}`);
+  if (cityName) queries.push(cityName);
+  if (neighborhood && neighborhood.toLowerCase() !== cityName.toLowerCase()) {
+    queries.push(neighborhood);
+  }
+
+  let lastError = new Error('Cidade nao encontrada na base meteorologica.');
+
+  for (const query of queries) {
+    try {
+      const geocodeResponse = await fetchWithTimeout(
+        `${OPEN_METEO.geocodeBase}?name=${encodeURIComponent(query)}&count=5&language=pt&format=json&country_code=BR`
+      );
+      if (!geocodeResponse.ok) {
+        lastError = new Error('Nao foi possivel localizar a cidade.');
+        continue;
+      }
+
+      const geocode = await geocodeResponse.json();
+      const results = Array.isArray(geocode.results) ? geocode.results : [];
+      if (!results.length) continue;
+
+      const normalizedCity = cityName.toLowerCase();
+      const normalizedNeighborhood = neighborhood.toLowerCase();
+      const place =
+        (normalizedNeighborhood
+          && results.find((r) => String(r.name || '').toLowerCase() === normalizedNeighborhood))
+        || (normalizedNeighborhood
+          && results.find((r) => String(r.name || '').toLowerCase().includes(normalizedNeighborhood)))
+        || results.find((r) => String(r.name || '').toLowerCase() === normalizedCity)
+        || results.find((r) => String(r.name || '').toLowerCase().includes(normalizedCity))
+        || results[0];
+
+      if (place?.latitude != null && place?.longitude != null) {
+        return place;
+      }
+    } catch (err) {
+      lastError = err;
+    }
+  }
+
+  throw lastError;
+}
+
+async function fetchFromOpenMeteo(city, bairro) {
+  const place = await geocodeOpenMeteo(city, bairro);
 
   const weatherParams = new URLSearchParams({
     latitude: String(place.latitude),
@@ -96,33 +148,40 @@ async function fetchFromOpenMeteo(city) {
     current: 'european_aqi,pm10,pm2_5,uv_index',
   });
 
-  const [weatherResponse, airResponse] = await Promise.all([
-    fetchWithTimeout(`${OPEN_METEO.forecastBase}?${weatherParams.toString()}`),
-    fetchWithTimeout(`${OPEN_METEO.airBase}?${airParams.toString()}`),
-  ]);
+  const weatherResponse = await fetchWithTimeout(`${OPEN_METEO.forecastBase}?${weatherParams.toString()}`);
   if (!weatherResponse.ok) throw new Error('Erro ao buscar dados climaticos.');
 
+  let air = null;
+  try {
+    const airResponse = await fetchWithTimeout(`${OPEN_METEO.airBase}?${airParams.toString()}`);
+    if (airResponse.ok) air = await airResponse.json();
+  } catch (airErr) {
+    console.warn('Open-Meteo air-quality indisponivel:', airErr?.message || airErr);
+  }
+
   const weather = await weatherResponse.json();
-  const air = airResponse.ok ? await airResponse.json() : null;
   const current = weather.current || {};
   const daily = weather.daily || {};
   const airCurrent = air?.current || {};
+  const eaqi = airCurrent.european_aqi != null ? Math.round(airCurrent.european_aqi) : null;
 
   const environmentalData = {
     temperatura: Math.round(current.temperature_2m ?? 0),
     umidade: Math.round(current.relative_humidity_2m ?? 0),
     qualidadeAr: {
-      mode: 'eaqi',
-      aqi: Math.round(airCurrent.european_aqi ?? 0),
-      label: null,
-      note: null,
+      mode: eaqi != null ? 'eaqi' : 'qualitative',
+      aqi: eaqi,
+      label: eaqiToLabel(eaqi),
+      note: eaqi != null ? 'Indice europeu de qualidade do ar (Open-Meteo)' : 'Qualidade do ar indisponivel nesta consulta',
     },
     visibilidade: Number(((current.visibility ?? 0) / 1000).toFixed(1)),
     vento: Math.round(current.wind_speed_10m ?? 0),
     pressao: Math.round(current.pressure_msl ?? 0),
     sensacao: Math.round(current.apparent_temperature ?? current.temperature_2m ?? 0),
     descricao: weatherCodeDescription[current.weather_code] || 'Condicao indisponivel',
-    uv: Math.round(airCurrent.uv_index ?? daily.uv_index_max?.[0] ?? 0),
+    uv: airCurrent.uv_index != null
+      ? Math.round(airCurrent.uv_index)
+      : (daily.uv_index_max?.[0] != null ? Math.round(daily.uv_index_max[0]) : null),
     nascerSol: daily.sunrise?.[0]
       ? new Date(daily.sunrise[0]).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
       : '--:--',
@@ -149,11 +208,15 @@ async function fetchFromOpenMeteo(city) {
       temp: Math.round(weather.hourly.temperature_2m[start + index] ?? 0),
     }));
 
+  const placeLabel = [place.name, place.admin1].filter(Boolean).join(', ');
+
   return {
     environmentalData,
     forecast,
     temperatureHours,
     source: 'open-meteo',
+    placeLabel,
+    resolvedName: place.name,
   };
 }
 
@@ -379,27 +442,45 @@ function buildSimulated(city) {
  * @param {string} city
  * @param {string} [_bairro] mantido por compatibilidade com a tela
  */
-export async function fetchWeatherData(city, _bairro) {
+async function loadWeatherData(city, bairro) {
   try {
-    return await fetchFromOpenMeteo(city);
+    return await fetchFromOpenMeteo(city, bairro);
   } catch (openMeteoError) {
-    console.warn('Open-Meteo falhou, tentando fallback:', openMeteoError.message);
+    console.warn('Open-Meteo falhou, tentando fallback:', openMeteoError?.message || openMeteoError);
   }
 
   const apiKey = getOpenWeatherKey();
   if (apiKey) {
     try {
-      return await fetchFromOpenWeatherMap(city, apiKey);
+      const result = await fetchFromOpenWeatherMap(city, apiKey);
+      return {
+        ...result,
+        placeLabel: result.placeLabel || city,
+        resolvedName: result.resolvedName || city,
+      };
     } catch (owmError) {
       console.warn('OpenWeatherMap falhou, usando dados simulados:', owmError.message);
     }
   }
 
-  return buildSimulated(city);
+  return {
+    ...buildSimulated(city),
+    placeLabel: city,
+    resolvedName: city,
+  };
+}
+
+export async function fetchWeatherData(city, bairro) {
+  const finishLoading = beginRequest();
+  try {
+    return await loadWeatherData(city, bairro);
+  } finally {
+    finishLoading();
+  }
 }
 
 export const SOURCE_LABELS = {
-  'open-meteo': 'Fonte: Open-Meteo',
+  'open-meteo': 'Fonte: Open-Meteo (dados reais)',
   openweathermap: 'Fonte: OpenWeatherMap (alternativa)',
-  simulated: 'Dados simulados — sem conexão com serviços externos',
+  simulated: 'Dados simulados — APIs externas indisponiveis',
 };
