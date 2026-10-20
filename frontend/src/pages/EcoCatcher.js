@@ -48,7 +48,7 @@ class MainMenu extends Phaser.Scene {
     }).setOrigin(0.5);
 
     // Instructions
-    this.add.text(width / 2, 250, 'Use ← → para mover a cesta', {
+    this.add.text(width / 2, 250, 'Arraste o dedo ou use ← → para mover', {
       fontSize: '24px',
       color: '#333'
     }).setOrigin(0.5);
@@ -199,6 +199,15 @@ class GameScene extends Phaser.Scene {
 
     // Controls
     this.cursors = this.input.keyboard.createCursorKeys();
+    // Pointer coordinates are converted by Phaser when the canvas is scaled.
+    const moveBasket = pointer => {
+      if (!pointer.isDown || this._gameOverTriggered) return;
+      this.player.x = Phaser.Math.Clamp(pointer.x, 40, width - 40);
+      this.player.body.setVelocityX(0);
+      this.player.body.updateFromGameObject();
+    };
+    this.input.on('pointerdown', moveBasket);
+    this.input.on('pointermove', moveBasket);
 
     // Spawn items
     this.spawnTimer = this.time.addEvent({
@@ -483,6 +492,7 @@ export default function EcoCatcher() {
   const savingRef = useRef(false);
 
   useEffect(() => {
+    let createdGame;
     if (showGame && !gameInstance) {
       savingRef.current = false;
 
@@ -491,6 +501,10 @@ export default function EcoCatcher() {
         parent: 'game-container',
         width: 800,
         height: 600,
+        scale: {
+          mode: Phaser.Scale.FIT,
+          autoCenter: Phaser.Scale.CENTER_BOTH,
+        },
         backgroundColor: '#87CEEB',
         physics: {
           default: 'arcade',
@@ -503,6 +517,7 @@ export default function EcoCatcher() {
       };
 
       const game = new Phaser.Game(config);
+      createdGame = game;
       setGameInstance(game);
 
       window.saveGameScore = async (score, ecoPoints, meta = {}) => {
@@ -569,9 +584,8 @@ export default function EcoCatcher() {
     }
 
     return () => {
-      if (gameInstance && !showGame) {
-        gameInstance.destroy(true);
-        setGameInstance(null);
+      if (createdGame) {
+        createdGame.destroy(true);
         window.saveGameScore = undefined;
       }
     };
@@ -609,7 +623,7 @@ export default function EcoCatcher() {
                 <div className="bg-blue-50 p-6 rounded-2xl">
                   <h3 className="text-xl font-bold text-blue-800 mb-4">Como Jogar</h3>
                   <ul className="text-left space-y-2 text-gray-700">
-                    <li>Use as setas para mover</li>
+                    <li>Arraste o dedo na tela ou use as setas para mover</li>
                     <li>Colete lixo reciclável</li>
                     <li>Evite lixo orgânico</li>
                     <li>60 segundos de jogo</li>
@@ -658,10 +672,7 @@ export default function EcoCatcher() {
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             onClick={() => {
-              if (gameInstance) {
-                gameInstance.destroy(true);
-                setGameInstance(null);
-              }
+              setGameInstance(null);
               setShowGame(false);
             }}
             className="bg-red-500 text-white px-6 py-3 rounded-xl font-bold shadow-lg hover:shadow-xl transition-all flex items-center gap-2"
@@ -673,7 +684,7 @@ export default function EcoCatcher() {
           <div 
             id="game-container" 
             ref={gameRef}
-            className="bg-white rounded-2xl shadow-2xl overflow-hidden"
+            className="game-viewport bg-white rounded-2xl shadow-2xl overflow-hidden"
             style={{ width: '800px', height: '600px' }}
           />
         </div>

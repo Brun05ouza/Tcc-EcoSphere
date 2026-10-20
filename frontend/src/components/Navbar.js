@@ -7,13 +7,14 @@ import { Bell, Sparkles, User, X, ArrowRight } from 'lucide-react';
 import { useUser } from '../contexts/UserContext';
 import { AppIcon } from './ui/AppIcon';
 import EcoGlobeLogo from './ui/EcoGlobeLogo';
+import { InstallAppButton } from '../contexts/PWAContext';
 
 const Navbar = () => {
   const [menuOpen, setMenuOpen] = useState(false);
   const [notifications] = useState(3);
   const [showNotifications, setShowNotifications] = useState(false);
   const [showEcoPointsModal, setShowEcoPointsModal] = useState(false);
-  const { user } = useUser();
+  const { user, logout } = useUser();
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -68,8 +69,7 @@ const Navbar = () => {
   const todayTip = ecoTips[Math.floor(Math.random() * ecoTips.length)];
 
   const handleLogout = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
+    logout();
     navigate('/login');
   };
 
@@ -105,7 +105,7 @@ const Navbar = () => {
 
   return (
     <>
-      <header className="sticky top-0 z-50 pt-3 md:pt-4 px-3 md:px-6 pointer-events-none">
+      <header className="site-navbar sticky top-0 z-50 pt-3 md:pt-4 px-3 md:px-6 pointer-events-none">
         <motion.div
           initial={{ y: -16, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
@@ -352,6 +352,7 @@ const Navbar = () => {
                       ))}
                     </ul>
 
+                    <InstallAppButton />
                     <button
                       type="button"
                       onClick={() => {

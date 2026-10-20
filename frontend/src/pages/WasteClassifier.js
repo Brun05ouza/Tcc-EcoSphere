@@ -77,7 +77,6 @@ const WasteClassifier = () => {
     loading: modelLoading,
     modelReady,
     modelUnavailable,
-    error: modelError,
     reload,
     classifyImageElement,
     calculatePoints,
@@ -374,14 +373,10 @@ const WasteClassifier = () => {
             <AlertTriangle className="mx-auto mb-3 text-amber-500" size={40} />
             <h2 className="text-xl font-bold text-stone-800">Modelo indisponível</h2>
             <p className="mt-2 text-sm text-stone-500">
-              {modelError ||
-                'O modelo Teachable Machine ainda não foi publicado em /models/waste-classifier/.'}
+              Não foi possível preparar o reconhecimento de imagens. Verifique sua conexão e tente novamente.
             </p>
             <p className="mt-3 text-xs text-stone-400">
-              Exporte o modelo do Teachable Machine (TensorFlow.js) para{' '}
-              <code className="rounded bg-stone-100 px-1">public/models/waste-classifier/</code>
-              {' '}ou, só em desenvolvimento, use{' '}
-              <code className="rounded bg-stone-100 px-1">REACT_APP_USE_MOCK_MODEL=true</code>.
+              Se o problema continuar, tente novamente mais tarde.
             </p>
             <button
               type="button"

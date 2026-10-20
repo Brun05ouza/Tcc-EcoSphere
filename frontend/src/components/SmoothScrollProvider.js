@@ -9,7 +9,7 @@ const SmoothScrollProvider = ({ children }) => {
 
   useEffect(() => {
     const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    if (prefersReducedMotion) return undefined;
+    if (prefersReducedMotion || window.matchMedia('(pointer: coarse)').matches) return undefined;
 
     const lenis = new Lenis({
       duration: 1.1,

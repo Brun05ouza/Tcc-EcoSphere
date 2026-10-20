@@ -171,7 +171,7 @@ const Profile = () => {
         </motion.div>
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-8">
+        <div className="app-stats-grid grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-8">
           {[
             { label: 'EcoPoints', value: stats.ecoPoints || 0, iconName: 'star', color: 'text-amber-600', bg: 'bg-amber-50', border: 'hover:border-amber-200' },
             { label: 'Nível', value: stats.level || 'Iniciante', iconName: 'trophy', color: 'text-blue-600', bg: 'bg-blue-50', border: 'hover:border-blue-200' },
@@ -198,7 +198,7 @@ const Profile = () => {
 
         {/* Tabs */}
         <div className="flex justify-center mb-10">
-          <div className="inline-flex flex-row flex-wrap gap-2 bg-stone-100/80 p-2 rounded-2xl border border-stone-200 backdrop-blur w-full max-w-full overflow-x-auto custom-scrollbar md:w-auto md:justify-center">
+          <div className="app-section-tabs inline-flex flex-row flex-wrap gap-2 bg-stone-100/80 p-2 rounded-2xl border border-stone-200 backdrop-blur w-full max-w-full overflow-x-auto custom-scrollbar md:w-auto md:justify-center">
             {[
               { id: 'personal', label: 'Dados Pessoais', icon: 'bi-person', activeColor: 'text-indigo-500' },
               { id: 'preferences', label: 'Preferências', icon: 'bi-gear', activeColor: 'text-indigo-500' },

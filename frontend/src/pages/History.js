@@ -1,11 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Doughnut } from 'react-chartjs-2';
+import { Chart as ChartJS, ArcElement, Tooltip, Legend } from 'chart.js';
 import { wasteAPI } from '../services/api';
 import { BarChart3, Database, Target, Leaf, Award, Sparkles, Clock } from 'lucide-react';
 import { AppIcon } from '../components/ui/AppIcon';
 import LoadingScreen from '../components/ui/LoadingScreen';
 import { getWasteClass } from '../data/wasteKnowledge';
+
+ChartJS.register(ArcElement, Tooltip, Legend);
 
 const TYPE_ICON = { Plástico: 'plastic', Papel: 'paper', Vidro: 'glass', Metal: 'metal', Orgânico: 'organico', Eletrônico: 'eletronico' };
 
@@ -86,7 +89,7 @@ const History = () => {
         </motion.div>
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-8">
+        <div className="app-stats-grid grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-8">
           {[
             { label: 'Análises Realizadas', value: stats.total, icon: Database, color: 'text-blue-600', bg: 'bg-blue-50', border: 'hover:border-blue-200' },
             { label: 'EcoPoints Ganhos', value: stats.totalPoints, icon: Award, color: 'text-green-600', bg: 'bg-green-50', border: 'hover:border-green-200' },

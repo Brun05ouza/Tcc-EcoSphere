@@ -1,0 +1,22 @@
+{
+  "id": "/",
+  "name": "EcoSphere",
+  "short_name": "EcoSphere",
+  "description": "Seu impacto sustentável: descarte inteligente, clima, aprendizado e EcoPoints.",
+  "lang": "pt-BR",
+  "start_url": "/dashboard",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#f6f8f7",
+  "theme_color": "#f6f8f7",
+  "categories": ["lifestyle", "education"],
+  "icons": [
+    { "src": "/icons/app-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/icons/app-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/icons/app-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "shortcuts": [
+    { "name": "Classificar resíduo", "short_name": "Classificar", "url": "/classificar-residuos" },
+    { "name": "Clima e ambiente", "short_name": "Clima", "url": "/monitoramento" }
+  ]
+}

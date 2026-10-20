@@ -184,7 +184,7 @@ const Dashboard = () => {
           </div>
         </motion.div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-8">
+        <div className="app-stats-grid grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-8">
           {[
             { icon: "ecopoints", title: "EcoPoints Acumulados", value: userStats.ecoPoints.toLocaleString(), color: "text-eco-600", bg: "bg-eco-50", border: "hover:border-eco-200" },
             { icon: "rocket", title: "Ações Validadas", value: userStats.actions, color: "text-blue-600", bg: "bg-blue-50", border: "hover:border-blue-200" },

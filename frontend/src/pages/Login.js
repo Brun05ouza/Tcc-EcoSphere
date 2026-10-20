@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { userAPI } from '../services/api';
 import { useUser } from '../contexts/UserContext';
 import GoogleLogin from '../components/GoogleLogin';
+import { InstallAppButton } from '../contexts/PWAContext';
 import { Eye, EyeOff, Loader2, AlertTriangle, Check } from 'lucide-react';
 
 const Login = () => {
@@ -443,6 +444,7 @@ const Login = () => {
             />
           </div>
 
+          <InstallAppButton />
           {!isLogin && (
             <p className="mt-5 text-center text-[11px] text-white/45 font-medium leading-relaxed">
               Ao se registrar, você concorda com nossos{' '}

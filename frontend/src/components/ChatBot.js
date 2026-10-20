@@ -594,7 +594,7 @@ const ChatBot = () => {
             initial={{ opacity: 0, x: 16, y: 8 }}
             animate={{ opacity: 1, x: 0, y: 0 }}
             exit={{ opacity: 0, x: 12, y: 6 }}
-            className="fixed bottom-[6.75rem] right-6 z-50 max-w-[min(17rem,calc(100vw-5.5rem))] text-left border-0 bg-transparent p-0 cursor-pointer"
+            className="ecobot-nudge fixed bottom-[6.75rem] right-6 z-50 max-w-[min(17rem,calc(100vw-5.5rem))] text-left border-0 bg-transparent p-0 cursor-pointer"
           >
             <div className="relative bg-white text-stone-700 px-3.5 py-2.5 rounded-2xl rounded-br-md shadow-soft-lg border border-stone-100 min-h-[2.75rem] flex items-center">
               <AnimatePresence mode="wait">
@@ -638,7 +638,7 @@ const ChatBot = () => {
         }}
         whileHover={{ scale: 1.06 }}
         whileTap={{ scale: 0.95 }}
-        className={`fixed bottom-5 right-5 z-50 flex items-center justify-center border-0 outline-none focus:outline-none ${
+        className={`ecobot-launcher fixed bottom-5 right-5 z-50 flex items-center justify-center border-0 outline-none focus:outline-none ${
           isOpen
             ? 'w-14 h-14 rounded-full bg-stone-800 text-white shadow-soft-lg'
             : 'w-[4.5rem] h-[4.5rem] bg-transparent p-0'
@@ -684,7 +684,9 @@ const ChatBot = () => {
             initial={{ opacity: 0, y: 20, scale: 0.97 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 20, scale: 0.97 }}
-            className="fixed z-40 bottom-24 right-3 sm:right-6 w-[min(34rem,calc(100vw-1.5rem))] h-[min(42rem,calc(100dvh-7.5rem))] bg-white rounded-3xl shadow-soft-lg border border-stone-100 flex flex-col overflow-hidden"
+            className="ecobot-panel fixed z-40 bottom-24 right-3 sm:right-6 w-[min(34rem,calc(100vw-1.5rem))] h-[min(42rem,calc(100dvh-7.5rem))] bg-white rounded-3xl shadow-soft-lg border border-stone-100 flex flex-col overflow-hidden"
+            role="dialog"
+            aria-label="Conversa com o EcoBot"
             style={{ fontFamily: '"Nunito", "Segoe UI", system-ui, -apple-system, sans-serif' }}
           >
             <div className="shrink-0 bg-gradient-to-r from-eco-600 to-teal-600 text-white px-4 py-3.5 flex items-center gap-3">
@@ -709,6 +711,7 @@ const ChatBot = () => {
                   <span className="text-[10px] font-bold text-white/90">IA</span>
                 </div>
               )}
+              <button type="button" className="ecobot-mobile-close" onClick={() => setIsOpen(false)} aria-label="Fechar conversa">×</button>
             </div>
 
             <div

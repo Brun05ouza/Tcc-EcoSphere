@@ -74,7 +74,7 @@ const Home = () => {
   };
 
   return (
-    <div className="min-h-screen bg-surface-50 overflow-x-hidden">
+    <div className="page-home min-h-screen bg-surface-50 overflow-x-hidden">
       {/* Hero - Clean AI Dashboard Background */}
       <div className="relative overflow-hidden min-h-[80vh] md:min-h-screen flex items-center -mt-20 md:-mt-[80px] pt-20 md:pt-[80px] bg-gradient-to-b from-stone-50 to-surface-50">
         {/* Decorative Light Blobs */}

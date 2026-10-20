@@ -167,7 +167,7 @@ const Environmental = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
-          className="bg-white p-4 sm:p-5 rounded-3xl shadow-soft border border-stone-100 mb-8"
+          className="weather-location-picker bg-white p-4 sm:p-5 rounded-3xl shadow-soft border border-stone-100 mb-8"
         >
           <div className="flex flex-col xl:flex-row xl:items-end gap-4">
             <button
@@ -237,11 +237,12 @@ const Environmental = () => {
             <button
               type="button"
               onClick={() => loadWeather(selectedCity, selectedBairro)}
+              aria-label={loading ? 'Atualizando clima' : 'Consultar novamente'}
               disabled={loading}
               className="inline-flex items-center justify-center gap-2.5 px-5 py-3.5 rounded-2xl font-bold text-white bg-gradient-to-r from-eco-600 to-teal-600 hover:from-eco-700 hover:to-teal-700 shadow-sm shadow-eco-600/20 disabled:opacity-60 disabled:cursor-not-allowed transition-all active:scale-[0.98] xl:min-w-[12.5rem]"
             >
               <RefreshCw className={`w-4.5 h-4.5 w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
-              {loading ? 'Atualizando...' : 'Consultar novamente'}
+              <span className="weather-location-picker__refresh-label">{loading ? 'Atualizando...' : 'Consultar novamente'}</span>
             </button>
           </div>
         </motion.div>

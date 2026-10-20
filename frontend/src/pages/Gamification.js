@@ -509,7 +509,7 @@ const Gamification = () => {
         </motion.div>
 
         {/* User Stats */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-8">
+        <div className="app-stats-grid grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-8">
           {[
             { label: 'EcoPoints Totais', value: contextUser?.ecoPoints || gamificationData?.ecoPoints || 0, icon: 'ecopoints', color: 'text-amber-600', bg: 'bg-amber-50', border: 'hover:border-amber-200' },
             { label: 'Badges Conquistadas', value: badges.filter(b => b.earned).length, icon: 'recompensas', color: 'text-violet-600', bg: 'bg-violet-50', border: 'hover:border-violet-200' },
@@ -540,7 +540,7 @@ const Gamification = () => {
 
         {/* Tabs */}
         <div className="flex justify-center mb-10">
-          <div className="inline-flex flex-row flex-wrap gap-2 bg-stone-100/80 p-2 rounded-2xl border border-stone-200 backdrop-blur w-full max-w-full overflow-x-auto custom-scrollbar md:w-auto md:justify-center">
+          <div className="app-section-tabs inline-flex flex-row flex-wrap gap-2 bg-stone-100/80 p-2 rounded-2xl border border-stone-200 backdrop-blur w-full max-w-full overflow-x-auto custom-scrollbar md:w-auto md:justify-center">
             {[
               { id: 'overview', label: 'Visão Geral', icon: 'bi-grid-1x2-fill' },
               { id: 'quiz', label: 'Eco Quiz', icon: 'bi-lightning-charge-fill' },

@@ -371,7 +371,7 @@ const AdminDashboard = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-slate-950 text-white">
+    <div className="admin-app min-h-screen bg-slate-950 text-white">
       {/* Modais */}
       {editUser && <EditPointsModal user={editUser} onSave={handleEditPoints} onCancel={() => setEditUser(null)} />}
       {showCreate && <CreateUserModal onSave={handleCreateUser} onCancel={() => setShowCreate(false)} />}

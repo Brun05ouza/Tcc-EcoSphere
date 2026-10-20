@@ -6,7 +6,7 @@ import EcoGlobeLogo from './ui/EcoGlobeLogo';
 
 const Footer = () => {
   return (
-    <footer className="bg-stone-900 text-stone-300">
+    <footer className="app-footer bg-stone-900 text-stone-300">
       <div className="container mx-auto px-4 py-16 max-w-7xl">
         <div className="grid md:grid-cols-3 gap-12">
           {/* Logo e Descrição */}
@@ -66,7 +66,7 @@ const Footer = () => {
             <div className="space-y-4 text-sm">
               <div className="flex items-start gap-3 text-stone-400">
                 <Mail size={18} className="text-eco-500/70 shrink-0 mt-0.5" />
-                <span>brunosoaresecosphere@gmail.com</span>
+                <span className="min-w-0 break-all">brunosoaresecosphere@gmail.com</span>
               </div>
               <div className="flex items-center gap-3 text-stone-400">
                 <Phone size={18} className="text-eco-500/70 shrink-0" />

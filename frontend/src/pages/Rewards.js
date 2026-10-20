@@ -161,7 +161,7 @@ const Rewards = () => {
 
         {/* Categories */}
         <div className="flex justify-center mb-10">
-          <div className="inline-flex flex-row flex-wrap gap-2 bg-stone-100/80 p-2 rounded-2xl border border-stone-200 backdrop-blur w-full max-w-full overflow-x-auto custom-scrollbar md:w-auto md:justify-center">
+          <div className="app-section-tabs inline-flex flex-row flex-wrap gap-2 bg-stone-100/80 p-2 rounded-2xl border border-stone-200 backdrop-blur w-full max-w-full overflow-x-auto custom-scrollbar md:w-auto md:justify-center">
             {categories.map((category) => (
               <button
                 key={category.id}
