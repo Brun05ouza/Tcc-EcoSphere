@@ -691,12 +691,12 @@ const ChatBot = () => {
             initial={{ opacity: 0, y: 20, scale: 0.97 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 20, scale: 0.97 }}
-            className="ecobot-panel fixed z-40 bottom-24 right-3 sm:right-6 w-[min(34rem,calc(100vw-1.5rem))] h-[min(42rem,calc(100dvh-7.5rem))] bg-white rounded-3xl shadow-soft-lg border border-stone-100 flex flex-col overflow-hidden"
+            className="ecobot-panel fixed bg-white rounded-3xl shadow-soft-lg border border-stone-100 flex flex-col overflow-hidden"
             role="dialog"
             aria-label="Conversa com o EcoBot"
             style={{ fontFamily: '"Nunito", "Segoe UI", system-ui, -apple-system, sans-serif' }}
           >
-            <div className="shrink-0 bg-gradient-to-r from-eco-600 to-teal-600 text-white px-4 py-3.5 flex items-center gap-3">
+            <div className="ecobot-header shrink-0 bg-gradient-to-r from-eco-600 to-teal-600 text-white px-4 py-3.5 flex items-center gap-3">
               <div className="relative shrink-0">
                 <img
                   src={chatAvatarSrc}
@@ -723,7 +723,7 @@ const ChatBot = () => {
 
             <div
               ref={messagesContainerRef}
-              className="flex-1 min-h-0 overflow-y-auto overscroll-contain px-3.5 py-4 space-y-2.5 bg-[#F0F2F5]"
+              className="ecobot-messages flex-1 min-h-0 overflow-y-auto overscroll-contain px-3.5 py-4 space-y-2.5 bg-[#F0F2F5]"
             >
               {messages.map((message) => {
                 const isUser = message.sender === 'user';
@@ -810,7 +810,7 @@ const ChatBot = () => {
                       }`}
                     >
                       <p
-                        className="text-[15px] font-normal whitespace-pre-line tracking-[0.01em]"
+                        className="text-[15px] font-normal whitespace-pre-line break-words tracking-[0.01em]"
                         style={{ lineHeight: 1.45 }}
                       >
                         {message.text}
@@ -873,7 +873,7 @@ const ChatBot = () => {
               <div ref={messagesEndRef} />
             </div>
 
-            <div className="shrink-0 p-4 border-t border-stone-100 bg-white">
+            <div className="ecobot-composer shrink-0 p-4 border-t border-stone-100 bg-white">
               {weatherFlow?.step === 'city' && !weatherLoading && (
                 <div className="mb-3">
                   <p className="text-[11px] font-semibold uppercase tracking-wide text-stone-400 mb-2">
@@ -915,7 +915,7 @@ const ChatBot = () => {
                 </div>
               )}
               {!weatherFlow && (
-                <div className="flex flex-wrap gap-2 mb-3">
+                <div className="ecobot-shortcuts flex flex-wrap gap-2 mb-3">
                   {quickActions.map((action, index) => (
                     <button
                       key={index}
